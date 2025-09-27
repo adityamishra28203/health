@@ -51,7 +51,7 @@ Before running this project, ensure you have the following installed:
 
 ## 🚀 Quick Start
 
-### **Option 1: Deploy to Vercel (Recommended)**
+### **Deploy to Vercel (Recommended)**
 
 #### **Frontend + Backend on Vercel**
 
@@ -73,7 +73,7 @@ Before running this project, ensure you have the following installed:
 
 **See [VERCEL_BACKEND_DEPLOYMENT.md](VERCEL_BACKEND_DEPLOYMENT.md) for detailed instructions.**
 
-### **Option 2: Local Development**
+### **Local Development**
 
 #### 1. Clone the Repository
 
