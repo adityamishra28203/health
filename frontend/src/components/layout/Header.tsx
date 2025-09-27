@@ -34,7 +34,8 @@ import {
   Sun,
   Moon,
   User,
-  CreditCard
+  CreditCard,
+  Building2
 } from "lucide-react";
 
 interface HeaderProps {
@@ -63,6 +64,11 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
       title: "Health Records",
       href: "/records",
       icon: <FileText className="h-4 w-4" />,
+    },
+    {
+      title: "Hospitals",
+      href: "/hospital",
+      icon: <Building2 className="h-4 w-4" />,
     },
     {
       title: "Insurance",
