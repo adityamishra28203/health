@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, CreditCard, FileText, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Shield, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface InsurancePolicy {
   id: string;

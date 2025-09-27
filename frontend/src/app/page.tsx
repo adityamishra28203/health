@@ -81,8 +81,6 @@ const testimonials = [
 ];
 
 export default function HomePage() {
-  // Force dynamic rendering
-  const timestamp = Date.now();
   
   return (
     <div className="min-h-screen">
