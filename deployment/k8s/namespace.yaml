@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: healthwallet
+  labels:
+    name: healthwallet
+    app: blockchain-health-wallet

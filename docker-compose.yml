@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: healthwallet-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: healthwallet
+    volumes:
+      - mongodb_data:/data/db
+      - ./deployment/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - healthwallet-network
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: healthwallet-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - healthwallet-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: healthwallet-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/healthwallet?authSource=admin
+      REDIS_URL: redis://:redis123@redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_EXPIRES_IN: 24h
+      BLOCKCHAIN_RPC_URL: http://ganache:8545
+      BLOCKCHAIN_PRIVATE_KEY: your-private-key-here
+      IPFS_URL: http://ipfs:5001
+      AWS_ACCESS_KEY_ID: your-aws-access-key
+      AWS_SECRET_ACCESS_KEY: your-aws-secret-key
+      AWS_REGION: us-east-1
+      AWS_S3_BUCKET: healthwallet-files
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - healthwallet-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: healthwallet-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - healthwallet-network
+
+  # IPFS Node
+  ipfs:
+    image: ipfs/go-ipfs:v0.20.0
+    container_name: healthwallet-ipfs
+    restart: unless-stopped
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    environment:
+      IPFS_PROFILE: server
+    volumes:
+      - ipfs_data:/data/ipfs
+    networks:
+      - healthwallet-network
+
+  # Ganache (Ethereum Testnet)
+  ganache:
+    image: trufflesuite/ganache:latest
+    container_name: healthwallet-ganache
+    restart: unless-stopped
+    ports:
+      - "8545:8545"
+    command: ganache --host 0.0.0.0 --port 8545 --accounts 10 --deterministic
+    networks:
+      - healthwallet-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: healthwallet-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - healthwallet-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+  ipfs_data:
+
+networks:
+  healthwallet-network:
+    driver: bridge
