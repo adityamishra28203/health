@@ -1,114 +1,155 @@
-const { NestFactory } = require('@nestjs/core');
+const express = require('express');
+const cors = require('cors');
 
-// Try to use the simplified module first, fallback to full module
-let AppModule;
-try {
-  AppModule = require('../dist/app.module.vercel');
-  console.log('✅ Using simplified AppModule for Vercel');
-} catch (error) {
-  console.log('⚠️ Simplified module not found, using full AppModule');
-  AppModule = require('../dist/app.module');
-}
+// Create Express app
+const app = express();
 
-let app;
+// Enable CORS
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',') || [
+    'http://localhost:3000', 
+    'http://localhost:8081',
+    'https://healthwallet.vercel.app',
+    'https://healthwallet-frontend.vercel.app',
+    'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app'
+  ],
+  credentials: true,
+}));
 
-async function createApp() {
-  if (!app) {
-    try {
-      console.log('🚀 Starting HealthWallet API initialization...');
-      
-      // Create the NestJS application
-      app = await NestFactory.create(AppModule, {
-        logger: ['error', 'warn', 'log'],
-      });
-      
-      console.log('✅ NestJS app created successfully');
-      
-      // Enable CORS
-      app.enableCors({
-        origin: process.env.CORS_ORIGIN?.split(',') || [
-          'http://localhost:3000', 
-          'http://localhost:8081',
-          'https://healthwallet.vercel.app',
-          'https://healthwallet-frontend.vercel.app',
-          'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app'
-        ],
-        credentials: true,
-      });
-      
-      console.log('✅ CORS enabled');
+// Parse JSON bodies
+app.use(express.json());
 
-      // Global validation pipe
-      const { ValidationPipe } = require('@nestjs/common');
-      app.useGlobalPipes(new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }));
-      
-      console.log('✅ Validation pipe configured');
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    platform: 'vercel',
+    message: 'HealthWallet API is running'
+  });
+});
 
-      // Swagger documentation
-      const { DocumentBuilder, SwaggerModule } = require('@nestjs/swagger');
-      const config = new DocumentBuilder()
-        .setTitle('HealthWallet API')
-        .setDescription('Blockchain-powered health records and insurance platform API')
-        .setVersion('1.0')
-        .addBearerAuth()
-        .build();
-      
-      const document = SwaggerModule.createDocument(app, config);
-      SwaggerModule.setup('api/docs', app, document);
-      
-      console.log('✅ Swagger documentation configured');
+// Basic API endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'HealthWallet API is running!',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    platform: 'vercel'
+  });
+});
 
-      // Health check endpoint
-      app.getHttpAdapter().get('/health', (req, res) => {
-        res.status(200).json({
-          status: 'ok',
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime(),
-          environment: process.env.NODE_ENV || 'development',
-          platform: 'vercel',
-        });
-      });
-      
-      console.log('✅ Health check endpoint configured');
+// Sample health records endpoint
+app.get('/api/health-records', (req, res) => {
+  res.json({
+    records: [
+      {
+        id: '1',
+        title: 'Blood Test Report',
+        type: 'LAB_REPORT',
+        date: '2024-01-15',
+        status: 'VERIFIED',
+        doctor: 'Dr. Smith',
+        hospital: 'Apollo Hospital',
+      },
+      {
+        id: '2',
+        title: 'X-Ray Chest',
+        type: 'RADIOLOGY',
+        date: '2024-01-10',
+        status: 'VERIFIED',
+        doctor: 'Dr. Johnson',
+        hospital: 'Fortis Healthcare',
+      }
+    ],
+    total: 2,
+  });
+});
 
-      await app.init();
-      console.log('🚀 HealthWallet API initialized successfully for Vercel');
-    } catch (error) {
-      console.error('❌ Failed to initialize application:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      throw error;
-    }
-  }
-  return app;
-}
+// Sample insurance claims endpoint
+app.get('/api/insurance-claims', (req, res) => {
+  res.json({
+    claims: [
+      {
+        id: '1',
+        claimNumber: 'C001',
+        policyNumber: 'POL123456',
+        type: 'MEDICAL',
+        amount: 25000,
+        status: 'APPROVED',
+        submittedDate: '2024-01-15',
+        approvedDate: '2024-01-20',
+        approvedAmount: 25000,
+      },
+      {
+        id: '2',
+        claimNumber: 'C002',
+        policyNumber: 'POL123456',
+        type: 'SURGERY',
+        amount: 150000,
+        status: 'PENDING',
+        submittedDate: '2024-01-18',
+      }
+    ],
+    total: 2,
+  });
+});
 
-module.exports = async (req, res) => {
-  try {
-    console.log(`📥 Incoming request: ${req.method} ${req.url}`);
-    const app = await createApp();
-    const server = app.getHttpAdapter().getInstance();
-    return server(req, res);
-  } catch (error) {
-    console.error('❌ Error in Vercel function:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    
-    res.status(500).json({ 
-      error: 'Internal server error',
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-  }
-};
+// Sample analytics endpoint
+app.get('/api/analytics', (req, res) => {
+  res.json({
+    healthScore: 85,
+    totalRecords: 24,
+    verifiedRecords: 20,
+    pendingRecords: 4,
+    totalClaims: 3,
+    approvedClaims: 1,
+    pendingClaims: 1,
+    rejectedClaims: 1,
+    totalClaimAmount: 180000,
+    approvedAmount: 25000,
+    trends: [
+      { month: 'Jan', score: 80 },
+      { month: 'Feb', score: 82 },
+      { month: 'Mar', score: 85 },
+    ],
+  });
+});
+
+// API documentation endpoint
+app.get('/api/docs', (req, res) => {
+  res.json({
+    title: 'HealthWallet API',
+    description: 'Blockchain-powered health records and insurance platform API',
+    version: '1.0.0',
+    endpoints: [
+      { method: 'GET', path: '/health', description: 'Health check endpoint' },
+      { method: 'GET', path: '/api/health-records', description: 'Get health records' },
+      { method: 'GET', path: '/api/insurance-claims', description: 'Get insurance claims' },
+      { method: 'GET', path: '/api/analytics', description: 'Get analytics data' }
+    ]
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Route ${req.method} ${req.path} not found`,
+    timestamp: new Date().toISOString()
+  });
+});
+
+module.exports = app;

@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "npm install",
   "installCommand": "npm install",
   "framework": null,
   "builds": [
