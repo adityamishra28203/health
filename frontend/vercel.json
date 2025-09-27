@@ -4,7 +4,7 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://healthwallet-backend-production.up.railway.app",
+    "NEXT_PUBLIC_API_URL": "https://healthwallet-backend.vercel.app",
     "NEXT_PUBLIC_IPFS_URL": "https://ipfs.infura.io:5001",
     "NEXT_PUBLIC_BLOCKCHAIN_URL": "https://mainnet.infura.io/v3/your-project-id"
   }

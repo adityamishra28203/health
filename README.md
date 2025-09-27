@@ -51,14 +51,38 @@ Before running this project, ensure you have the following installed:
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### **Option 1: Deploy to Vercel (Recommended)**
+
+#### **Frontend + Backend on Vercel**
+
+1. **Deploy Frontend:**
+   - Go to [Vercel.com](https://vercel.com)
+   - Import GitHub repository
+   - Set Root Directory to `frontend`
+   - Deploy
+
+2. **Deploy Backend:**
+   - Create new Vercel project
+   - Set Root Directory to `backend`
+   - Configure environment variables
+   - Deploy
+
+3. **Update URLs:**
+   - Update frontend environment variables with backend URL
+   - Redeploy frontend
+
+**See [VERCEL_BACKEND_DEPLOYMENT.md](VERCEL_BACKEND_DEPLOYMENT.md) for detailed instructions.**
+
+### **Option 2: Local Development**
+
+#### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd blockchain-health-wallet
+git clone https://github.com/adityamishra28203/health.git
+cd health
 ```
 
-### 2. Environment Setup
+#### 2. Environment Setup
 
 Create environment files for each service:
 
@@ -91,7 +115,7 @@ NEXT_PUBLIC_IPFS_URL=http://localhost:5001
 NEXT_PUBLIC_BLOCKCHAIN_URL=http://localhost:8545
 ```
 
-### 3. Install Dependencies
+#### 3. Install Dependencies
 
 ```bash
 # Install root dependencies
@@ -110,7 +134,7 @@ cd ../mobile
 npm install
 ```
 
-### 4. Start with Docker Compose (Recommended)
+#### 4. Start with Docker Compose (Recommended)
 
 ```bash
 # Start all services
@@ -123,7 +147,7 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### 5. Manual Development Setup
+#### 5. Manual Development Setup
 
 #### Start Backend
 ```bash

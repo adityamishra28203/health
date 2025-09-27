@@ -8,7 +8,12 @@ async function bootstrap() {
   
   // Enable CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:8081'],
+    origin: process.env.CORS_ORIGIN?.split(',') || [
+      'http://localhost:3000', 
+      'http://localhost:8081',
+      'https://healthwallet.vercel.app',
+      'https://healthwallet-frontend.vercel.app'
+    ],
     credentials: true,
   });
 
@@ -37,6 +42,7 @@ async function bootstrap() {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
+      platform: 'vercel',
     });
   });
 
@@ -45,6 +51,7 @@ async function bootstrap() {
   
   console.log(`🚀 HealthWallet API is running on: http://0.0.0.0:${port}`);
   console.log(`📚 API Documentation: http://0.0.0.0:${port}/api/docs`);
+  console.log(`🌐 Platform: Vercel`);
 }
 
 bootstrap().catch((error) => {

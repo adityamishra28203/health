@@ -4,7 +4,7 @@ This guide will help you deploy the HealthWallet application to make it live and
 
 ## 🎯 Quick Deployment Options
 
-### **Option 1: Vercel + Railway (Recommended - Free & Easy)**
+### **Option 1: Vercel + Vercel (Recommended - Free & Easy)**
 
 #### **Step 1: Deploy Frontend to Vercel**
 
@@ -28,38 +28,34 @@ This guide will help you deploy the HealthWallet application to make it live and
 
 4. **Redeploy** after adding environment variables
 
-#### **Step 2: Deploy Backend to Railway**
+#### **Step 2: Deploy Backend to Vercel**
 
-1. **Go to [Railway.app](https://railway.app)**
-   - Sign up with GitHub account
+1. **Go to [Vercel.com](https://vercel.com)**
+   - Use the same account as frontend
    - Click "New Project"
 
-2. **Deploy from GitHub**
-   - Select your repository
+2. **Import Repository**
+   - Select your `health` repository
    - Set **Root Directory** to `backend`
    - Click "Deploy"
 
-3. **Add Database Services**
-   - Click "New" → "Database" → "MongoDB"
-   - Click "New" → "Database" → "Redis"
-
-4. **Configure Environment Variables**
-   - Go to Variables tab
+3. **Configure Environment Variables**
+   - Go to Settings → Environment Variables
    - Add these variables:
    ```
-   MONGODB_URI=${{MongoDB.MONGODB_URI}}
-   REDIS_URL=${{Redis.REDIS_URL}}
+   NODE_ENV=production
    JWT_SECRET=your-super-secret-jwt-key-here
    JWT_EXPIRES_IN=7d
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/healthwallet
+   REDIS_URL=redis://username:password@your-redis-host:6379
+   CORS_ORIGIN=https://healthwallet.vercel.app
    ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/your-project-id
    IPFS_URL=https://ipfs.infura.io:5001
-   PORT=3001
-   NODE_ENV=production
    ```
 
-5. **Update Frontend Environment**
-   - Go back to Vercel
-   - Update `NEXT_PUBLIC_API_URL` with your Railway backend URL
+4. **Update Frontend Environment**
+   - Go to your frontend project
+   - Update `NEXT_PUBLIC_API_URL` to `https://healthwallet-backend.vercel.app`
    - Redeploy frontend
 
 ### **Option 2: Netlify + Heroku (Alternative)**
