@@ -27,7 +27,16 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     platform: 'vercel',
-    message: 'HealthWallet API is running'
+    message: 'HealthWallet API is running',
+    cors: 'enabled',
+    endpoints: [
+      '/health',
+      '/',
+      '/api/health-records',
+      '/api/insurance-claims',
+      '/api/analytics',
+      '/api/docs'
+    ]
   });
 });
 
@@ -37,7 +46,24 @@ app.get('/', (req, res) => {
     message: 'HealthWallet API is running!',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    platform: 'vercel'
+    platform: 'vercel',
+    status: 'public',
+    endpoints: {
+      health: '/health',
+      records: '/api/health-records',
+      claims: '/api/insurance-claims',
+      analytics: '/api/analytics',
+      docs: '/api/docs'
+    }
+  });
+});
+
+// Public test endpoint
+app.get('/test', (req, res) => {
+  res.json({
+    message: 'Backend is working!',
+    timestamp: new Date().toISOString(),
+    status: 'success'
   });
 });
 
