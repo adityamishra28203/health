@@ -25,8 +25,8 @@ export const storage = getStorage(app);
 // Initialize Analytics (only in browser)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-// Connect to emulators in development
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+// Connect to emulators in development (disabled for now)
+if (false && process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   try {
     // Only connect to emulators if not already connected
     connectAuthEmulator(auth, 'http://localhost:9099');
