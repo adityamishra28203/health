@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ export default function FirebaseLoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<unknown>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Initialize reCAPTCHA for phone authentication
@@ -47,6 +48,14 @@ export default function FirebaseLoginPage() {
       firebaseAuthService.initRecaptcha('recaptcha-container');
     }
   }, []);
+
+  useEffect(() => {
+    // Handle URL parameters to set active tab
+    const tab = searchParams.get('tab');
+    if (tab === 'google' || tab === 'phone') {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
