@@ -1,11 +1,9 @@
 import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 
-import { User, UserDocument, UserRole, UserStatus } from '../schemas/user.schema';
+import { FirebaseAdminService } from '../common/firebase-admin.service';
 import { RegisterDto, LoginDto, VerifyEmailDto, VerifyPhoneDto, ResendOtpDto, OtpLoginDto, RefreshTokenDto, ForgotPasswordDto, ResetPasswordDto } from './dto/register.dto';
 import { OtpService } from './services/otp.service';
 import { SmsService } from './services/sms.service';
@@ -36,7 +34,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private firebaseAdminService: FirebaseAdminService,
     private jwtService: JwtService,
     private otpService: OtpService,
     private smsService: SmsService,
@@ -45,7 +43,7 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.userModel.findOne({ email }).select('+password');
+    const user = await this.firebaseAdminService.getUserByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -55,17 +53,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== UserStatus.ACTIVE) {
+    if (user.status !== 'active') {
       throw new UnauthorizedException('Account is not active');
     }
 
-    const { password: _, ...result } = user.toObject();
+    const { password: _, ...result } = user;
     return result;
   }
 
   async login(user: any): Promise<LoginResponse> {
     const payload: JwtPayload = {
-      sub: (user._id as any).toString(),
+      sub: user.id,
       email: user.email,
       role: user.role,
     };
@@ -74,7 +72,7 @@ export class AuthService {
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     // Update last login
-    await this.userModel.findByIdAndUpdate(user._id, {
+    await this.firebaseAdminService.updateUser(user.id, {
       lastLogin: new Date(),
     });
 
@@ -82,7 +80,7 @@ export class AuthService {
       access_token,
       refresh_token,
       user: {
-        id: (user._id as any).toString(),
+        id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -98,13 +96,13 @@ export class AuthService {
     firstName: string;
     lastName: string;
     phone?: string;
-    role: UserRole;
+    role: string;
     organization?: string;
     licenseNumber?: string;
     specialization?: string;
   }): Promise<LoginResponse> {
     // Check if user already exists
-    const existingUser = await this.userModel.findOne({ email: registerData.email });
+    const existingUser = await this.firebaseAdminService.getUserByEmail(registerData.email);
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
@@ -118,21 +116,22 @@ export class AuthService {
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create user
-    const user = new this.userModel({
+    const userId = await this.firebaseAdminService.createUser({
       ...registerData,
       password: hashedPassword,
       verificationToken,
       verificationExpires,
-      status: UserStatus.PENDING_VERIFICATION,
+      status: 'pending_verification',
+      emailVerified: false,
+      phoneVerified: false,
+      aadhaarVerified: false,
     });
-
-    await user.save();
 
     // Generate tokens
     const payload: JwtPayload = {
-      sub: (user._id as any).toString(),
-      email: user.email,
-      role: user.role,
+      sub: userId,
+      email: registerData.email,
+      role: registerData.role,
     };
 
     const access_token = this.jwtService.sign(payload);
@@ -142,24 +141,24 @@ export class AuthService {
       access_token,
       refresh_token,
       user: {
-        id: (user._id as any).toString(),
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        status: user.status,
+        id: userId,
+        email: registerData.email,
+        firstName: registerData.firstName,
+        lastName: registerData.lastName,
+        role: registerData.role,
+        status: 'pending_verification',
       },
     };
   }
 
   async refreshToken(userId: string): Promise<{ access_token: string }> {
-    const user = await this.userModel.findById(userId);
+    const user = await this.firebaseAdminService.getUserById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
     const payload: JwtPayload = {
-      sub: (user._id as any).toString(),
+      sub: user.id,
       email: user.email,
       role: user.role,
     };
@@ -170,26 +169,30 @@ export class AuthService {
   }
 
   async verifyEmail(token: string): Promise<boolean> {
-    const user = await this.userModel.findOne({
-      verificationToken: token,
-      verificationExpires: { $gt: new Date() },
-    });
+    const users = await this.firebaseAdminService.queryDocuments(
+      'users',
+      'verificationToken',
+      '==',
+      token
+    );
 
+    const user = users.find(u => u.verificationExpires && new Date(u.verificationExpires) > new Date());
     if (!user) {
       throw new BadRequestException('Invalid or expired verification token');
     }
 
-    user.emailVerified = true;
-    user.status = UserStatus.ACTIVE;
-    user.verificationToken = undefined;
-    user.verificationExpires = undefined;
+    await this.firebaseAdminService.updateUser(user.id, {
+      emailVerified: true,
+      status: 'active',
+      verificationToken: null,
+      verificationExpires: null,
+    });
 
-    await user.save();
     return true;
   }
 
   async forgotPassword(email: string): Promise<boolean> {
-    const user = await this.userModel.findOne({ email });
+    const user = await this.firebaseAdminService.getUserByEmail(email);
     if (!user) {
       // Don't reveal if user exists or not
       return true;
@@ -198,46 +201,53 @@ export class AuthService {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = resetExpires;
-
-    await user.save();
+    await this.firebaseAdminService.updateUser(user.id, {
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: resetExpires,
+    });
 
     // TODO: Send email with reset link
     return true;
   }
 
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
-    const user = await this.userModel.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: new Date() },
-    });
+    const users = await this.firebaseAdminService.queryDocuments(
+      'users',
+      'resetPasswordToken',
+      '==',
+      token
+    );
 
+    const user = users.find(u => u.resetPasswordExpires && new Date(u.resetPasswordExpires) > new Date());
     if (!user) {
       throw new BadRequestException('Invalid or expired reset token');
     }
 
     const saltRounds = 12;
-    user.password = await bcrypt.hash(newPassword, saltRounds);
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-    await user.save();
+    await this.firebaseAdminService.updateUser(user.id, {
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    });
+
     return true;
   }
 
   async enableTwoFactor(userId: string): Promise<{ secret: string; qrCode: string }> {
-    const user = await this.userModel.findById(userId);
+    const user = await this.firebaseAdminService.getUserById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
     // Generate secret
     const secret = crypto.randomBytes(32).toString('base64');
-    user.twoFactorSecret = secret;
-    user.twoFactorEnabled = true;
 
-    await user.save();
+    await this.firebaseAdminService.updateUser(userId, {
+      twoFactorSecret: secret,
+      twoFactorEnabled: true,
+    });
 
     // TODO: Generate QR code
     const qrCode = `otpauth://totp/HealthWallet:${user.email}?secret=${secret}&issuer=HealthWallet`;
@@ -246,7 +256,7 @@ export class AuthService {
   }
 
   async verifyTwoFactor(userId: string, token: string): Promise<boolean> {
-    const user = await this.userModel.findById(userId);
+    const user = await this.firebaseAdminService.getUserById(userId);
     if (!user || !user.twoFactorSecret) {
       throw new UnauthorizedException('Two-factor authentication not enabled');
     }
@@ -262,32 +272,38 @@ export class AuthService {
     const { email, password, firstName, lastName, phone, method, googleToken } = registerDto;
 
     // Check if user already exists
-    const existingUser = await this.userModel.findOne({ email });
+    const existingUser = await this.firebaseAdminService.getUserByEmail(email);
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
 
-    let user: UserDocument;
+    let userId: string;
 
     if (method === 'google' && googleToken) {
       // Google OAuth registration
       const googleUserInfo = await this.googleOAuthService.verifyGoogleToken(googleToken);
       
       // Check if Google user already exists
-      const existingGoogleUser = await this.userModel.findOne({ googleId: googleUserInfo.googleId });
-      if (existingGoogleUser) {
+      const existingGoogleUsers = await this.firebaseAdminService.queryDocuments(
+        'users',
+        'googleId',
+        '==',
+        googleUserInfo.googleId
+      );
+      
+      if (existingGoogleUsers.length > 0) {
         throw new BadRequestException('Google account already registered');
       }
 
-      user = new this.userModel({
+      userId = await this.firebaseAdminService.createUser({
         email: googleUserInfo.email,
         firstName: googleUserInfo.firstName,
         lastName: googleUserInfo.lastName,
         googleId: googleUserInfo.googleId,
         googleEmail: googleUserInfo.email,
         emailVerified: googleUserInfo.emailVerified,
-        status: UserStatus.ACTIVE,
-        role: UserRole.PATIENT,
+        status: 'active',
+        role: 'patient',
         password: crypto.randomBytes(32).toString('hex'), // Random password for Google users
       });
     } else {
@@ -295,27 +311,31 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(password, 12);
       const verificationToken = this.otpService.generateVerificationToken();
 
-      user = new this.userModel({
+      userId = await this.firebaseAdminService.createUser({
         email,
         password: hashedPassword,
         firstName,
         lastName,
         phone,
-        status: UserStatus.PENDING_VERIFICATION,
-        role: UserRole.PATIENT,
+        status: 'pending_verification',
+        role: 'patient',
         verificationToken,
         verificationExpires: this.otpService.generateExpiryDate(24 * 60), // 24 hours
+        emailVerified: false,
+        phoneVerified: false,
+        aadhaarVerified: false,
       });
 
       // Send verification email
       await this.emailService.sendEmailVerification(email, verificationToken, firstName);
     }
 
-    await user.save();
+    // Get user data for response
+    const user = await this.firebaseAdminService.getUserById(userId);
 
     // Generate tokens
     const payload: JwtPayload = {
-      sub: (user._id as any).toString(),
+      sub: userId,
       email: user.email,
       role: user.role,
     };
@@ -327,7 +347,7 @@ export class AuthService {
       access_token,
       refresh_token,
       user: {
-        id: (user._id as any).toString(),
+        id: userId,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -345,7 +365,7 @@ export class AuthService {
     }
 
     // Traditional email/password login
-    const user = await this.userModel.findOne({ email: identifier }).select('+password');
+    const user = await this.firebaseAdminService.getUserByEmail(identifier);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -355,7 +375,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== UserStatus.ACTIVE) {
+    if (user.status !== 'active') {
       throw new UnauthorizedException('Account is not active');
     }
 
@@ -365,30 +385,38 @@ export class AuthService {
   async googleAuth(googleToken: string): Promise<LoginResponse> {
     const googleUserInfo = await this.googleOAuthService.verifyGoogleToken(googleToken);
     
-    let user = await this.userModel.findOne({ googleId: googleUserInfo.googleId });
+    let users = await this.firebaseAdminService.queryDocuments(
+      'users',
+      'googleId',
+      '==',
+      googleUserInfo.googleId
+    );
+    
+    let user = users.length > 0 ? users[0] : null;
     
     if (!user) {
       // Check if user exists with same email
-      user = await this.userModel.findOne({ email: googleUserInfo.email });
+      user = await this.firebaseAdminService.getUserByEmail(googleUserInfo.email);
       if (user) {
         // Link Google account to existing user
-        user.googleId = googleUserInfo.googleId;
-        user.googleEmail = googleUserInfo.email;
-        await user.save();
+        await this.firebaseAdminService.updateUser(user.id, {
+          googleId: googleUserInfo.googleId,
+          googleEmail: googleUserInfo.email,
+        });
       } else {
         // Create new user
-        user = new this.userModel({
+        const userId = await this.firebaseAdminService.createUser({
           email: googleUserInfo.email,
           firstName: googleUserInfo.firstName,
           lastName: googleUserInfo.lastName,
           googleId: googleUserInfo.googleId,
           googleEmail: googleUserInfo.email,
           emailVerified: googleUserInfo.emailVerified,
-          status: UserStatus.ACTIVE,
-          role: UserRole.PATIENT,
+          status: 'active',
+          role: 'patient',
           password: crypto.randomBytes(32).toString('hex'),
         });
-        await user.save();
+        user = await this.firebaseAdminService.getUserById(userId);
       }
     }
 
@@ -539,9 +567,9 @@ export class AuthService {
     return { message: 'Logout successful' };
   }
 
-  private async generateLoginResponse(user: UserDocument): Promise<LoginResponse> {
+  private async generateLoginResponse(user: any): Promise<LoginResponse> {
     const payload: JwtPayload = {
-      sub: (user._id as any).toString(),
+      sub: user.id,
       email: user.email,
       role: user.role,
     };
@@ -550,7 +578,7 @@ export class AuthService {
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
 
     // Update last login
-    await this.userModel.findByIdAndUpdate(user._id, {
+    await this.firebaseAdminService.updateUser(user.id, {
       lastLogin: new Date(),
     });
 
@@ -558,7 +586,7 @@ export class AuthService {
       access_token,
       refresh_token,
       user: {
-        id: (user._id as any).toString(),
+        id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
