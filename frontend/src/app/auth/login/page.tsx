@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Mail, Lock, Eye, EyeOff, Smartphone, CreditCard, Shield, ArrowRight } from "lucide-react";
+import { Heart, Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -50,26 +50,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleOAuthLogin = async (provider: string) => {
-    setIsLoading(true);
-    
-    try {
-      if (provider === "mobile") {
-        // Redirect to mobile OTP page
-        window.location.href = "/auth/multi-factor";
-      } else if (provider === "aadhaar") {
-        // Redirect to Aadhaar eKYC page
-        window.location.href = "/auth/aadhaar";
-      } else {
-        // For Firebase auth
-        window.location.href = "/auth/firebase-login";
-      }
-    } catch (error) {
-      console.error("OAuth login error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
@@ -197,21 +177,6 @@ export default function LoginPage() {
                 Alternative Login Methods
               </h3>
               
-              <div className="grid grid-cols-1 gap-3">
-                <Link href="/auth/multi-factor">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between"
-                  >
-                    <div className="flex items-center">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Multi-Factor Authentication
-                    </div>
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                
-              </div>
             </div>
             
             <div className="text-center">
@@ -225,18 +190,6 @@ export default function LoginPage() {
           </CardContent>
         </Card>
         
-        {/* Additional login options */}
-        <div className="mt-6 space-y-3">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => handleOAuthLogin("mobile")}
-          >
-            <Smartphone className="h-4 w-4 mr-2" />
-            Login with Mobile OTP
-          </Button>
-          
-        </div>
       </motion.div>
     </div>
   );
