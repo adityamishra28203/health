@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,7 +54,7 @@ export default function ProfilePage() {
     specialization: '',
   });
 
-  const loadUserProfile = async () => {
+  const loadUserProfile = useCallback(async () => {
     try {
       const savedUser = localStorage.getItem('user');
       if (savedUser) {
@@ -82,11 +82,11 @@ export default function ProfilePage() {
       console.error('Error loading user profile:', error);
       setError('Failed to load profile');
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadUserProfile();
-  }, []);
+  }, [loadUserProfile]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -116,7 +116,7 @@ export default function ProfilePage() {
         specialization: formData.specialization,
       };
 
-      await firebaseAuthService.updateProfileData(user.uid, updatedProfile);
+      await firebaseAuthService.updateUserProfile(user.uid, updatedProfile);
 
       // Update local storage
       const updatedUser = { ...user, ...updatedProfile };
