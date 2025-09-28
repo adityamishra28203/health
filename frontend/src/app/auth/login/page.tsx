@@ -39,9 +39,31 @@ export default function LoginPage() {
     setIsLoading(false);
   };
 
-  const handleOAuthLogin = (provider: string) => {
-    // Implement OAuth login
-    console.log(`Login with ${provider}`);
+  const handleOAuthLogin = async (provider: string) => {
+    setIsLoading(true);
+    
+    try {
+      if (provider === "google") {
+        // Redirect to Google OAuth page
+        window.location.href = "/auth/google";
+      } else if (provider === "microsoft") {
+        // Redirect to Microsoft OAuth page
+        window.location.href = "/auth/microsoft";
+      } else if (provider === "mobile") {
+        // Redirect to mobile OTP page
+        window.location.href = "/auth/multi-factor";
+      } else if (provider === "aadhaar") {
+        // Redirect to Aadhaar eKYC page
+        window.location.href = "/auth/aadhaar";
+      } else {
+        // For Firebase auth
+        window.location.href = "/auth/firebase-login";
+      }
+    } catch (error) {
+      console.error("OAuth login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
