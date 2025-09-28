@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/layout/Layout";
+import { OfflineWarning } from "@/components/offline-warning";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -43,6 +44,7 @@ export default function RootLayout({
         <Layout>
           {children}
         </Layout>
+        <OfflineWarning />
       </body>
     </html>
   );

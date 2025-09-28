@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { authFallbackService } from './auth-fallback';
 
 interface ConfirmationResult {
   confirm: (otp: string) => Promise<{ user: unknown }>;
@@ -168,7 +169,20 @@ class FirebaseAuthService {
           updatedAt: serverTimestamp(),
         };
 
-        await setDoc(doc(db, 'users', user.uid), userProfile);
+        try {
+          await setDoc(doc(db, 'users', user.uid), userProfile);
+        } catch (firestoreError) {
+          console.warn('Failed to save user profile to Firestore (offline?):', firestoreError);
+          // Use fallback authentication when offline
+          const fallbackUser = await authFallbackService.handleOfflineAuth({
+            email: user.email!,
+            firstName: user.displayName?.split(' ')[0] || '',
+            lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+            role: 'patient',
+            avatar: user.photoURL || undefined,
+          });
+          userProfile = fallbackUser;
+        }
       }
 
       return { user, userProfile };

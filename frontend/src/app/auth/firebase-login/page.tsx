@@ -55,17 +55,36 @@ export default function FirebaseLoginPage() {
     setSuccess('');
 
     try {
-      const { user, userProfile } = await firebaseAuthService.signInWithEmail(email, password);
-      
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userProfile));
-      localStorage.setItem('firebase_user', JSON.stringify(user));
-      
-      setSuccess('Login successful! Redirecting...');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      // Send to backend for authentication
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password
+        }),
+      });
+
+      if (response.ok) {
+        const authData = await response.json();
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(authData.user));
+        localStorage.setItem('access_token', authData.accessToken);
+        localStorage.setItem('auth_provider', 'email');
+        
+        setSuccess('Login successful! Redirecting...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Login failed');
+      }
     } catch (error: unknown) {
+      console.error('Email login error:', error);
       setError((error as Error).message || 'Login failed');
     } finally {
       setIsLoading(false);
@@ -80,15 +99,39 @@ export default function FirebaseLoginPage() {
     try {
       const { user, userProfile } = await firebaseAuthService.signInWithGoogle();
       
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userProfile));
-      localStorage.setItem('firebase_user', JSON.stringify(user));
+      // Get Firebase ID token for backend authentication
+      const idToken = await user.getIdToken();
       
-      setSuccess('Google login successful! Redirecting...');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      // Send to backend for authentication
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          role: 'patient'
+        }),
+      });
+
+      if (response.ok) {
+        const authData = await response.json();
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(authData.user));
+        localStorage.setItem('access_token', authData.accessToken);
+        localStorage.setItem('auth_provider', 'google');
+        
+        setSuccess('Google login successful! Redirecting...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Google authentication failed');
+      }
     } catch (error: unknown) {
+      console.error('Google login error:', error);
       setError((error as Error).message || 'Google login failed');
     } finally {
       setIsLoading(false);
@@ -120,15 +163,39 @@ export default function FirebaseLoginPage() {
     try {
       const { user, userProfile } = await firebaseAuthService.verifyPhoneOTP(confirmationResult as ConfirmationResult, otp);
       
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userProfile));
-      localStorage.setItem('firebase_user', JSON.stringify(user));
+      // Get Firebase ID token for backend authentication
+      const idToken = await user.getIdToken();
       
-      setSuccess('Phone login successful! Redirecting...');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      // Send to backend for authentication
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/phone-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          role: 'patient'
+        }),
+      });
+
+      if (response.ok) {
+        const authData = await response.json();
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(authData.user));
+        localStorage.setItem('access_token', authData.accessToken);
+        localStorage.setItem('auth_provider', 'phone');
+        
+        setSuccess('Phone login successful! Redirecting...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Phone authentication failed');
+      }
     } catch (error: unknown) {
+      console.error('Phone OTP verification error:', error);
       setError((error as Error).message || 'Invalid OTP');
     } finally {
       setIsLoading(false);

@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
@@ -24,6 +24,25 @@ export const storage = getStorage(app);
 
 // Initialize Analytics (only in browser)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+
+// Ensure Firestore is online
+if (typeof window !== 'undefined') {
+  // Enable network for Firestore
+  enableNetwork(db).catch((error) => {
+    console.warn('Failed to enable Firestore network:', error);
+  });
+
+  // Handle online/offline events
+  window.addEventListener('online', () => {
+    enableNetwork(db).catch((error) => {
+      console.warn('Failed to enable Firestore network on online event:', error);
+    });
+  });
+
+  window.addEventListener('offline', () => {
+    console.log('App is offline, Firestore will use cached data');
+  });
+}
 
 // Connect to emulators in development (disabled for now)
 if (false && process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {

@@ -73,28 +73,38 @@ export default function FirebaseRegisterPage() {
     }
 
     try {
-      const { user, userProfile } = await firebaseAuthService.signUpWithEmail(
-        formData.email,
-        formData.password,
-        {
+      // Send to backend for registration
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone,
-          role: formData.role as 'patient' | 'doctor' | 'hospital_admin' | 'insurer' | 'system_admin',
-        }
-      );
+          role: formData.role
+        }),
+      });
 
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userProfile));
-      localStorage.setItem('firebase_user', JSON.stringify(user));
-
-      setSuccess('Account created successfully! Please verify your email.');
-      
-      // Redirect to dashboard after a short delay
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 3000);
+      if (response.ok) {
+        const authData = await response.json();
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(authData.user));
+        localStorage.setItem('auth_provider', 'email');
+        
+        setSuccess('Account created successfully! Please verify your email.');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 3000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Registration failed');
+      }
     } catch (error: unknown) {
+      console.error('Registration error:', error);
       setError((error as Error).message || 'Registration failed');
     } finally {
       setIsLoading(false);
@@ -109,15 +119,39 @@ export default function FirebaseRegisterPage() {
     try {
       const { user, userProfile } = await firebaseAuthService.signInWithGoogle();
       
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(userProfile));
-      localStorage.setItem('firebase_user', JSON.stringify(user));
+      // Get Firebase ID token for backend authentication
+      const idToken = await user.getIdToken();
       
-      setSuccess('Google registration successful! Redirecting...');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      // Send to backend for authentication
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          role: formData.role
+        }),
+      });
+
+      if (response.ok) {
+        const authData = await response.json();
+        
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(authData.user));
+        localStorage.setItem('access_token', authData.accessToken);
+        localStorage.setItem('auth_provider', 'google');
+        
+        setSuccess('Google registration successful! Redirecting...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Google registration failed');
+      }
     } catch (error: unknown) {
+      console.error('Google registration error:', error);
       setError((error as Error).message || 'Google registration failed');
     } finally {
       setIsLoading(false);
