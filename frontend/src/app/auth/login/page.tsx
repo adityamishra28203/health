@@ -83,32 +83,29 @@ export default function LoginPage() {
       // Get Firebase ID token
       const idToken = await user.getIdToken();
       
-      // Send to backend for authentication
-      const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/firebase-google`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idToken,
-          role: 'patient'
-        }),
-      });
+      // For development, create mock user data
+      const mockUser = {
+        id: user.uid,
+        email: user.email,
+        firstName: user.displayName?.split(' ')[0] || 'User',
+        lastName: user.displayName?.split(' ').slice(1).join(' ') || 'Name',
+        role: 'patient',
+        avatar: user.photoURL,
+        status: 'active',
+        firebaseUid: user.uid
+      };
 
-      if (backendResponse.ok) {
-        const authData = await backendResponse.json();
-        localStorage.setItem('user', JSON.stringify(authData.user));
-        localStorage.setItem('access_token', authData.accessToken);
-        localStorage.setItem('auth_provider', 'google');
-        
-        setSuccess('Google login successful! Redirecting...');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
-      } else {
-        const errorData = await backendResponse.json();
-        setError(errorData.message || 'Google login failed');
-      }
+      const mockAccessToken = `mock_token_${Date.now()}`;
+
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem('access_token', mockAccessToken);
+      localStorage.setItem('auth_provider', 'google');
+      
+      setSuccess('Google login successful! Redirecting...');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
     } catch (error: unknown) {
       console.error('Google login error:', error);
       setError((error as Error).message || "Google sign-in failed");
