@@ -54,10 +54,6 @@ export default function ProfilePage() {
     specialization: '',
   });
 
-  useEffect(() => {
-    loadUserProfile();
-  }, [loadUserProfile]);
-
   const loadUserProfile = async () => {
     try {
       const savedUser = localStorage.getItem('user');
@@ -87,6 +83,10 @@ export default function ProfilePage() {
       setError('Failed to load profile');
     }
   };
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

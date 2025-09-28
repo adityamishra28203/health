@@ -51,7 +51,7 @@ if (false && process.env.NODE_ENV === 'development' && typeof window !== 'undefi
     connectAuthEmulator(auth, 'http://localhost:9099');
     connectFirestoreEmulator(db, 'localhost', 8080);
     connectStorageEmulator(storage, 'localhost', 9199);
-  } catch (error) {
+  } catch {
     // Emulators already connected or not available
     console.log('Firebase emulators not available or already connected');
   }
