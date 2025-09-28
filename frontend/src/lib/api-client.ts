@@ -1,14 +1,14 @@
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;
   status: number;
 }
 
-interface ApiError {
+interface ApiErrorDetails {
   message: string;
   status: number;
-  details?: any;
+  details?: unknown;
 }
 
 class ApiClient {
@@ -22,15 +22,16 @@ class ApiClient {
     const contentType = response.headers.get('content-type');
     const isJson = contentType?.includes('application/json');
 
-    let data: any;
+    let data: unknown;
     try {
       data = isJson ? await response.json() : await response.text();
-    } catch (error) {
+    } catch {
       throw new ApiError('Failed to parse response', response.status);
     }
 
     if (!response.ok) {
-      const errorMessage = data?.message || data?.error || `HTTP ${response.status}`;
+      const errorData = data as { message?: string; error?: string };
+      const errorMessage = errorData?.message || errorData?.error || `HTTP ${response.status}`;
       throw new ApiError(errorMessage, response.status, data);
     }
 
@@ -61,7 +62,7 @@ class ApiClient {
     }
   }
 
-  async post<T>(endpoint: string, data?: any, options?: RequestInit): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
@@ -83,7 +84,7 @@ class ApiClient {
     }
   }
 
-  async put<T>(endpoint: string, data?: any, options?: RequestInit): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'PUT',
@@ -129,9 +130,9 @@ class ApiClient {
 
 class ApiError extends Error {
   status: number;
-  details?: any;
+  details?: unknown;
 
-  constructor(message: string, status: number, details?: any) {
+  constructor(message: string, status: number, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;

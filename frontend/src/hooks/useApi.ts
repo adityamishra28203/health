@@ -11,11 +11,11 @@ interface UseApiState<T> {
 
 interface UseApiOptions {
   immediate?: boolean;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: unknown) => void;
   onError?: (error: ApiError) => void;
 }
 
-export function useApi<T = any>(
+export function useApi<T = unknown>(
   endpoint: string,
   options: UseApiOptions = {}
 ) {
@@ -25,7 +25,7 @@ export function useApi<T = any>(
     error: null,
   });
 
-  const execute = useCallback(async (data?: any, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET') => {
+  const execute = useCallback(async (data?: unknown, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET') => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
@@ -90,10 +90,10 @@ export function useApi<T = any>(
   };
 }
 
-export function useGet<T = any>(endpoint: string, options: UseApiOptions = {}) {
+export function useGet<T = unknown>(endpoint: string, options: UseApiOptions = {}) {
   const api = useApi<T>(endpoint, options);
   
-  const get = useCallback((data?: any) => api.execute(data, 'GET'), [api]);
+  const get = useCallback((data?: unknown) => api.execute(data, 'GET'), [api]);
   
   return {
     ...api,
@@ -101,10 +101,10 @@ export function useGet<T = any>(endpoint: string, options: UseApiOptions = {}) {
   };
 }
 
-export function usePost<T = any>(endpoint: string, options: UseApiOptions = {}) {
+export function usePost<T = unknown>(endpoint: string, options: UseApiOptions = {}) {
   const api = useApi<T>(endpoint, options);
   
-  const post = useCallback((data?: any) => api.execute(data, 'POST'), [api]);
+  const post = useCallback((data?: unknown) => api.execute(data, 'POST'), [api]);
   
   return {
     ...api,
@@ -112,10 +112,10 @@ export function usePost<T = any>(endpoint: string, options: UseApiOptions = {}) 
   };
 }
 
-export function usePut<T = any>(endpoint: string, options: UseApiOptions = {}) {
+export function usePut<T = unknown>(endpoint: string, options: UseApiOptions = {}) {
   const api = useApi<T>(endpoint, options);
   
-  const put = useCallback((data?: any) => api.execute(data, 'PUT'), [api]);
+  const put = useCallback((data?: unknown) => api.execute(data, 'PUT'), [api]);
   
   return {
     ...api,
@@ -123,10 +123,10 @@ export function usePut<T = any>(endpoint: string, options: UseApiOptions = {}) {
   };
 }
 
-export function useDelete<T = any>(endpoint: string, options: UseApiOptions = {}) {
+export function useDelete<T = unknown>(endpoint: string, options: UseApiOptions = {}) {
   const api = useApi<T>(endpoint, options);
   
-  const del = useCallback((data?: any) => api.execute(data, 'DELETE'), [api]);
+  const del = useCallback((data?: unknown) => api.execute(data, 'DELETE'), [api]);
   
   return {
     ...api,

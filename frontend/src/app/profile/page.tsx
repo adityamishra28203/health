@@ -82,7 +82,7 @@ export default function ProfilePage() {
       console.error('Error loading user profile:', error);
       setError('Failed to load profile');
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     loadUserProfile();
