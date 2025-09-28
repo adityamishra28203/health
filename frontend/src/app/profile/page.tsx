@@ -141,13 +141,20 @@ export default function ProfilePage() {
 
     try {
       // Upload to Firebase Storage
-      const uploadResult = await firebaseStorageService.uploadFile(
-        file, 
-        `avatars/${user.uid}/${Date.now()}_${file.name}`
-      );
+      const uploadResult = await firebaseStorageService.uploadFile({
+        file,
+        path: `avatars/${user.uid}/${Date.now()}_${file.name}`,
+        metadata: {
+          contentType: file.type,
+          customMetadata: {
+            uploadedBy: user.uid,
+            uploadedAt: new Date().toISOString()
+          }
+        }
+      });
 
       // Update user profile with new avatar URL
-      await firebaseAuthService.updateProfileData(user.uid, { avatar: uploadResult.url });
+      await firebaseAuthService.updateUserProfile(user.uid, { avatar: uploadResult.url });
 
       // Update local storage
       const updatedUser = { ...user, avatar: uploadResult.url };

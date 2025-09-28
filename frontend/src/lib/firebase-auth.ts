@@ -181,7 +181,7 @@ class FirebaseAuthService {
             role: 'patient',
             avatar: user.photoURL || undefined,
           });
-          userProfile = fallbackUser;
+          userProfile = fallbackUser as unknown as UserProfile;
         }
       }
 

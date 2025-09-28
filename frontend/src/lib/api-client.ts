@@ -5,11 +5,6 @@ interface ApiResponse<T = unknown> {
   status: number;
 }
 
-interface ApiErrorDetails {
-  message: string;
-  status: number;
-  details?: unknown;
-}
 
 class ApiClient {
   private baseUrl: string;
@@ -36,7 +31,7 @@ class ApiClient {
     }
 
     return {
-      data,
+      data: data as T,
       status: response.status,
     };
   }
