@@ -1,188 +1,232 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  HttpCode,
-  HttpStatus,
-  Get,
-  Param,
-  Query,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Request, Response } from 'express';
+import { User } from '../schemas/user.schema';
+import { firebaseAuthService } from './firebase-auth.service';
+import { jwtService } from './jwt.service';
 
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './guards/local-auth.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
-import { VerifyEmailDto, VerifyPhoneDto, ResendOtpDto, OtpLoginDto, RefreshTokenDto } from './dto/register.dto';
-
-@ApiTags('Authentication')
-@Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  async phoneOTPSignIn(req: Request, res: Response) {
+    try {
+      const { idToken, role } = req.body;
+      const firebaseUser = await firebaseAuthService.verifyFirebaseToken(idToken);
+      const authResult = await firebaseAuthService.authenticateUser(firebaseUser, { role });
 
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
-    return this.authService.login(user);
+      res.cookie('refreshToken', authResult.refreshToken, jwtService.getCookieOptions(true));
+      res.cookie('accessToken', authResult.accessToken, jwtService.getCookieOptions(false));
+
+      res.json({
+        success: true,
+        message: 'Phone OTP sign-in successful',
+        user: authResult.user,
+        accessToken: authResult.accessToken
+      });
+    } catch (error) {
+      res.status(401).json({
+        success: false,
+        message: 'Phone OTP sign-in failed'
+      });
+    }
   }
 
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'User registration' })
-  @ApiResponse({ status: 201, description: 'Registration successful' })
-  @ApiResponse({ status: 400, description: 'User already exists' })
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async googleSignIn(req: Request, res: Response) {
+    try {
+      const { idToken, role } = req.body;
+      const firebaseUser = await firebaseAuthService.verifyFirebaseToken(idToken);
+      const authResult = await firebaseAuthService.authenticateUser(firebaseUser, { role });
+
+      res.cookie('refreshToken', authResult.refreshToken, jwtService.getCookieOptions(true));
+      res.cookie('accessToken', authResult.accessToken, jwtService.getCookieOptions(false));
+
+      res.json({
+        success: true,
+        message: 'Google sign-in successful',
+        user: authResult.user,
+        accessToken: authResult.accessToken
+      });
+    } catch (error) {
+      res.status(401).json({
+        success: false,
+        message: 'Google sign-in failed'
+      });
+    }
   }
 
-  @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, description: 'Token refreshed' })
-  async refreshToken(@Request() req) {
-    return this.authService.refreshToken(req.user.sub);
+  async emailSignUp(req: Request, res: Response) {
+    try {
+      const { email, password, firstName, lastName, role } = req.body;
+
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'User already exists with this email'
+        });
+      }
+
+      const user = new User({
+        email,
+        password,
+        firstName,
+        lastName,
+        role: role || 'patient',
+        status: 'pending_verification',
+        emailVerified: false
+      });
+
+      await user.save();
+
+      const verificationLink = await firebaseAuthService.generateEmailVerificationLink(email);
+      console.log('Email verification link:', verificationLink);
+
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully. Please check your email for verification.',
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          emailVerified: user.emailVerified
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Sign-up failed'
+      });
+    }
   }
 
-  @Get('verify-email/:token')
-  @ApiOperation({ summary: 'Verify email address' })
-  @ApiResponse({ status: 200, description: 'Email verified' })
-  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
-  async verifyEmail(@Param('token') token: string) {
-    await this.authService.verifyEmail(token);
-    return { message: 'Email verified successfully' };
+  async emailSignIn(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+      
+      if (!user || !(await user.comparePassword(password))) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      const tokens = jwtService.generateTokenPair({
+        userId: user._id,
+        email: user.email,
+        role: user.role
+      });
+
+      res.cookie('refreshToken', tokens.refreshToken, jwtService.getCookieOptions(true));
+      res.cookie('accessToken', tokens.accessToken, jwtService.getCookieOptions(false));
+
+      res.json({
+        success: true,
+        message: 'Sign-in successful',
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          avatar: user.avatar,
+          emailVerified: user.emailVerified
+        },
+        accessToken: tokens.accessToken
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Sign-in failed'
+      });
+    }
   }
 
-  @Post('forgot-password')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'Request password reset' })
-  @ApiResponse({ status: 200, description: 'Reset email sent' })
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    await this.authService.forgotPassword(forgotPasswordDto.email);
-    return { message: 'If the email exists, a reset link has been sent' };
+  async refreshToken(req: Request, res: Response) {
+    try {
+      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+      const decoded = jwtService.verifyRefreshToken(refreshToken);
+      const user = await User.findById(decoded.userId);
+      
+      if (!user || !user.refreshTokens?.includes(refreshToken)) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid refresh token'
+        });
+      }
+
+      const newAccessToken = jwtService.generateAccessToken({
+        userId: user._id,
+        email: user.email,
+        role: user.role
+      });
+
+      res.cookie('accessToken', newAccessToken, jwtService.getCookieOptions(false));
+
+      res.json({
+        success: true,
+        message: 'Token refreshed successfully',
+        accessToken: newAccessToken
+      });
+    } catch (error) {
+      res.status(401).json({
+        success: false,
+        message: 'Token refresh failed'
+      });
+    }
   }
 
-  @Post('reset-password')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'Reset password' })
-  @ApiResponse({ status: 200, description: 'Password reset successful' })
-  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    await this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword);
-    return { message: 'Password reset successful' };
+  async logout(req: Request, res: Response) {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+      
+      if (refreshToken) {
+        const decoded = jwtService.verifyRefreshToken(refreshToken);
+        const user = await User.findById(decoded.userId);
+        
+        if (user && user.refreshTokens) {
+          user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
+          await user.save();
+        }
+      }
+
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+
+      res.json({
+        success: true,
+        message: 'Logout successful'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Logout failed'
+      });
+    }
   }
 
-  @Post('2fa/enable')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Enable two-factor authentication' })
-  @ApiResponse({ status: 200, description: '2FA enabled' })
-  async enableTwoFactor(@Request() req) {
-    return this.authService.enableTwoFactor(req.user.sub);
-  }
-
-  @Post('2fa/verify')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Verify two-factor authentication' })
-  @ApiResponse({ status: 200, description: '2FA verified' })
-  async verifyTwoFactor(@Request() req, @Body() body: { token: string }) {
-    const isValid = await this.authService.verifyTwoFactor(req.user.sub, body.token);
-    return { valid: isValid };
-  }
-
-  @Post('login/otp')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'Login with OTP (phone or email)' })
-  @ApiResponse({ status: 200, description: 'OTP login successful' })
-  @ApiResponse({ status: 401, description: 'Invalid OTP' })
-  async loginWithOtp(@Body() otpLoginDto: OtpLoginDto) {
-    return this.authService.loginWithOtp(otpLoginDto);
-  }
-
-  @Post('verify/email')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verify email with OTP' })
-  @ApiResponse({ status: 200, description: 'Email verified successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid OTP' })
-  async verifyEmailOtp(@Body() verifyEmailDto: VerifyEmailDto) {
-    return this.authService.verifyEmailOtp(verifyEmailDto);
-  }
-
-  @Post('verify/phone')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verify phone with OTP' })
-  @ApiResponse({ status: 200, description: 'Phone verified successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid OTP' })
-  async verifyPhoneOtp(@Body() verifyPhoneDto: VerifyPhoneDto) {
-    return this.authService.verifyPhoneOtp(verifyPhoneDto);
-  }
-
-  @Post('send-otp')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'Send OTP to phone or email' })
-  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  async sendOtp(@Body() body: { identifier: string; type: 'email' | 'phone' }) {
-    return this.authService.sendOtp(body.identifier, body.type);
-  }
-
-  @Post('resend-otp')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(ThrottlerGuard)
-  @ApiOperation({ summary: 'Resend OTP' })
-  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
-    return this.authService.resendOtp(resendOtpDto);
-  }
-
-  @Post('google')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login/Register with Google OAuth' })
-  @ApiResponse({ status: 200, description: 'Google authentication successful' })
-  @ApiResponse({ status: 401, description: 'Invalid Google token' })
-  async googleAuth(@Body() body: { googleToken: string }) {
-    return this.authService.googleAuth(body.googleToken);
-  }
-
-  @Get('google/url')
-  @ApiOperation({ summary: 'Get Google OAuth URL' })
-  @ApiResponse({ status: 200, description: 'Google OAuth URL generated' })
-  async getGoogleAuthUrl() {
-    return this.authService.getGoogleAuthUrl();
-  }
-
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get user profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved' })
-  async getProfile(@Request() req) {
-    return this.authService.getProfile(req.user.sub);
-  }
-
-  @Post('logout')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'User logout' })
-  @ApiResponse({ status: 200, description: 'Logout successful' })
-  async logout(@Request() req) {
-    return this.authService.logout(req.user.sub);
+  async getCurrentUser(req: Request, res: Response) {
+    try {
+      const user = req.user;
+      
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          avatar: user.avatar,
+          emailVerified: user.emailVerified,
+          phoneVerified: user.phoneVerified
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get user information'
+      });
+    }
   }
 }
+
+export const authController = new AuthController();

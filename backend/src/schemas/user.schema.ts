@@ -1,158 +1,211 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
 
-export type UserDocument = User & Document;
-
-export enum UserRole {
-  PATIENT = 'patient',
-  DOCTOR = 'doctor',
-  HOSPITAL_ADMIN = 'hospital_admin',
-  INSURER = 'insurer',
-  SYSTEM_ADMIN = 'system_admin',
-}
-
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-  PENDING_VERIFICATION = 'pending_verification',
-}
-
-@Schema({ timestamps: true })
-export class User {
-  @Prop({ required: true, unique: true })
+export interface IUser extends Document {
+  _id: string;
+  firebaseUid?: string;
   email: string;
-
-  @Prop({ required: true })
-  password: string;
-
-  @Prop({ required: true })
+  password?: string; // Only for email/password users
   firstName: string;
-
-  @Prop({ required: true })
   lastName: string;
-
-  @Prop()
   phone?: string;
-
-  @Prop()
-  avatar?: string;
-
-  @Prop({ type: String, enum: UserRole, default: UserRole.PATIENT })
-  role: UserRole;
-
-  @Prop({ type: String, enum: UserStatus, default: UserStatus.PENDING_VERIFICATION })
-  status: UserStatus;
-
-  @Prop()
-  organization?: string;
-
-  @Prop()
-  licenseNumber?: string;
-
-  @Prop()
-  specialization?: string;
-
-  @Prop()
-  aadhaarNumber?: string;
-
-  @Prop()
-  aadhaarVerified: boolean;
-
-  @Prop()
-  mobileVerified: boolean;
-
-  @Prop()
+  role: 'patient' | 'doctor' | 'hospital_admin' | 'insurer' | 'system_admin';
+  status: 'active' | 'inactive' | 'suspended' | 'pending_verification';
   emailVerified: boolean;
-
-  @Prop()
-  lastLogin?: Date;
-
-  @Prop()
-  twoFactorEnabled: boolean;
-
-  @Prop()
-  twoFactorSecret?: string;
-
-  @Prop()
-  refreshToken?: string;
-
-  @Prop()
-  resetPasswordToken?: string;
-
-  @Prop()
-  resetPasswordExpires?: Date;
-
-  @Prop()
-  verificationToken?: string;
-
-  @Prop()
-  verificationExpires?: Date;
-
-  // Google OAuth
-  @Prop()
-  googleId?: string;
-
-  @Prop()
-  googleEmail?: string;
-
-  // OTP Verification
-  @Prop()
-  phoneOtpCode?: string;
-
-  @Prop()
-  phoneOtpExpiry?: Date;
-
-  @Prop()
-  emailOtpCode?: string;
-
-  @Prop()
-  emailOtpExpiry?: Date;
-
-  // Login Attempts
-  @Prop({ default: 0 })
-  loginAttempts: number;
-
-  @Prop()
-  lockUntil?: Date;
-
-  // Security
-  @Prop()
-  refreshTokenExpiry?: Date;
-
-  // Profile
-  @Prop()
+  phoneVerified: boolean;
+  avatar?: string;
   bio?: string;
-
-  @Prop()
   emergencyContact?: string;
-
-  @Prop()
   bloodType?: string;
-
-  @Prop()
   allergies?: string[];
-
-  @Prop()
   medications?: string[];
-
-  @Prop()
   medicalConditions?: string[];
-
-  @Prop({ type: Object })
-  preferences?: Record<string, any>;
-
-  @Prop({ type: Object })
-  metadata?: Record<string, any>;
+  organization?: string;
+  licenseNumber?: string;
+  specialization?: string;
+  aadhaarNumber?: string;
+  aadhaarVerified: boolean;
+  lastLogin?: Date;
+  loginAttempts: number;
+  lockUntil?: Date;
+  refreshTokens?: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+const userSchema = new Schema<IUser>({
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple null values
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+  },
+  password: {
+    type: String,
+    minlength: 8,
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  phone: {
+    type: String,
+    trim: true,
+  },
+  role: {
+    type: String,
+    enum: ['patient', 'doctor', 'hospital_admin', 'insurer', 'system_admin'],
+    default: 'patient',
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'suspended', 'pending_verification'],
+    default: 'pending_verification',
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  phoneVerified: {
+    type: Boolean,
+    default: false,
+  },
+  avatar: {
+    type: String,
+  },
+  bio: {
+    type: String,
+    maxlength: 500,
+  },
+  emergencyContact: {
+    type: String,
+  },
+  bloodType: {
+    type: String,
+  },
+  allergies: [{
+    type: String,
+  }],
+  medications: [{
+    type: String,
+  }],
+  medicalConditions: [{
+    type: String,
+  }],
+  organization: {
+    type: String,
+  },
+  licenseNumber: {
+    type: String,
+  },
+  specialization: {
+    type: String,
+  },
+  aadhaarNumber: {
+    type: String,
+  },
+  aadhaarVerified: {
+    type: Boolean,
+    default: false,
+  },
+  lastLogin: {
+    type: Date,
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0,
+  },
+  lockUntil: {
+    type: Date,
+  },
+  refreshTokens: [{
+    type: String,
+  }],
+}, {
+  timestamps: true,
+});
 
-// Add indexes for better performance
-UserSchema.index({ email: 1 });
-UserSchema.index({ phone: 1 });
-UserSchema.index({ googleId: 1 });
-UserSchema.index({ verificationToken: 1 });
-UserSchema.index({ resetPasswordToken: 1 });
-UserSchema.index({ phoneOtpCode: 1 });
-UserSchema.index({ emailOtpCode: 1 });
+// Indexes for performance
+userSchema.index({ email: 1 });
+userSchema.index({ firebaseUid: 1 });
+userSchema.index({ phone: 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ status: 1 });
+
+// Virtual for full name
+userSchema.virtual('fullName').get(function() {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Virtual for account lock status
+userSchema.virtual('isLocked').get(function() {
+  return !!(this.lockUntil && this.lockUntil > new Date());
+});
+
+// Pre-save middleware to hash password
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password') || !this.password) {
+    return next();
+  }
+  
+  try {
+    const bcrypt = await import('bcryptjs');
+    const saltRounds = 12;
+    this.password = await bcrypt.hash(this.password, saltRounds);
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+
+// Method to compare password
+userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  if (!this.password) return false;
+  
+  try {
+    const bcrypt = await import('bcryptjs');
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw new Error('Password comparison failed');
+  }
+};
+
+// Method to increment login attempts
+userSchema.methods.incLoginAttempts = function() {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.lockUntil && this.lockUntil < new Date()) {
+    return this.updateOne({
+      $unset: { lockUntil: 1 },
+      $set: { loginAttempts: 1 }
+    });
+  }
+  
+  const updates: any = { $inc: { loginAttempts: 1 } };
+  
+  // Lock account after 5 failed attempts for 2 hours
+  if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
+    updates.$set = { lockUntil: new Date(Date.now() + 2 * 60 * 60 * 1000) };
+  }
+  
+  return this.updateOne(updates);
+};
+
+// Method to reset login attempts
+userSchema.methods.resetLoginAttempts = function() {
+  return this.updateOne({
+    $unset: { loginAttempts: 1, lockUntil: 1 }
+  });
+};
+
+export const User = model<IUser>('User', userSchema);
