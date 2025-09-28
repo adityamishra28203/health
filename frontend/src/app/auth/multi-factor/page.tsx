@@ -39,26 +39,13 @@ export default function MultiFactorAuthPage() {
       const identifier = activeTab === 'phone' ? phone : email;
       const type = activeTab === 'phone' ? 'phone' : 'email';
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/send-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier,
-          type,
-        }),
-      });
-
-      if (response.ok) {
-        setOtpSent(true);
-        setSuccess(`OTP sent to your ${activeTab}`);
-        setCountdown(60);
-        startCountdown();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to send OTP');
-      }
+      // Simulate OTP sending (mock implementation)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setOtpSent(true);
+      setSuccess(`OTP sent to your ${activeTab}. Use 123456 as OTP for demo.`);
+      setCountdown(60);
+      startCountdown();
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -75,30 +62,30 @@ export default function MultiFactorAuthPage() {
       const identifier = activeTab === 'phone' ? phone : email;
       const type = activeTab === 'phone' ? 'phone' : 'email';
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login/otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier,
-          otpCode,
-          type,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setSuccess('Login successful! Redirecting...');
+      // Simulate OTP verification (mock implementation)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (otpCode === '123456') {
+        const mockUser = {
+          id: "otp_user_" + Date.now(),
+          name: "OTP User",
+          email: identifier.includes('@') ? identifier : identifier + '@example.com',
+          phone: identifier.includes('@') ? '+919876543210' : identifier,
+          role: "Patient",
+          provider: "otp",
+          verified: true
+        };
+        
+        localStorage.setItem('access_token', 'mock_otp_token_' + Date.now());
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('auth_provider', 'otp');
+        
+        setSuccess('OTP verified! Login successful! Redirecting...');
         setTimeout(() => {
           window.location.href = '/dashboard';
-        }, 2000);
+        }, 1500);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Invalid OTP');
+        setError('Invalid OTP. Please enter 123456 for demo.');
       }
     } catch {
       setError('Network error. Please try again.');

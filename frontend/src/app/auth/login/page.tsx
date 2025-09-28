@@ -24,19 +24,30 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock successful login
-    localStorage.setItem("user", JSON.stringify({
-      id: "1",
-      name: "John Doe",
-      email: email,
-      role: "Patient"
-    }));
-    
-    router.push("/dashboard");
-    setIsLoading(false);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock successful login
+      const mockUser = {
+        id: "login_user_" + Date.now(),
+        name: "John Doe",
+        email: email,
+        role: "Patient",
+        provider: "email",
+        verified: true
+      };
+      
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      localStorage.setItem("access_token", "mock_login_token_" + Date.now());
+      localStorage.setItem("auth_provider", "email");
+      
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOAuthLogin = async (provider: string) => {

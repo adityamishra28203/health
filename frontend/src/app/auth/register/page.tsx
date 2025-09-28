@@ -38,19 +38,31 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock successful registration
-    localStorage.setItem("user", JSON.stringify({
-      id: "1",
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      role: formData.role
-    }));
-    
-    router.push("/dashboard");
-    setIsLoading(false);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock successful registration
+      const mockUser = {
+        id: "register_user_" + Date.now(),
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        provider: "email",
+        verified: true
+      };
+      
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      localStorage.setItem("access_token", "mock_register_token_" + Date.now());
+      localStorage.setItem("auth_provider", "email");
+      
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Registration error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOAuthRegister = async (provider: string) => {

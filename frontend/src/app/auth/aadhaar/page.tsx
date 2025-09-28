@@ -38,7 +38,7 @@ export default function AadhaarAuthPage() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setOtpSent(true);
-      setSuccess('OTP sent to your registered mobile number');
+      setSuccess('OTP sent to your registered mobile number. Use 123456 as OTP for demo.');
     } catch {
       setError('Failed to send OTP. Please try again.');
     } finally {
@@ -54,21 +54,32 @@ export default function AadhaarAuthPage() {
 
     try {
       // Simulate OTP verification
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful Aadhaar verification
-      localStorage.setItem('user', JSON.stringify({
-        id: "1",
-        name: "Aadhaar User",
-        email: "user@aadhaar.com",
-        role: "Patient",
-        aadhaarVerified: true
-      }));
-      
-      setSuccess('Aadhaar verification successful! Redirecting...');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      if (otp === '123456') {
+        // Mock successful Aadhaar verification
+        const mockUser = {
+          id: "aadhaar_user_" + Date.now(),
+          name: "Aadhaar User",
+          email: "user@aadhaar.com",
+          aadhaarNumber: aadhaarNumber,
+          role: "Patient",
+          provider: "aadhaar",
+          aadhaarVerified: true,
+          verified: true
+        };
+        
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('access_token', 'mock_aadhaar_token_' + Date.now());
+        localStorage.setItem('auth_provider', 'aadhaar');
+        
+        setSuccess('Aadhaar verification successful! Redirecting...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
+      } else {
+        setError('Invalid OTP. Please enter 123456 for demo.');
+      }
     } catch {
       setError('Invalid OTP. Please try again.');
     } finally {

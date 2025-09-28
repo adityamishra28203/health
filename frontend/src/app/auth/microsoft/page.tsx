@@ -42,35 +42,32 @@ export default function MicrosoftAuthPage() {
     setSuccess('');
 
     try {
-      // For demo purposes, we'll simulate Microsoft OAuth
-      // In production, you would integrate with Microsoft OAuth properly
-      const mockMicrosoftToken = 'mock_microsoft_token_' + Date.now();
+      // Simulate Microsoft OAuth flow
+      setSuccess('Redirecting to Microsoft...');
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/microsoft`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          microsoftToken: mockMicrosoftToken,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+      // Simulate successful Microsoft authentication
+      setTimeout(() => {
+        const mockUser = {
+          id: "microsoft_user_" + Date.now(),
+          name: "Microsoft User",
+          email: "user@outlook.com",
+          role: "Patient",
+          provider: "microsoft",
+          verified: true
+        };
+        
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('access_token', 'mock_microsoft_token_' + Date.now());
+        localStorage.setItem('auth_provider', 'microsoft');
+        
         setSuccess('Microsoft authentication successful! Redirecting...');
         setTimeout(() => {
           window.location.href = '/dashboard';
-        }, 2000);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Microsoft authentication failed');
-      }
-    } catch {
-      setError('Network error. Please try again.');
+        }, 1500);
+      }, 2000);
+      
+    } catch (error) {
+      setError('Microsoft authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

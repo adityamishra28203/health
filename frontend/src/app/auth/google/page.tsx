@@ -48,35 +48,32 @@ export default function GoogleAuthPage() {
     setSuccess('');
 
     try {
-      // For demo purposes, we'll simulate Google OAuth
-      // In production, you would integrate with Google OAuth properly
-      const mockGoogleToken = 'mock_google_token_' + Date.now();
+      // Simulate Google OAuth flow
+      setSuccess('Redirecting to Google...');
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          googleToken: mockGoogleToken,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+      // Simulate successful Google authentication
+      setTimeout(() => {
+        const mockUser = {
+          id: "google_user_" + Date.now(),
+          name: "Google User",
+          email: "user@gmail.com",
+          role: "Patient",
+          provider: "google",
+          verified: true
+        };
+        
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('access_token', 'mock_google_token_' + Date.now());
+        localStorage.setItem('auth_provider', 'google');
+        
         setSuccess('Google authentication successful! Redirecting...');
         setTimeout(() => {
           window.location.href = '/dashboard';
-        }, 2000);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Google authentication failed');
-      }
-    } catch {
-      setError('Network error. Please try again.');
+        }, 1500);
+      }, 2000);
+      
+    } catch (error) {
+      setError('Google authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
