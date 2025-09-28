@@ -89,6 +89,56 @@ export class User {
   @Prop()
   verificationExpires?: Date;
 
+  // Google OAuth
+  @Prop()
+  googleId?: string;
+
+  @Prop()
+  googleEmail?: string;
+
+  // OTP Verification
+  @Prop()
+  phoneOtpCode?: string;
+
+  @Prop()
+  phoneOtpExpiry?: Date;
+
+  @Prop()
+  emailOtpCode?: string;
+
+  @Prop()
+  emailOtpExpiry?: Date;
+
+  // Login Attempts
+  @Prop({ default: 0 })
+  loginAttempts: number;
+
+  @Prop()
+  lockUntil?: Date;
+
+  // Security
+  @Prop()
+  refreshTokenExpiry?: Date;
+
+  // Profile
+  @Prop()
+  bio?: string;
+
+  @Prop()
+  emergencyContact?: string;
+
+  @Prop()
+  bloodType?: string;
+
+  @Prop()
+  allergies?: string[];
+
+  @Prop()
+  medications?: string[];
+
+  @Prop()
+  medicalConditions?: string[];
+
   @Prop({ type: Object })
   preferences?: Record<string, any>;
 
@@ -97,3 +147,12 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Add indexes for better performance
+UserSchema.index({ email: 1 });
+UserSchema.index({ phone: 1 });
+UserSchema.index({ googleId: 1 });
+UserSchema.index({ verificationToken: 1 });
+UserSchema.index({ resetPasswordToken: 1 });
+UserSchema.index({ phoneOtpCode: 1 });
+UserSchema.index({ emailOtpCode: 1 });
