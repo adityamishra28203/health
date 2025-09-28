@@ -27,15 +27,14 @@ export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : nul
 
 // Connect to emulators in development
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-  // Only connect to emulators if not already connected
-  if (!auth.config.emulator) {
+  try {
+    // Only connect to emulators if not already connected
     connectAuthEmulator(auth, 'http://localhost:9099');
-  }
-  if (!db._delegate._databaseId.projectId.includes('demo-')) {
     connectFirestoreEmulator(db, 'localhost', 8080);
-  }
-  if (!storage._delegate._host.includes('localhost')) {
     connectStorageEmulator(storage, 'localhost', 9199);
+  } catch (error) {
+    // Emulators already connected or not available
+    console.log('Firebase emulators not available or already connected');
   }
 }
 

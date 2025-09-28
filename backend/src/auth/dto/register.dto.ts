@@ -69,3 +69,60 @@ export class ResendOtpDto {
   @IsEnum(['email', 'phone'])
   type: 'email' | 'phone';
 }
+
+export class LoginDto {
+  @ApiProperty({ description: 'User email or phone number' })
+  @IsString()
+  identifier: string;
+
+  @ApiProperty({ description: 'User password', required: false })
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @ApiProperty({ description: 'Login method', enum: ['password', 'otp', 'google'] })
+  @IsEnum(['password', 'otp', 'google'])
+  method: 'password' | 'otp' | 'google' = 'password';
+
+  @ApiProperty({ description: 'Google OAuth token', required: false })
+  @IsOptional()
+  @IsString()
+  googleToken?: string;
+}
+
+export class OtpLoginDto {
+  @ApiProperty({ description: 'User email or phone number' })
+  @IsString()
+  identifier: string;
+
+  @ApiProperty({ description: 'OTP code for login' })
+  @IsString()
+  otpCode: string;
+
+  @ApiProperty({ description: 'Type of identifier', enum: ['email', 'phone'] })
+  @IsEnum(['email', 'phone'])
+  type: 'email' | 'phone';
+}
+
+export class RefreshTokenDto {
+  @ApiProperty({ description: 'Refresh token' })
+  @IsString()
+  refreshToken: string;
+}
+
+export class ForgotPasswordDto {
+  @ApiProperty({ description: 'User email address' })
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ description: 'Password reset token' })
+  @IsString()
+  token: string;
+
+  @ApiProperty({ description: 'New password (min 8 characters)', minLength: 8 })
+  @IsString()
+  @MinLength(8)
+  newPassword: string;
+}

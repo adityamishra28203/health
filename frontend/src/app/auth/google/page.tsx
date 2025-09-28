@@ -15,7 +15,7 @@ import Link from 'next/link';
 
 declare global {
   interface Window {
-    google: any;
+    google: unknown;
   }
 }
 
@@ -75,7 +75,7 @@ export default function GoogleAuthPage() {
         const errorData = await response.json();
         setError(errorData.message || 'Google authentication failed');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);

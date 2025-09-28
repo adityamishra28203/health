@@ -3,14 +3,11 @@ import {
   createUserWithEmailAndPassword,
   signInWithPhoneNumber,
   RecaptchaVerifier,
-  PhoneAuthProvider,
-  signInWithCredential,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
   User,
-  updateProfile,
   sendEmailVerification,
   sendPasswordResetEmail,
   updatePassword,
@@ -19,6 +16,10 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
+
+interface ConfirmationResult {
+  confirm: (otp: string) => Promise<{ user: unknown }>;
+}
 
 export interface UserProfile {
   uid: string;
@@ -42,8 +43,8 @@ export interface UserProfile {
   specialization?: string;
   aadhaarNumber?: string;
   aadhaarVerified: boolean;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: unknown;
+  updatedAt: unknown;
 }
 
 class FirebaseAuthService {
@@ -127,11 +128,11 @@ class FirebaseAuthService {
     }
   }
 
-  async verifyPhoneOTP(confirmationResult: any, otp: string) {
+  async verifyPhoneOTP(confirmationResult: ConfirmationResult, otp: string) {
     try {
       const result = await confirmationResult.confirm(otp);
-      const userProfile = await this.getUserProfile(result.user.uid);
-      return { user: result.user, userProfile };
+      const userProfile = await this.getUserProfile((result.user as User).uid);
+      return { user: result.user as User, userProfile };
     } catch (error) {
       throw error;
     }

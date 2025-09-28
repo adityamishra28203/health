@@ -23,6 +23,10 @@ import {
 import Link from 'next/link';
 import { firebaseAuthService } from '@/lib/firebase-auth';
 
+interface ConfirmationResult {
+  confirm: (otp: string) => Promise<{ user: unknown }>;
+}
+
 export default function FirebaseLoginPage() {
   const [activeTab, setActiveTab] = useState('email');
   const [email, setEmail] = useState('');
@@ -34,7 +38,7 @@ export default function FirebaseLoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [confirmationResult, setConfirmationResult] = useState<unknown>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -61,8 +65,8 @@ export default function FirebaseLoginPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || 'Login failed');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -84,8 +88,8 @@ export default function FirebaseLoginPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || 'Google login failed');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Google login failed');
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +105,8 @@ export default function FirebaseLoginPage() {
       setConfirmationResult(result);
       setOtpSent(true);
       setSuccess('OTP sent to your phone number');
-    } catch (error: any) {
-      setError(error.message || 'Failed to send OTP');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Failed to send OTP');
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +118,7 @@ export default function FirebaseLoginPage() {
     setSuccess('');
 
     try {
-      const { user, userProfile } = await firebaseAuthService.verifyPhoneOTP(confirmationResult, otp);
+      const { user, userProfile } = await firebaseAuthService.verifyPhoneOTP(confirmationResult as ConfirmationResult, otp);
       
       // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(userProfile));
@@ -124,8 +128,8 @@ export default function FirebaseLoginPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || 'Invalid OTP');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Invalid OTP');
     } finally {
       setIsLoading(false);
     }

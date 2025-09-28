@@ -10,7 +10,6 @@ import {
   where,
   orderBy,
   limit,
-  startAfter,
   onSnapshot,
   serverTimestamp,
   Timestamp,

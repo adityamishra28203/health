@@ -59,7 +59,7 @@ export default function MultiFactorAuthPage() {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to send OTP');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -100,7 +100,7 @@ export default function MultiFactorAuthPage() {
         const errorData = await response.json();
         setError(errorData.message || 'Invalid OTP');
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);

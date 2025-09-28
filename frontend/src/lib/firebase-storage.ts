@@ -48,7 +48,7 @@ class FirebaseStorageService {
         name: fileMetadata.name,
         url: downloadURL,
         size: fileMetadata.size,
-        contentType: fileMetadata.contentType,
+        contentType: fileMetadata.contentType || 'application/octet-stream',
         fullPath: fileMetadata.fullPath,
         timeCreated: fileMetadata.timeCreated,
         updated: fileMetadata.updated,
@@ -182,7 +182,7 @@ class FirebaseStorageService {
             name: metadata.name,
             url,
             size: metadata.size,
-            contentType: metadata.contentType,
+            contentType: metadata.contentType || 'application/octet-stream',
             fullPath: metadata.fullPath,
             timeCreated: metadata.timeCreated,
             updated: metadata.updated,
@@ -209,7 +209,7 @@ class FirebaseStorageService {
   }
 
   // Update file metadata
-  async updateFileMetadata(path: string, metadata: any) {
+  async updateFileMetadata(path: string, metadata: Record<string, unknown>) {
     try {
       const storageRef = ref(storage, path);
       await updateMetadata(storageRef, metadata);

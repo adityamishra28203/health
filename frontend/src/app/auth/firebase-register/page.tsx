@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,7 +80,7 @@ export default function FirebaseRegisterPage() {
           firstName: formData.firstName,
           lastName: formData.lastName,
           phone: formData.phone,
-          role: formData.role as any,
+          role: formData.role as 'patient' | 'doctor' | 'hospital_admin' | 'insurer' | 'system_admin',
         }
       );
 
@@ -94,8 +94,8 @@ export default function FirebaseRegisterPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 3000);
-    } catch (error: any) {
-      setError(error.message || 'Registration failed');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -117,8 +117,8 @@ export default function FirebaseRegisterPage() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || 'Google registration failed');
+    } catch (error: unknown) {
+      setError((error as Error).message || 'Google registration failed');
     } finally {
       setIsLoading(false);
     }
