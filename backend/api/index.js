@@ -1,14 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 
-// Import authentication routes
-const googleSignup = require('./auth/google-signup');
-const googleLogin = require('./auth/google-login');
-const sendOtp = require('./auth/send-otp');
-const verifyOtpSignup = require('./auth/verify-otp-signup');
-const verifyOtpLogin = require('./auth/verify-otp-login');
-const firebaseGoogle = require('./auth/firebase-google');
-
 // Create Express app
 const app = express();
 
@@ -27,13 +19,13 @@ app.use(cors({
 // Parse JSON bodies
 app.use(express.json());
 
-// Authentication routes
-app.use('/auth', googleSignup);
-app.use('/auth', googleLogin);
-app.use('/auth', sendOtp);
-app.use('/auth', verifyOtpSignup);
-app.use('/auth', verifyOtpLogin);
-app.use('/auth', firebaseGoogle);
+// Authentication routes (temporarily disabled for debugging)
+// app.use('/auth', googleSignup);
+// app.use('/auth', googleLogin);
+// app.use('/auth', sendOtp);
+// app.use('/auth', verifyOtpSignup);
+// app.use('/auth', verifyOtpLogin);
+// app.use('/auth', firebaseGoogle);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Wifi, WifiOff, AlertTriangle } from 'lucide-react';
+import { Wifi, WifiOff } from 'lucide-react';
 
 export function OfflineWarning() {
   const [isOffline, setIsOffline] = useState(false);
@@ -24,7 +24,7 @@ export function OfflineWarning() {
     };
 
     // Listen for custom offline auth event
-    const handleOfflineAuth = (event: CustomEvent) => {
+    const handleOfflineAuth = () => {
       setShowWarning(true);
     };
 
@@ -48,16 +48,16 @@ export function OfflineWarning() {
           <>
             <WifiOff className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
-              <strong>You're offline</strong>
+              <strong>You&apos;re offline</strong>
               <br />
-              Some features may be limited. Your data will sync when you're back online.
+              Some features may be limited. Your data will sync when you&apos;re back online.
             </AlertDescription>
           </>
         ) : (
           <>
             <Wifi className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              <strong>You're back online!</strong>
+              <strong>You&apos;re back online!</strong>
               <br />
               All features are now available.
             </AlertDescription>

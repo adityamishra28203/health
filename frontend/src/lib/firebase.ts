@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, enableNetwork } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
@@ -27,15 +27,15 @@ export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : nul
 
 // Ensure Firestore is online
 if (typeof window !== 'undefined') {
-  // Enable network for Firestore
-  enableNetwork(db).catch((error) => {
-    console.warn('Failed to enable Firestore network:', error);
-  });
+      // Enable network for Firestore
+      enableNetwork(db).catch(() => {
+        console.warn('Failed to enable Firestore network');
+      });
 
   // Handle online/offline events
   window.addEventListener('online', () => {
-    enableNetwork(db).catch((error) => {
-      console.warn('Failed to enable Firestore network on online event:', error);
+    enableNetwork(db).catch(() => {
+      console.warn('Failed to enable Firestore network on online event');
     });
   });
 

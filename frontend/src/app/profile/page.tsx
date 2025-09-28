@@ -16,8 +16,6 @@ import {
   User, 
   Mail, 
   Phone, 
-  MapPin, 
-  Calendar, 
   Shield, 
   Camera, 
   Save, 
@@ -25,10 +23,7 @@ import {
   CheckCircle, 
   AlertCircle,
   Heart,
-  FileText,
-  CreditCard,
-  Building2,
-  GraduationCap
+  Building2
 } from 'lucide-react';
 import { firebaseAuthService, UserProfile } from '@/lib/firebase-auth';
 import { firebaseStorageService } from '@/lib/firebase-storage';
@@ -61,7 +56,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadUserProfile();
-  }, []);
+  }, [loadUserProfile]);
 
   const loadUserProfile = async () => {
     try {
@@ -130,7 +125,7 @@ export default function ProfilePage() {
 
       setSuccess('Profile updated successfully!');
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       setError('Failed to update profile. Please try again.');
     } finally {
       setIsLoading(false);
@@ -160,7 +155,7 @@ export default function ProfilePage() {
       setUser(updatedUser);
 
       setSuccess('Profile picture updated successfully!');
-    } catch (error) {
+    } catch {
       setError('Failed to upload profile picture. Please try again.');
     } finally {
       setIsLoading(false);

@@ -99,7 +99,7 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
         try {
           const { firebaseAuthService } = await import('@/lib/firebase-auth');
           await firebaseAuthService.signOutUser();
-        } catch (error) {
+        } catch {
           console.log('Firebase sign out not available or user not signed in');
         }
       }

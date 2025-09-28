@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 // Firebase types are handled by Firebase SDK
 import Link from "next/link";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Mail, Lock, Eye, EyeOff, User, Phone, Building2, CreditCard, Shield, Smartphone, Loader2 } from "lucide-react";
+import { Heart, Mail, Lock, Eye, EyeOff, User, Phone, Building2, Smartphone, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -83,20 +83,17 @@ export default function RegisterPage() {
     setError("");
     setSuccess("");
 
-    try {
-      // Import Firebase auth dynamically
-      const { getAuth, GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
-      const { auth } = await import('@/lib/firebase');
-      
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
-      
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      
-      // Get Firebase ID token
-      const idToken = await user.getIdToken();
+        try {
+          // Import Firebase auth dynamically
+          const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+          const { auth } = await import('@/lib/firebase');
+          
+          const provider = new GoogleAuthProvider();
+          provider.addScope('email');
+          provider.addScope('profile');
+          
+          const result = await signInWithPopup(auth, provider);
+          const user = result.user;
       
       // For development, create mock user data
       const mockUser = {

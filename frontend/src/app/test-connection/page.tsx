@@ -8,10 +8,10 @@ import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 
 interface ConnectionStatus {
   status: string;
-  backend?: any;
+  backend?: Record<string, unknown>;
   error?: string;
   backend_url?: string;
-  frontend?: any;
+  frontend?: Record<string, unknown>;
 }
 
 export default function TestConnectionPage() {
