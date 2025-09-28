@@ -26,7 +26,21 @@ export default function GoogleAuthPage() {
   const [googleUrl, setGoogleUrl] = useState('');
 
   useEffect(() => {
-    // Get Google OAuth URL from backend
+    // Load Google Identity Services
+    const loadGoogleScript = () => {
+      if (typeof window !== 'undefined' && !window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          console.log('Google Identity Services loaded');
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+    loadGoogleScript();
     fetchGoogleAuthUrl();
   }, []);
 
@@ -48,30 +62,60 @@ export default function GoogleAuthPage() {
     setSuccess('');
 
     try {
-      // Simulate Google OAuth flow
-      setSuccess('Redirecting to Google...');
-      
-      // Simulate successful Google authentication
-      setTimeout(() => {
-        const mockUser = {
-          id: "google_user_" + Date.now(),
-          name: "Google User",
-          email: "user@gmail.com",
-          role: "Patient",
-          provider: "google",
-          verified: true
-        };
+      // Load Google Identity Services
+      if (typeof window !== 'undefined' && window.google) {
+        const client = window.google.accounts.oauth2.initCodeClient({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'your-google-client-id',
+          scope: 'openid email profile',
+          callback: async (response: any) => {
+            try {
+              // Send the authorization code to your backend
+              const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  code: response.code,
+                }),
+              });
+
+              if (backendResponse.ok) {
+                const data = await backendResponse.json();
+                localStorage.setItem('access_token', data.access_token);
+                localStorage.setItem('refresh_token', data.refresh_token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('auth_provider', 'google');
+                
+                setSuccess('Google authentication successful! Redirecting...');
+                setTimeout(() => {
+                  window.location.href = '/dashboard';
+                }, 1500);
+              } else {
+                const errorData = await backendResponse.json();
+                setError(errorData.message || 'Google authentication failed');
+              }
+            } catch (error) {
+              setError('Failed to authenticate with Google. Please try again.');
+            }
+          },
+        });
+
+        client.requestCode();
+      } else {
+        // Fallback: Use Firebase Google Auth
+        const { firebaseAuthService } = await import('@/lib/firebase-auth');
+        const { user, userProfile } = await firebaseAuthService.signInWithGoogle();
         
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        localStorage.setItem('access_token', 'mock_google_token_' + Date.now());
+        localStorage.setItem('user', JSON.stringify(userProfile));
+        localStorage.setItem('firebase_user', JSON.stringify(user));
         localStorage.setItem('auth_provider', 'google');
         
         setSuccess('Google authentication successful! Redirecting...');
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 1500);
-      }, 2000);
-      
+      }
     } catch (error) {
       setError('Google authentication failed. Please try again.');
     } finally {

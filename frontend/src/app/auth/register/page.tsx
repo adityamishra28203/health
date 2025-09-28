@@ -72,15 +72,9 @@ export default function RegisterPage() {
       if (provider === "google") {
         // Redirect to Google OAuth page
         window.location.href = "/auth/google";
-      } else if (provider === "microsoft") {
-        // Redirect to Microsoft OAuth page
-        window.location.href = "/auth/microsoft";
       } else if (provider === "mobile") {
         // Redirect to mobile OTP page
         window.location.href = "/auth/multi-factor";
-      } else if (provider === "aadhaar") {
-        // Redirect to Aadhaar eKYC page
-        window.location.href = "/auth/aadhaar";
       } else {
         // For Firebase auth
         window.location.href = "/auth/firebase-register";
@@ -334,19 +328,6 @@ export default function RegisterPage() {
                 Google
               </Button>
               
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthRegister("microsoft")}
-                className="w-full"
-              >
-                <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
-                  <path fill="#f25022" d="M1 1h10v10H1z"/>
-                  <path fill="#00a4ef" d="M13 1h10v10H13z"/>
-                  <path fill="#7fba00" d="M1 13h10v10H1z"/>
-                  <path fill="#ffb900" d="M13 13h10v10H13z"/>
-                </svg>
-                Microsoft
-              </Button>
             </div>
             
             <div className="text-center">
@@ -416,14 +397,6 @@ export default function RegisterPage() {
             Register with Mobile OTP
           </Button>
           
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => handleOAuthRegister("aadhaar")}
-          >
-            <CreditCard className="h-4 w-4 mr-2" />
-            Register with Aadhaar eKYC
-          </Button>
         </div>
       </motion.div>
     </div>
