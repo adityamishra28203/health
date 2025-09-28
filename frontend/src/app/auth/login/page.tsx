@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-// Declare Google types
-declare global {
-  interface Window {
-    google: any;
-  }
-}
+// Firebase types are handled by Firebase SDK
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -29,20 +24,7 @@ export default function LoginPage() {
   const [success, setSuccess] = useState("");
   const router = useRouter();
 
-  // Load Google Identity Services
-  useEffect(() => {
-    const loadGoogleScript = () => {
-      if (typeof window !== 'undefined' && !window.google) {
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-      }
-    };
-
-    loadGoogleScript();
-  }, []);
+  // No need for Google Identity Services script loading with Firebase
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,49 +69,48 @@ export default function LoginPage() {
     setSuccess("");
 
     try {
-      // Use Google Identity Services for direct Google login
-      if (typeof window !== 'undefined' && window.google) {
-        const client = window.google.accounts.oauth2.initCodeClient({
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-          scope: 'email profile',
-          callback: async (response: any) => {
-            try {
-              // Send the authorization code to your backend
-              const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-login`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  code: response.code
-                }),
-              });
+      // Import Firebase auth dynamically
+      const { getAuth, GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const { auth } = await import('@/lib/firebase');
+      
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Get Firebase ID token
+      const idToken = await user.getIdToken();
+      
+      // Send to backend for authentication
+      const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/firebase-google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          role: 'patient'
+        }),
+      });
 
-              if (backendResponse.ok) {
-                const authData = await backendResponse.json();
-                localStorage.setItem('user', JSON.stringify(authData.user));
-                localStorage.setItem('access_token', authData.accessToken);
-                localStorage.setItem('auth_provider', 'google');
-                
-                setSuccess('Google login successful! Redirecting...');
-                setTimeout(() => {
-                  router.push('/dashboard');
-                }, 1500);
-              } else {
-                const errorData = await backendResponse.json();
-                setError(errorData.message || 'Google login failed');
-              }
-            } catch (error) {
-              setError('Google login failed. Please try again.');
-            }
-          }
-        });
-
-        client.requestCode();
+      if (backendResponse.ok) {
+        const authData = await backendResponse.json();
+        localStorage.setItem('user', JSON.stringify(authData.user));
+        localStorage.setItem('access_token', authData.accessToken);
+        localStorage.setItem('auth_provider', 'google');
+        
+        setSuccess('Google login successful! Redirecting...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
       } else {
-        setError('Google services not available. Please try again.');
+        const errorData = await backendResponse.json();
+        setError(errorData.message || 'Google login failed');
       }
     } catch (error: unknown) {
+      console.error('Google login error:', error);
       setError((error as Error).message || "Google sign-in failed");
     } finally {
       setIsLoading(false);
