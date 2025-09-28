@@ -17,6 +17,7 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginDto, RegisterDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
+import { VerifyEmailDto, VerifyPhoneDto, ResendOtpDto, OtpLoginDto, RefreshTokenDto } from './dto/register.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -103,13 +104,85 @@ export class AuthController {
     return { valid: isValid };
   }
 
+  @Post('login/otp')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @ApiOperation({ summary: 'Login with OTP (phone or email)' })
+  @ApiResponse({ status: 200, description: 'OTP login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid OTP' })
+  async loginWithOtp(@Body() otpLoginDto: OtpLoginDto) {
+    return this.authService.loginWithOtp(otpLoginDto);
+  }
+
+  @Post('verify/email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email with OTP' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid OTP' })
+  async verifyEmailOtp(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmailOtp(verifyEmailDto);
+  }
+
+  @Post('verify/phone')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify phone with OTP' })
+  @ApiResponse({ status: 200, description: 'Phone verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid OTP' })
+  async verifyPhoneOtp(@Body() verifyPhoneDto: VerifyPhoneDto) {
+    return this.authService.verifyPhoneOtp(verifyPhoneDto);
+  }
+
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @ApiOperation({ summary: 'Send OTP to phone or email' })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async sendOtp(@Body() body: { identifier: string; type: 'email' | 'phone' }) {
+    return this.authService.sendOtp(body.identifier, body.type);
+  }
+
+  @Post('resend-otp')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ThrottlerGuard)
+  @ApiOperation({ summary: 'Resend OTP' })
+  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+    return this.authService.resendOtp(resendOtpDto);
+  }
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login/Register with Google OAuth' })
+  @ApiResponse({ status: 200, description: 'Google authentication successful' })
+  @ApiResponse({ status: 401, description: 'Invalid Google token' })
+  async googleAuth(@Body() body: { googleToken: string }) {
+    return this.authService.googleAuth(body.googleToken);
+  }
+
+  @Get('google/url')
+  @ApiOperation({ summary: 'Get Google OAuth URL' })
+  @ApiResponse({ status: 200, description: 'Google OAuth URL generated' })
+  async getGoogleAuthUrl() {
+    return this.authService.getGoogleAuthUrl();
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved' })
+  async getProfile(@Request() req) {
+    return this.authService.getProfile(req.user.sub);
+  }
+
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'User logout' })
   @ApiResponse({ status: 200, description: 'Logout successful' })
   async logout(@Request() req) {
-    // TODO: Implement token blacklisting
-    return { message: 'Logout successful' };
+    return this.authService.logout(req.user.sub);
   }
 }
