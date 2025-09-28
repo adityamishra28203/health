@@ -15,23 +15,36 @@ export class FirebaseAdminService {
     try {
       // Initialize Firebase Admin SDK
       if (!admin.apps.length) {
-        const serviceAccount = {
-          type: 'service_account',
-          project_id: this.configService.get<string>('FIREBASE_PROJECT_ID') || 'healthify-31b19',
-          private_key_id: this.configService.get<string>('FIREBASE_PRIVATE_KEY_ID'),
-          private_key: this.configService.get<string>('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-          client_email: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
-          client_id: this.configService.get<string>('FIREBASE_CLIENT_ID') || '187067589929',
-          auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-          token_uri: 'https://oauth2.googleapis.com/token',
-          auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
-          client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${this.configService.get<string>('FIREBASE_CLIENT_EMAIL')}`,
-        };
+        // Try to load service account from file first
+        const serviceAccountPath = this.configService.get<string>('FIREBASE_SERVICE_ACCOUNT_PATH');
+        
+        if (serviceAccountPath && require('fs').existsSync(serviceAccountPath)) {
+          // Load from file
+          const serviceAccount = require(serviceAccountPath);
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            projectId: serviceAccount.project_id || 'healthify-31b19',
+          });
+        } else {
+          // Fallback to environment variables
+          const serviceAccount = {
+            type: 'service_account',
+            project_id: this.configService.get<string>('FIREBASE_PROJECT_ID') || 'healthify-31b19',
+            private_key_id: this.configService.get<string>('FIREBASE_PRIVATE_KEY_ID'),
+            private_key: this.configService.get<string>('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+            client_email: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
+            client_id: this.configService.get<string>('FIREBASE_CLIENT_ID') || '187067589929',
+            auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+            token_uri: 'https://oauth2.googleapis.com/token',
+            auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+            client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${this.configService.get<string>('FIREBASE_CLIENT_EMAIL')}`,
+          };
 
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-          projectId: this.configService.get<string>('FIREBASE_PROJECT_ID') || 'healthify-31b19',
-        });
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+            projectId: this.configService.get<string>('FIREBASE_PROJECT_ID') || 'healthify-31b19',
+          });
+        }
       }
 
       this.db = admin.firestore();

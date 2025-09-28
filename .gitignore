@@ -131,6 +131,7 @@ mobile/web-build/
 backend/dist/
 backend/.env
 backend/uploads/
+backend/config/serviceAccountKey.json
 
 # Frontend specific
 frontend/.next/
