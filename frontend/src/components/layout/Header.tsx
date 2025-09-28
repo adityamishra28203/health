@@ -82,9 +82,40 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
     },
   ];
 
-  const handleLogout = () => {
-    // Implement logout logic
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      // Clear all user data from localStorage
+      localStorage.removeItem('user');
+      localStorage.removeItem('firebase_user');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('auth_provider');
+      
+      // Clear session storage
+      sessionStorage.removeItem('firebase_confirmation_result');
+      
+      // If using Firebase, sign out from Firebase
+      if (typeof window !== 'undefined') {
+        try {
+          const { firebaseAuthService } = await import('@/lib/firebase-auth');
+          await firebaseAuthService.signOutUser();
+        } catch (error) {
+          console.log('Firebase sign out not available or user not signed in');
+        }
+      }
+      
+      // Redirect to home page
+      router.push("/");
+      
+      // Reload the page to clear any cached state
+      window.location.reload();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if there's an error, clear local data and redirect
+      localStorage.clear();
+      router.push("/");
+      window.location.reload();
+    }
   };
 
   return (
@@ -169,9 +200,11 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
