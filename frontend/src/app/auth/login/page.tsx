@@ -1,6 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Declare Google types
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -21,6 +28,21 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
+
+  // Load Google Identity Services
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      if (typeof window !== 'undefined' && !window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+    };
+
+    loadGoogleScript();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +87,48 @@ export default function LoginPage() {
     setSuccess("");
 
     try {
-      // Redirect to Firebase login page with Google sign-in
-      window.location.href = "/auth/firebase-login?tab=google";
+      // Use Google Identity Services for direct Google login
+      if (typeof window !== 'undefined' && window.google) {
+        const client = window.google.accounts.oauth2.initCodeClient({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          scope: 'email profile',
+          callback: async (response: any) => {
+            try {
+              // Send the authorization code to your backend
+              const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-login`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  code: response.code
+                }),
+              });
+
+              if (backendResponse.ok) {
+                const authData = await backendResponse.json();
+                localStorage.setItem('user', JSON.stringify(authData.user));
+                localStorage.setItem('access_token', authData.accessToken);
+                localStorage.setItem('auth_provider', 'google');
+                
+                setSuccess('Google login successful! Redirecting...');
+                setTimeout(() => {
+                  router.push('/dashboard');
+                }, 1500);
+              } else {
+                const errorData = await backendResponse.json();
+                setError(errorData.message || 'Google login failed');
+              }
+            } catch (error) {
+              setError('Google login failed. Please try again.');
+            }
+          }
+        });
+
+        client.requestCode();
+      } else {
+        setError('Google services not available. Please try again.');
+      }
     } catch (error: unknown) {
       setError((error as Error).message || "Google sign-in failed");
     } finally {
@@ -80,8 +142,65 @@ export default function LoginPage() {
     setSuccess("");
 
     try {
-      // Redirect to Firebase login page with phone OTP
-      window.location.href = "/auth/firebase-login?tab=phone";
+      // Show mobile number input for OTP login
+      const phoneNumber = prompt('Enter your phone number (e.g., +1234567890):');
+      
+      if (phoneNumber) {
+        // Send OTP to the phone number
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/send-otp`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phone: phoneNumber,
+            type: 'login'
+          }),
+        });
+
+        if (response.ok) {
+          setSuccess('OTP sent to your phone number. Please check your messages.');
+          
+          // Get OTP from user
+          const otpCode = prompt('Enter the OTP sent to your phone:');
+          
+          if (otpCode) {
+            // Verify OTP and login
+            const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp-login`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                phone: phoneNumber,
+                otp: otpCode
+              }),
+            });
+
+            if (verifyResponse.ok) {
+              const authData = await verifyResponse.json();
+              localStorage.setItem('user', JSON.stringify(authData.user));
+              localStorage.setItem('access_token', authData.accessToken);
+              localStorage.setItem('auth_provider', 'phone');
+              
+              setSuccess('Mobile login successful! Redirecting...');
+              setTimeout(() => {
+                router.push('/dashboard');
+              }, 1500);
+            } else {
+              const errorData = await verifyResponse.json();
+              setError(errorData.message || 'OTP verification failed');
+            }
+          } else {
+            setError('OTP is required for mobile login');
+          }
+        } else {
+          const errorData = await response.json();
+          setError(errorData.message || 'Failed to send OTP');
+        }
+      } else {
+        setError('Phone number is required for mobile login');
+      }
     } catch (error: unknown) {
       setError((error as Error).message || "Mobile sign-in failed");
     } finally {
@@ -263,16 +382,6 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
-              
-              <Link href="/auth/firebase-login">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Firebase Authentication
-                </Button>
-              </Link>
             </div>
 
             <Separator className="my-6" />
