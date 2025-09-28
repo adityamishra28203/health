@@ -18,11 +18,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
+    setSuccess("");
     
     try {
       // Simulate API call
@@ -42,8 +46,13 @@ export default function LoginPage() {
       localStorage.setItem("access_token", "mock_login_token_" + Date.now());
       localStorage.setItem("auth_provider", "email");
       
-      router.push("/dashboard");
+      setSuccess("Login successful! Redirecting...");
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
     } catch (error) {
+      setError("Login failed. Please check your credentials.");
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
@@ -102,6 +111,16 @@ export default function LoginPage() {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {error && (
+              <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                {success}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

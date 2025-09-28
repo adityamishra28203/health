@@ -28,6 +28,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const router = useRouter();
 
   const handleInputChange = (field: string, value: string) => {
@@ -37,6 +39,8 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
+    setSuccess("");
     
     try {
       // Simulate API call
@@ -57,8 +61,13 @@ export default function RegisterPage() {
       localStorage.setItem("access_token", "mock_register_token_" + Date.now());
       localStorage.setItem("auth_provider", "email");
       
-      router.push("/dashboard");
+      setSuccess("Registration successful! Redirecting...");
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
     } catch (error) {
+      setError("Registration failed. Please try again.");
       console.error("Registration error:", error);
     } finally {
       setIsLoading(false);
@@ -117,6 +126,16 @@ export default function RegisterPage() {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {error && (
+              <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                {success}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
