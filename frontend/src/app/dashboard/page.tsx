@@ -106,9 +106,13 @@ export default function DashboardPage() {
   const [healthScore] = useState(85);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    try {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (error) {
+      console.error('Error loading user from localStorage:', error);
     }
   }, []);
 

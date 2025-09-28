@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Header from "./Header";
 import Footer from "./Footer";
 import { Toaster } from "@/components/ui/sonner";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface User {
   id: string;
@@ -28,19 +29,23 @@ export default function Layout({ children }: LayoutProps) {
   const isAuthPage = pathname?.startsWith("/auth");
 
   useEffect(() => {
-    // Load theme preference
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      setDarkMode(savedTheme === "dark");
-    } else {
-      // Check system preference
-      setDarkMode(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
+    try {
+      // Load theme preference
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) {
+        setDarkMode(savedTheme === "dark");
+      } else {
+        // Check system preference
+        setDarkMode(window.matchMedia("(prefers-color-scheme: dark)").matches);
+      }
 
-    // Load user data
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      // Load user data
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
     }
   }, []);
 
@@ -59,32 +64,34 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {!isAuthPage && (
-            <Header
-              user={user || undefined}
-              darkMode={darkMode}
-              onToggleDarkMode={toggleDarkMode}
-            />
-          )}
-          
-          <main className="flex-1">
-            {children}
-          </main>
-          
-          {!isAuthPage && <Footer />}
-        </motion.div>
-      </AnimatePresence>
-      
-      <Toaster />
-    </div>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {!isAuthPage && (
+              <Header
+                user={user || undefined}
+                darkMode={darkMode}
+                onToggleDarkMode={toggleDarkMode}
+              />
+            )}
+            
+            <main className="flex-1">
+              {children}
+            </main>
+            
+            {!isAuthPage && <Footer />}
+          </motion.div>
+        </AnimatePresence>
+        
+        <Toaster />
+      </div>
+    </ErrorBoundary>
   );
 }

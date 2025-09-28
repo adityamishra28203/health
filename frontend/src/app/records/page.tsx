@@ -124,29 +124,43 @@ export default function RecordsPage() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleAddRecord = () => {
-    const record: HealthRecord = {
-      id: Date.now().toString(),
-      title: newRecord.title,
-      type: newRecord.type,
-      date: new Date().toISOString().split('T')[0],
-      doctor: newRecord.doctor,
-      hospital: newRecord.hospital,
-      status: 'pending',
-      description: newRecord.description,
-      files: newRecord.files
-    };
-    
-    setRecords([record, ...records]);
-    setNewRecord({
-      title: '',
-      type: '',
-      doctor: '',
-      hospital: '',
-      description: '',
-      files: []
-    });
-    setIsAddRecordOpen(false);
+  const handleAddRecord = async () => {
+    try {
+      // Validate required fields
+      if (!newRecord.title || !newRecord.type || !newRecord.doctor || !newRecord.hospital) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      const record: HealthRecord = {
+        id: Date.now().toString(),
+        title: newRecord.title,
+        type: newRecord.type,
+        date: new Date().toISOString().split('T')[0],
+        doctor: newRecord.doctor,
+        hospital: newRecord.hospital,
+        status: 'pending',
+        description: newRecord.description,
+        files: newRecord.files
+      };
+      
+      // In a real app, you would save to the backend here
+      // await firebaseDbService.createHealthRecord(record);
+      
+      setRecords([record, ...records]);
+      setNewRecord({
+        title: '',
+        type: '',
+        doctor: '',
+        hospital: '',
+        description: '',
+        files: []
+      });
+      setIsAddRecordOpen(false);
+    } catch (error) {
+      console.error('Error adding record:', error);
+      alert('Failed to add record. Please try again.');
+    }
   };
 
   return (
