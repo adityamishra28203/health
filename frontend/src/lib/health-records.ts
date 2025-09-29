@@ -132,10 +132,6 @@ class HealthRecordsService {
 
   async getHealthRecords(page: number = 1, limit: number = 10): Promise<HealthRecordsResponse> {
     try {
-      if (API_BASE_URL === 'mock') {
-        return this.getMockHealthRecords(page, limit);
-      }
-
       const response = await axios.get(`${API_BASE_URL}/health-records`, {
         headers: this.getAuthHeaders(),
         params: { page, limit },
@@ -219,10 +215,6 @@ class HealthRecordsService {
 
   async getHealthRecordStatistics(): Promise<HealthRecordStatistics> {
     try {
-      if (API_BASE_URL === 'mock') {
-        return this.getMockStatistics();
-      }
-
       const response = await axios.get(`${API_BASE_URL}/health-records/statistics`, {
         headers: this.getAuthHeaders(),
         timeout: 10000, // 10 second timeout

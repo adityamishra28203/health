@@ -293,7 +293,7 @@ export default function RecordsPage() {
                       Unable to Connect to Server
                     </h3>
                     <p className="text-gray-600 mb-8 text-lg">
-                      We're having trouble connecting to our servers. Please check your internet connection and try again.
+                      We&apos;re having trouble connecting to our servers. Please check your internet connection and try again.
                     </p>
                     <Button onClick={loadRecords} className="btn-enhanced" size="lg">
                       Try Again
