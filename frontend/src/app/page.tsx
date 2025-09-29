@@ -62,6 +62,7 @@ export default function LandingPage() {
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Handle logo click - redirect to dashboard if logged in, otherwise stay on landing page
   const handleLogoClick = (e: React.MouseEvent) => {
@@ -146,6 +147,14 @@ export default function LandingPage() {
   useEffect(() => {
     setIsVisible(true);
     
+    // Detect mobile device
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     // Check authentication status
     const checkAuthStatus = async () => {
       const authenticated = authService.isAuthenticated();
@@ -199,8 +208,24 @@ export default function LandingPage() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
+
+  // Helper function to get optimized transform values for mobile
+  const getTransformValue = (baseValue: number, mobileMultiplier: number = 0.3) => {
+    return isMobile ? scrollY * baseValue * mobileMultiplier : scrollY * baseValue;
+  };
+
+  // Helper function to disable animations on mobile for better performance
+  const getMobileOptimizedStyle = (baseStyle: React.CSSProperties, disableOnMobile: boolean = false) => {
+    if (isMobile && disableOnMobile) {
+      return { ...baseStyle, transform: 'none' };
+    }
+    return baseStyle;
+  };
 
   const handleGetStarted = () => {
     setIsSignupOpen(true);
@@ -426,26 +451,29 @@ export default function LandingPage() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 text-gray-900 overflow-hidden">
+    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 text-gray-900 overflow-hidden ${isMobile ? 'scroll-smooth' : ''}`}>
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div 
-          className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full animate-pulse"
-          style={{
-            transform: `translateY(${scrollY * 0.1}px) rotate(${scrollY * 0.05}deg)`,
-          }}
+          className={`absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full ${isMobile ? '' : 'animate-pulse'}`}
+          style={getMobileOptimizedStyle({
+            transform: `translateY(${getTransformValue(0.1, 0.3)}px) rotate(${getTransformValue(0.05, 0.3)}deg)`,
+            willChange: 'transform',
+          }, true)}
         ></div>
         <div 
-          className="absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full animate-pulse delay-1000"
-          style={{
-            transform: `translateY(${scrollY * -0.05}px) rotate(${scrollY * -0.03}deg)`,
-          }}
+          className={`absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full ${isMobile ? '' : 'animate-pulse delay-1000'}`}
+          style={getMobileOptimizedStyle({
+            transform: `translateY(${getTransformValue(-0.05, 0.3)}px) rotate(${getTransformValue(-0.03, 0.3)}deg)`,
+            willChange: 'transform',
+          }, true)}
         ></div>
         <div 
-          className="absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full animate-pulse delay-2000"
-          style={{
-            transform: `translateY(${scrollY * 0.08}px) rotate(${scrollY * 0.02}deg)`,
-          }}
+          className={`absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full ${isMobile ? '' : 'animate-pulse delay-2000'}`}
+          style={getMobileOptimizedStyle({
+            transform: `translateY(${getTransformValue(0.08, 0.3)}px) rotate(${getTransformValue(0.02, 0.3)}deg)`,
+            willChange: 'transform',
+          }, true)}
         ></div>
         {/* Medical Grid Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -702,8 +730,9 @@ export default function LandingPage() {
             <p 
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
               style={{
-                transform: `translateY(${scrollY * 0.1}px)`,
+                transform: `translateY(${getTransformValue(0.1, 0.3)}px)`,
                 transition: 'transform 0.1s ease-out',
+                willChange: 'transform',
               }}
             >
               Transform your healthcare experience with blockchain-powered, HIPAA-compliant health record management. 
@@ -957,7 +986,8 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-20"
             style={{
-              transform: `translateY(${scrollY * 0.03}px)`,
+              transform: `translateY(${getTransformValue(0.03)}px)`,
+              willChange: 'transform',
             }}
           >
             <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
@@ -987,8 +1017,9 @@ export default function LandingPage() {
                 key={index}
                 className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8 text-center"
                 style={{
-                  transform: `translateY(${scrollY * (0.01 + index * 0.005)}px)`,
+                  transform: `translateY(${getTransformValue(0.01 + index * 0.005, 0.2)}px)`,
                   transitionDelay: `${index * 100}ms`,
+                  willChange: 'transform',
                 }}
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
@@ -1011,7 +1042,8 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-20"
             style={{
-              transform: `translateY(${scrollY * 0.02}px)`,
+              transform: `translateY(${getTransformValue(0.02)}px)`,
+              willChange: 'transform',
             }}
           >
             <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
@@ -1058,8 +1090,9 @@ export default function LandingPage() {
                 key={index}
                 className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8"
                 style={{
-                  transform: `translateY(${scrollY * (0.01 + index * 0.005)}px)`,
+                  transform: `translateY(${getTransformValue(0.01 + index * 0.005, 0.2)}px)`,
                   transitionDelay: `${index * 100}ms`,
+                  willChange: 'transform',
                 }}
               >
                 <div className="flex items-center space-x-1 mb-4">
@@ -1101,8 +1134,9 @@ export default function LandingPage() {
           <h2 
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
             style={{
-              transform: `translateY(${scrollY * 0.005}px)`,
+              transform: `translateY(${getTransformValue(0.005, 0.1)}px)`,
               paddingBottom: '0.5rem',
+              willChange: 'transform',
             }}
           >
             <span 
@@ -1118,8 +1152,9 @@ export default function LandingPage() {
           <p 
             className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-12 max-w-3xl mx-auto font-light leading-relaxed px-4"
             style={{
-              transform: `translateY(${scrollY * 0.005}px)`,
+              transform: `translateY(${getTransformValue(0.005, 0.1)}px)`,
               paddingBottom: '0.25rem',
+              willChange: 'transform',
             }}
           >
             Join thousands of users who trust SecureHealth with their most sensitive health information.
@@ -1127,7 +1162,8 @@ export default function LandingPage() {
           <div 
             className="flex flex-col sm:flex-row gap-6 justify-center"
             style={{
-              transform: `translateY(${scrollY * 0.005}px)`,
+              transform: `translateY(${getTransformValue(0.005, 0.1)}px)`,
+              willChange: 'transform',
             }}
           >
             <Button 
