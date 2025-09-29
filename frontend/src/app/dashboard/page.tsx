@@ -152,6 +152,16 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Force visibility for debugging
+  useEffect(() => {
+    const mainContainer = document.querySelector('.loading');
+    if (mainContainer) {
+      mainContainer.style.opacity = '1';
+      mainContainer.style.visibility = 'visible';
+      mainContainer.style.display = 'block';
+    }
+  }, [loading, user]);
+
   // Debug current state
   console.log('Dashboard render - loading:', loading, 'user:', user);
 
