@@ -82,6 +82,17 @@ export default function Layout({ children }: LayoutProps) {
     const handleAuthStateChanged = () => {
       // Re-check auth state when auth service notifies of changes
       handleAuthStateChange();
+      
+      // Also refresh user data from localStorage in case it was updated
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+        } catch (error) {
+          console.error('Error parsing user data from localStorage:', error);
+        }
+      }
     };
 
     // Listen for storage changes (logout from another tab)
@@ -118,6 +129,9 @@ export default function Layout({ children }: LayoutProps) {
     setUser(updatedUser);
     // Also save to localStorage
     localStorage.setItem("user", JSON.stringify(updatedUser));
+    
+    // Dispatch event to notify other components about the update
+    window.dispatchEvent(new CustomEvent('auth-state-changed'));
   };
 
   // Show loading spinner while initializing

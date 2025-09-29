@@ -179,7 +179,12 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       
       const updatedUser = await authService.updateProfile(updateData);
       
+      // Notify parent component
       onUpdate(updatedUser);
+      
+      // Dispatch global event for other components
+      window.dispatchEvent(new CustomEvent('auth-state-changed'));
+      
       setIsEditing(false);
       toast.success('Profile updated successfully');
     } catch (error: unknown) {

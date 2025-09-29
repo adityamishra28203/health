@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -50,6 +50,33 @@ interface HeaderProps {
 export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(user);
+
+  // Update local user state when prop changes
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
+
+  // Listen for auth state changes to refresh user data
+  useEffect(() => {
+    const handleAuthStateChanged = () => {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser);
+          setCurrentUser(userData);
+        } catch (error) {
+          console.error('Error parsing user data from localStorage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('auth-state-changed', handleAuthStateChanged);
+    
+    return () => {
+      window.removeEventListener('auth-state-changed', handleAuthStateChanged);
+    };
+  }, []);
 
   const navigationItems = [
     {
@@ -117,7 +144,7 @@ export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate 
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
+          <Link href={currentUser ? "/dashboard" : "/"} className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Heart className="h-5 w-5 text-primary-foreground" />
             </div>
@@ -165,14 +192,14 @@ export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate 
           </Button>
 
           {/* User menu */}
-          {user ? (
+          {currentUser ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
+                    <AvatarImage src={currentUser.avatar} alt={`${currentUser.firstName} ${currentUser.lastName}`} />
                     <AvatarFallback>
-                      {`${user.firstName[0]}${user.lastName[0]}`}
+                      {`${currentUser.firstName[0]}${currentUser.lastName[0]}`}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -180,12 +207,12 @@ export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate 
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{`${user.firstName} ${user.lastName}`}</p>
+                    <p className="text-sm font-medium leading-none">{`${currentUser.firstName} ${currentUser.lastName}`}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {currentUser.email}
                     </p>
                     <Badge variant="secondary" className="w-fit">
-                      {user.role}
+                      {currentUser.role}
                     </Badge>
                   </div>
                 </DropdownMenuLabel>
@@ -260,11 +287,11 @@ export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate 
       )}
 
       {/* Settings Modal */}
-      {user && (
+      {currentUser && (
         <SettingsModal
           isOpen={isSettingsOpen}
           onClose={() => setIsSettingsOpen(false)}
-          user={user}
+          user={currentUser}
           onUpdate={handleUserUpdate}
         />
       )}
