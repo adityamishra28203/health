@@ -1402,12 +1402,13 @@ app.get('/', (req, res) => {
   });
 });
 
-// Public test endpoint
+// Simple test endpoint
 app.get('/test', (req, res) => {
   res.json({
-    message: 'Backend is working!',
+    message: 'Test endpoint working',
     timestamp: new Date().toISOString(),
-    status: 'success'
+    crypto: typeof crypto !== 'undefined',
+    mongoose: typeof mongoose !== 'undefined'
   });
 });
 
