@@ -179,6 +179,9 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       
       const updatedUser = await authService.updateProfile(updateData);
       
+      // Update localStorage with the new user data
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
       // Notify parent component
       onUpdate(updatedUser);
       

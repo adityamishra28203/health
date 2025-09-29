@@ -157,11 +157,23 @@ class AuthService {
 
   async updateProfile(userData: Partial<User>): Promise<User> {
     try {
+      console.log('🔄 Updating profile with data:', userData);
+      console.log('🔄 API URL:', `${API_BASE_URL}/auth/profile`);
+      console.log('🔄 Auth headers:', this.getAuthHeaders());
+      
       const response = await axios.put(`${API_BASE_URL}/auth/profile`, userData, {
         headers: this.getAuthHeaders()
       });
+      
+      console.log('✅ Profile update response:', response.data);
       return response.data.user;
     } catch (error: unknown) {
+      console.error('❌ Profile update error:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any;
+        console.error('❌ Response status:', axiosError.response?.status);
+        console.error('❌ Response data:', axiosError.response?.data);
+      }
       throw new Error(getErrorMessage(error, 'Failed to update profile'));
     }
   }
