@@ -152,11 +152,15 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Debug current state
+  console.log('Dashboard render - loading:', loading, 'user:', user);
+
   if (loading) {
     return <PageLoader />;
   }
 
   if (!user) {
+    console.log('Dashboard: No user data, showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">

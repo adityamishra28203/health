@@ -148,11 +148,19 @@ class AuthService {
 
   async getProfile(): Promise<User> {
     try {
+      console.log('🔍 AuthService: Fetching profile from:', `${API_BASE_URL}/auth/profile`);
+      console.log('🔍 AuthService: Headers:', this.getAuthHeaders());
+      
       const response = await axios.get(`${API_BASE_URL}/auth/profile`, {
         headers: this.getAuthHeaders()
       });
+      
+      console.log('🔍 AuthService: Profile response status:', response.status);
+      console.log('🔍 AuthService: Profile response data:', response.data);
+      
       return response.data;
     } catch (error: unknown) {
+      console.error('🔍 AuthService: Profile fetch error:', error);
       throw new Error(getErrorMessage(error, 'Failed to get profile'));
     }
   }
