@@ -232,13 +232,13 @@ export default function LandingPage() {
   const handlePasswordToggle = (type: 'login' | 'signup' | 'confirm') => {
     if (type === 'login') {
       setShowLoginPassword(true);
-      setTimeout(() => setShowLoginPassword(false), 2000); // Hide after 2 seconds
+      setTimeout(() => setShowLoginPassword(false), 1000); // Hide after 1 second
     } else if (type === 'signup') {
       setShowSignupPassword(true);
-      setTimeout(() => setShowSignupPassword(false), 2000); // Hide after 2 seconds
+      setTimeout(() => setShowSignupPassword(false), 1000); // Hide after 1 second
     } else if (type === 'confirm') {
       setShowConfirmPassword(true);
-      setTimeout(() => setShowConfirmPassword(false), 2000); // Hide after 2 seconds
+      setTimeout(() => setShowConfirmPassword(false), 1000); // Hide after 1 second
     }
   };
 
@@ -1491,7 +1491,7 @@ export default function LandingPage() {
                 placeholder="Enter your email"
                 value={signupData.email}
                 onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                 required
               />
             </motion.div>
@@ -1516,7 +1516,7 @@ export default function LandingPage() {
                 placeholder="Enter your phone number"
                 value={signupData.phone}
                 onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
               />
             </motion.div>
             
