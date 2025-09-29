@@ -16,10 +16,10 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
-      'http://localhost:3000', 
-      'http://localhost:8081',
-      'https://healthwallet.vercel.app',
-      'https://healthwallet-frontend.vercel.app',
+    'http://localhost:3000', 
+    'http://localhost:8081',
+    'https://healthwallet.vercel.app',
+    'https://healthwallet-frontend.vercel.app',
       'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app',
       'https://health-five-lac.vercel.app',
       'https://healthify-gilt.vercel.app',
@@ -203,21 +203,34 @@ userSchema.virtual('isLocked').get(function() {
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  if (!this.password) return false;
+  if (!this.password) {
+    console.error('No password found for user:', this.email);
+    return false;
+  }
   
   try {
+    console.log('Comparing password for user:', this.email);
+    console.log('Password format check:', this.password.includes(':') ? 'PBKDF2' : 'bcrypt');
+    
     // Check if password is stored in PBKDF2 format (salt:hash)
     if (this.password.includes(':')) {
       const [salt, hash] = this.password.split(':');
+      console.log('Using PBKDF2 comparison');
       const candidateHash = crypto.pbkdf2Sync(candidatePassword, salt, 1000, 64, 'sha512').toString('hex');
-      return hash === candidateHash;
+      const isValid = hash === candidateHash;
+      console.log('PBKDF2 comparison result:', isValid);
+      return isValid;
     } else {
       // Fallback to bcrypt for old passwords
+      console.log('Using bcrypt comparison');
       const bcrypt = require('bcryptjs');
-      return await bcrypt.compare(candidatePassword, this.password);
+      const isValid = await bcrypt.compare(candidatePassword, this.password);
+      console.log('bcrypt comparison result:', isValid);
+      return isValid;
     }
   } catch (error) {
-    throw new Error('Password comparison failed');
+    console.error('Password comparison error:', error);
+    throw new Error('Password comparison failed: ' + error.message);
   }
 };
 
@@ -508,8 +521,11 @@ app.post('/auth/login', async (req, res) => {
     }
 
     // Find user in database
+    console.log('Searching for user with email:', email.toLowerCase());
     const user = await User.findOne({ email: email.toLowerCase() });
+    console.log('User found:', user ? 'Yes' : 'No');
     if (!user) {
+      console.log('No user found for email:', email.toLowerCase());
       return res.status(401).json({
         error: 'Authentication Error',
         message: 'Invalid email or password',
@@ -570,6 +586,11 @@ app.post('/auth/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     res.status(500).json({
       error: 'Server Error',
       message: 'An error occurred during login',
