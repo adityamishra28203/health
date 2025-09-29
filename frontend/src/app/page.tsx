@@ -1302,7 +1302,11 @@ export default function LandingPage() {
                   onMouseDown={(e) => e.preventDefault()}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1"
                 >
-                  <Eye className="w-5 h-5" />
+                  {showLoginPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -1578,7 +1582,11 @@ export default function LandingPage() {
                   onMouseDown={(e) => e.preventDefault()}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1"
                 >
-                  <Eye className="w-5 h-5" />
+                  {showSignupPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
               {signupData.password && (
@@ -1633,7 +1641,11 @@ export default function LandingPage() {
                   onMouseDown={(e) => e.preventDefault()}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1"
                 >
-                  <Eye className="w-5 h-5" />
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </motion.div>
