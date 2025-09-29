@@ -728,13 +728,13 @@ app.put('/auth/profile', async (req, res) => {
     }
     
     console.log('📝 Profile update request received:', { 
-      firstName: firstName ? 'provided' : 'not provided',
-      lastName: lastName ? 'provided' : 'not provided', 
-      email: email ? 'provided' : 'not provided',
-      phone: phone ? 'provided' : 'not provided',
-      avatar: avatar ? `provided (${avatar.length} chars)` : 'not provided',
-      role: role ? 'provided' : 'not provided',
-      bio: bio ? 'provided' : 'not provided'
+      firstName: firstName !== undefined ? `provided (${typeof firstName}, value: "${firstName}")` : 'not provided',
+      lastName: lastName !== undefined ? `provided (${typeof lastName}, value: "${lastName}")` : 'not provided', 
+      email: email !== undefined ? `provided (${typeof email}, value: "${email}")` : 'not provided',
+      phone: phone !== undefined ? `provided (${typeof phone}, value: "${phone}")` : 'not provided',
+      avatar: avatar !== undefined ? `provided (${avatar.length} chars)` : 'not provided',
+      role: role !== undefined ? `provided (${typeof role}, value: "${role}")` : 'not provided',
+      bio: bio !== undefined ? `provided (${typeof bio}, value: "${bio}")` : 'not provided'
     });
     
     console.log('🔧 Profile update request:', { 
@@ -796,26 +796,28 @@ app.put('/auth/profile', async (req, res) => {
     
     // Update user fields
     if (firstName !== undefined) {
-      if (firstName && firstName.trim() === '') {
+      // Only validate if firstName is being updated and it's empty
+      if (firstName === null || firstName === '' || (firstName && firstName.trim() === '')) {
         return res.status(400).json({
           error: 'Validation Error',
           message: 'First name cannot be empty',
           timestamp: new Date().toISOString()
         });
       }
-      if (firstName) {
+      if (firstName && firstName.trim()) {
         user.firstName = firstName.trim();
       }
     }
     if (lastName !== undefined) {
-      if (lastName && lastName.trim() === '') {
+      // Only validate if lastName is being updated and it's empty
+      if (lastName === null || lastName === '' || (lastName && lastName.trim() === '')) {
         return res.status(400).json({
           error: 'Validation Error',
           message: 'Last name cannot be empty',
           timestamp: new Date().toISOString()
         });
       }
-      if (lastName) {
+      if (lastName && lastName.trim()) {
         user.lastName = lastName.trim();
       }
     }
