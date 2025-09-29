@@ -206,8 +206,16 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   if (!this.password) return false;
   
   try {
-    const bcrypt = require('bcryptjs');
-    return await bcrypt.compare(candidatePassword, this.password);
+    // Check if password is stored in PBKDF2 format (salt:hash)
+    if (this.password.includes(':')) {
+      const [salt, hash] = this.password.split(':');
+      const candidateHash = crypto.pbkdf2Sync(candidatePassword, salt, 1000, 64, 'sha512').toString('hex');
+      return hash === candidateHash;
+    } else {
+      // Fallback to bcrypt for old passwords
+      const bcrypt = require('bcryptjs');
+      return await bcrypt.compare(candidatePassword, this.password);
+    }
   } catch (error) {
     throw new Error('Password comparison failed');
   }
