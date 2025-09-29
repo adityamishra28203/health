@@ -30,7 +30,9 @@ import {
   Smartphone,
   User as UserIcon,
   LogOut,
-  Settings
+  Settings,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -220,6 +222,11 @@ export default function LandingPage() {
   });
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState('');
+  
+  // Password visibility states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Login form validation
   const validateLoginForm = () => {
@@ -1241,15 +1248,28 @@ export default function LandingPage() {
                 />
                 Password
               </Label>
-              <Input
-                id="login-password"
-                type="password"
-                placeholder="Enter your password"
-                value={loginData.password}
-                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 hover:border-blue-300 hover:shadow-lg transform hover:scale-[1.02]"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  type={showLoginPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={loginData.password}
+                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 hover:border-blue-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  {showLoginPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </motion.div>
             
               <motion.div
@@ -1476,7 +1496,7 @@ export default function LandingPage() {
                 I am a
               </Label>
               <Select value={signupData.role} onValueChange={(value) => setSignupData({ ...signupData, role: value })}>
-                <SelectTrigger className="w-full px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]">
+                <SelectTrigger className="w-full px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02] bg-white text-gray-900">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1503,15 +1523,28 @@ export default function LandingPage() {
                 />
                 Password
               </Label>
-              <Input
-                id="signup-password"
-                type="password"
-                placeholder="Create a password"
-                value={signupData.password}
-                onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="signup-password"
+                  type={showSignupPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  value={signupData.password}
+                  onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSignupPassword(!showSignupPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  {showSignupPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {signupData.password && (
                 <div className="mt-2 text-xs space-y-1">
                   <div className={`flex items-center gap-2 ${signupData.password.length >= 8 ? 'text-green-600' : 'text-red-500'}`}>
@@ -1548,15 +1581,28 @@ export default function LandingPage() {
                 />
                 Confirm Password
               </Label>
-              <Input
-                id="signup-confirmPassword"
-                type="password"
-                placeholder="Confirm your password"
-                value={signupData.confirmPassword}
-                onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="signup-confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={signupData.confirmPassword}
+                  onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </motion.div>
             
             <motion.div
