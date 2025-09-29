@@ -180,8 +180,15 @@ export default function DashboardPage() {
     );
   }
 
+  console.log('Dashboard: Rendering main content with user:', user);
+  
   return (
-    <div className="min-h-screen loading">
+    <div className="min-h-screen loading" style={{ backgroundColor: '#f0f9ff' }}>
+      {/* Debug info */}
+      <div style={{ position: 'fixed', top: '10px', left: '10px', background: 'red', color: 'white', padding: '10px', zIndex: 9999 }}>
+        Dashboard Rendered - User: {user?.firstName || 'No User'}
+      </div>
+      
       {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
