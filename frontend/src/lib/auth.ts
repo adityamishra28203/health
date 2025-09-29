@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ? 'mock' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003');
+const API_BASE_URL = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ? 'mock' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003').replace(/\/$/, '');
 
 // Debug: Log the API URL being used
 if (typeof window !== 'undefined') {

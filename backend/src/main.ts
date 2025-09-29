@@ -21,11 +21,13 @@ async function bootstrap() {
       'http://localhost:3002',
       'https://healthwallet.vercel.app',
       'https://healthwallet-frontend.vercel.app',
+      'https://healthify-g78z95f7h-adityamishra28203s-projects.vercel.app',
+      'https://healthify-gdebttmrm-adityamishra28203s-projects.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean) as string[],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['Set-Cookie']
   }));
 
