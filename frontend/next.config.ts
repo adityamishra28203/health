@@ -16,11 +16,6 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   // Removed rewrites - frontend makes direct requests to backend
   
-  // Cache configuration to prevent chunk loading errors
-  experimental: {
-    optimizeCss: true,
-  },
-  
   // Add headers to prevent caching of chunks during development
   async headers() {
     return [
