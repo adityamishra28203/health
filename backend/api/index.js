@@ -71,22 +71,27 @@ app.post('/auth/login', (req, res) => {
     });
   }
 
-  // Password validation
-  if (password.length < 8) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'Password must be at least 8 characters long',
-      timestamp: new Date().toISOString()
-    });
-  }
+  // Password validation (skip for encrypted passwords - they are 64 character SHA-256 hashes)
+  if (password.length === 64 && /^[a-f0-9]+$/.test(password)) {
+    // This is an encrypted password (SHA-256 hash), skip format validation
+  } else {
+    // This is a plain text password, validate format
+    if (password.length < 8) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Password must be at least 8 characters long',
+        timestamp: new Date().toISOString()
+      });
+    }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
-  if (!passwordRegex.test(password)) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-      timestamp: new Date().toISOString()
-    });
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   // Find user and verify password
@@ -122,22 +127,27 @@ app.post('/auth/register', (req, res) => {
     });
   }
 
-  // Password validation
-  if (password.length < 8) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'Password must be at least 8 characters long',
-      timestamp: new Date().toISOString()
-    });
-  }
+  // Password validation (skip for encrypted passwords - they are 64 character SHA-256 hashes)
+  if (password.length === 64 && /^[a-f0-9]+$/.test(password)) {
+    // This is an encrypted password (SHA-256 hash), skip format validation
+  } else {
+    // This is a plain text password, validate format
+    if (password.length < 8) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Password must be at least 8 characters long',
+        timestamp: new Date().toISOString()
+      });
+    }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
-  if (!passwordRegex.test(password)) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-      timestamp: new Date().toISOString()
-    });
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   // Check if user already exists

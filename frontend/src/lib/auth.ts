@@ -149,7 +149,7 @@ class AuthService {
       const response = await axios.get(`${API_BASE_URL}/auth/profile`, {
         headers: this.getAuthHeaders()
       });
-      return response.data.user;
+      return response.data;
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error, 'Failed to get profile'));
     }
