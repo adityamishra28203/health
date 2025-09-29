@@ -32,8 +32,26 @@ app.post('/auth/login', (req, res) => {
     });
   }
 
+  // Password validation
+  if (password.length < 8) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Password must be at least 8 characters long',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      timestamp: new Date().toISOString()
+    });
+  }
+
   // Mock authentication - replace with real authentication logic
-  if (email === 'admin@healthify.com' && password === 'admin123') {
+  if (email === 'admin@healthify.com' && password === 'Admin123') {
     const mockUser = {
       id: '1',
       firstName: 'Admin',
@@ -48,7 +66,7 @@ app.post('/auth/login', (req, res) => {
     
     return res.status(200).json({
       user: mockUser,
-      token: mockToken,
+      accessToken: mockToken,
       message: 'Login successful'
     });
   }
@@ -73,6 +91,24 @@ app.post('/auth/register', (req, res) => {
     });
   }
 
+  // Password validation
+  if (password.length < 8) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Password must be at least 8 characters long',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      timestamp: new Date().toISOString()
+    });
+  }
+
   // Mock user creation - replace with real registration logic
   const mockUser = {
     id: Date.now().toString(),
@@ -89,7 +125,7 @@ app.post('/auth/register', (req, res) => {
   
   res.status(201).json({
     user: mockUser,
-    token: mockToken,
+    accessToken: mockToken,
     message: 'Registration successful'
   });
 });

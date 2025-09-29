@@ -241,8 +241,15 @@ export default function LandingPage() {
       return false;
     }
 
+    // Password validation - same as signup
     if (loginData.password.length < 8) {
       setLoginError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    if (!passwordRegex.test(loginData.password)) {
+      setLoginError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
       return false;
     }
 
