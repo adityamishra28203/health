@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, User as UserIcon, Mail, Phone, FileText, Save, X } from 'lucide-react';
+import { Camera, User as UserIcon, Mail, Phone, FileText, Save, X, Edit3 } from 'lucide-react';
 import { authService, User as UserType } from '@/lib/auth';
 import { toast } from 'sonner';
 
@@ -100,9 +100,9 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       return;
     }
 
-    // Validate file size (max 1MB)
-    if (file.size > 1024 * 1024) {
-      toast.error('File size must be less than 1MB');
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
       return;
     }
 
@@ -110,7 +110,7 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       setIsLoading(true);
       
       // Compress image before upload to reduce base64 size
-      const compressedFile = await compressImage(file, 0.8, 800); // 80% quality, max 800px width
+      const compressedFile = await compressImage(file, 0.7, 600); // 70% quality, max 600px width for smaller files
       
       // Upload file to backend
       const uploadResult = await authService.uploadAvatar(compressedFile);
@@ -189,13 +189,28 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   return (
     <Card className="w-full max-w-3xl mx-auto card-enhanced animate-slide-in-bottom">
       <CardHeader className="pb-6">
-        <CardTitle className="flex items-center gap-3 text-xl">
-          <UserIcon className="h-6 w-6" />
-          Profile Information
-        </CardTitle>
-        <CardDescription className="text-base">
-          Update your personal information and profile picture
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <UserIcon className="h-6 w-6" />
+              Profile Information
+            </CardTitle>
+            <CardDescription className="text-base">
+              Update your personal information and profile picture
+            </CardDescription>
+          </div>
+          {!isEditing && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
+              <Edit3 className="h-4 w-4" />
+              Edit
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="form-container">
         {/* Avatar Section */}
@@ -206,12 +221,14 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 <AvatarImage src={avatar} alt={`${formData.firstName} ${formData.lastName}`} />
                 <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
               </Avatar>
-              <div 
-                className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground rounded-full p-3 cursor-pointer hover:bg-primary/90 transition-all-smooth shadow-lg hover:shadow-xl"
-                onClick={handleAvatarClick}
-              >
-                <Camera className="h-5 w-5" />
-              </div>
+              {isEditing && (
+                <div 
+                  className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground rounded-full p-3 cursor-pointer hover:bg-primary/90 transition-all-smooth shadow-lg hover:shadow-xl"
+                  onClick={handleAvatarClick}
+                >
+                  <Camera className="h-5 w-5" />
+                </div>
+              )}
             </div>
             <input
               ref={fileInputRef}
