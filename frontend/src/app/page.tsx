@@ -165,32 +165,40 @@ export default function LandingPage() {
     
     checkAuthStatus();
     
+    let ticking = false;
+    
     const handleScroll = () => {
-      const scroll = window.scrollY;
-      setScrollY(scroll);
-      
-      // Determine active section
-      const sections = [
-        { ref: heroRef, id: 'hero' },
-        { ref: statsRef, id: 'stats' },
-        { ref: featuresRef, id: 'features' },
-        { ref: technologyRef, id: 'technology' },
-        { ref: testimonialsRef, id: 'testimonials' },
-        { ref: ctaRef, id: 'cta' }
-      ];
-      
-      for (const section of sections) {
-        if (section.ref.current) {
-          const rect = section.ref.current.getBoundingClientRect();
-          if (rect.top <= 100 && rect.bottom >= 100) {
-            setActiveSection(section.id);
-            break;
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scroll = window.scrollY;
+          setScrollY(scroll);
+          
+          // Determine active section
+          const sections = [
+            { ref: heroRef, id: 'hero' },
+            { ref: statsRef, id: 'stats' },
+            { ref: featuresRef, id: 'features' },
+            { ref: technologyRef, id: 'technology' },
+            { ref: testimonialsRef, id: 'testimonials' },
+            { ref: ctaRef, id: 'cta' }
+          ];
+          
+          for (const section of sections) {
+            if (section.ref.current) {
+              const rect = section.ref.current.getBoundingClientRect();
+              if (rect.top <= 100 && rect.bottom >= 100) {
+                setActiveSection(section.id);
+                break;
+              }
+            }
           }
-        }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -456,14 +464,15 @@ export default function LandingPage() {
 
       {/* Navigation */}
       <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-transparent'
         }`}
         style={{
           transform: `translateY(${scrollY > 50 ? '0' : '0'})`,
+          willChange: 'transform, background-color'
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-4">
           <Link 
             href="/" 
             onClick={handleLogoClick}
@@ -547,7 +556,7 @@ export default function LandingPage() {
             </button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {isAuthenticated && user ? (
               <>
                 {/* User Dropdown */}
@@ -607,17 +616,19 @@ export default function LandingPage() {
               <>
                 <Button 
                   variant="outline" 
+                  size="sm"
                   onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
-                  className="border-blue-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg bg-transparent"
+                  className="border-blue-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg bg-transparent text-xs sm:text-sm px-2 sm:px-4"
                 >
                   {isAuthenticated ? 'View Plans' : 'Login'}
                 </Button>
                 <Button 
+                  size="sm"
                   onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
-                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/25"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/25 text-xs sm:text-sm px-2 sm:px-4"
                 >
                   {isAuthenticated ? 'Dashboard' : 'Get Started'}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                 </Button>
                 
                 {/* Mobile Menu Button */}
@@ -649,7 +660,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section 
         ref={heroRef}
-        className="relative pt-32 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-6 overflow-hidden"
+        className="relative pt-24 sm:pt-32 md:pt-40 pb-16 sm:pb-24 px-4 sm:px-6 overflow-hidden"
         style={{
           background: `linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(59, 130, 246, 0.05) 100%)`,
           minHeight: '100vh',
@@ -666,13 +677,13 @@ export default function LandingPage() {
             <div className="space-y-4 sm:space-y-6">
               
               <h1 
-                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight"
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight"
                 style={{
                   background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #059669 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   textShadow: '0 4px 8px rgba(30, 64, 175, 0.1)',
-                  transform: `translateY(${scrollY * 0.1}px)`,
+                  transform: `translateY(${scrollY * 0.05}px)`,
                   transition: 'transform 0.1s ease-out',
                   lineHeight: '1.2',
                   paddingBottom: '1rem',
@@ -689,7 +700,7 @@ export default function LandingPage() {
             </div>
             
             <p 
-              className="text-lg sm:text-xl md:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
+              className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
               style={{
                 transform: `translateY(${scrollY * 0.1}px)`,
                 transition: 'transform 0.1s ease-out',
@@ -1199,7 +1210,7 @@ export default function LandingPage() {
 
       {/* Login Dialog */}
       <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md mx-auto bg-white rounded-3xl shadow-2xl border-0 overflow-hidden p-0 animate-in fade-in-0 zoom-in-95 duration-300">
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md mx-auto bg-white rounded-3xl shadow-2xl border-0 overflow-hidden p-0 animate-in fade-in-0 zoom-in-95 duration-300 m-4">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -1374,7 +1385,7 @@ export default function LandingPage() {
 
       {/* Signup Dialog */}
       <Dialog open={isSignupOpen} onOpenChange={setIsSignupOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md mx-auto bg-white rounded-3xl shadow-2xl border-0 overflow-hidden max-h-[85vh] p-0 animate-in fade-in-0 zoom-in-95 duration-300">
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md mx-auto bg-white rounded-3xl shadow-2xl border-0 overflow-hidden max-h-[85vh] p-0 animate-in fade-in-0 zoom-in-95 duration-300 m-4">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -1591,21 +1602,9 @@ export default function LandingPage() {
               </div>
               {signupData.password && (
                 <div className="mt-2 text-xs space-y-1">
-                  <div className={`flex items-center gap-2 ${signupData.password.length >= 8 ? 'text-green-600' : 'text-red-500'}`}>
+                  <div className={`flex items-center gap-2 ${/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(?=.{8,})/.test(signupData.password) ? 'text-green-600' : 'text-red-500'}`}>
                     <span className="w-1 h-1 rounded-full bg-current"></span>
-                    At least 8 characters
-                  </div>
-                  <div className={`flex items-center gap-2 ${/^(?=.*[a-z])/.test(signupData.password) ? 'text-green-600' : 'text-red-500'}`}>
-                    <span className="w-1 h-1 rounded-full bg-current"></span>
-                    One lowercase letter
-                  </div>
-                  <div className={`flex items-center gap-2 ${/^(?=.*[A-Z])/.test(signupData.password) ? 'text-green-600' : 'text-red-500'}`}>
-                    <span className="w-1 h-1 rounded-full bg-current"></span>
-                    One uppercase letter
-                  </div>
-                  <div className={`flex items-center gap-2 ${/^(?=.*\d)/.test(signupData.password) ? 'text-green-600' : 'text-red-500'}`}>
-                    <span className="w-1 h-1 rounded-full bg-current"></span>
-                    One number
+                    At least 8 characters with uppercase, lowercase, number, and special character
                   </div>
                 </div>
               )}
