@@ -1399,7 +1399,7 @@ export default function LandingPage() {
                 {isAuthenticated ? 'View Plans' : 'Sign In'}
               </Button>
             </motion.div>
-            </div>
+          </div>
         </div>
       </section>
 
