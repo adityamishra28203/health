@@ -118,7 +118,8 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   avatar: {
-    type: String
+    type: String,
+    maxlength: 5000000 // 5MB limit for base64 data URLs
   },
   bio: {
     type: String,
@@ -704,11 +705,11 @@ app.put('/auth/profile', async (req, res) => {
     });
     
     // Validate avatar data size if present
-    if (avatar && avatar.length > 10000000) { // 10MB limit
+    if (avatar && avatar.length > 5000000) { // 5MB limit for base64
       console.log('❌ Avatar data too large:', avatar.length, 'characters');
       return res.status(400).json({
         error: 'Validation Error',
-        message: 'Avatar image is too large. Please use a smaller image.',
+        message: `Avatar image is too large (${Math.round(avatar.length / 1024)}KB). Please use a smaller image.`,
         timestamp: new Date().toISOString()
       });
     }
@@ -791,11 +792,25 @@ app.put('/auth/profile', async (req, res) => {
       console.error('❌ Save error details:', {
         message: saveError.message,
         name: saveError.name,
-        errors: saveError.errors
+        code: saveError.code,
+        errors: saveError.errors,
+        keyPattern: saveError.keyPattern,
+        keyValue: saveError.keyValue
       });
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to save user profile';
+      if (saveError.name === 'ValidationError') {
+        errorMessage = 'Profile validation failed. Please check your input.';
+      } else if (saveError.code === 11000) {
+        errorMessage = 'Email address is already in use.';
+      } else if (saveError.message.includes('maxlength')) {
+        errorMessage = 'One or more fields exceed the maximum length allowed.';
+      }
+      
       return res.status(500).json({
         error: 'Database Error',
-        message: 'Failed to save user profile',
+        message: errorMessage,
         details: saveError.message,
         timestamp: new Date().toISOString()
       });
