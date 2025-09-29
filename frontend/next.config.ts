@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BLOCKCHAIN_URL: process.env.NEXT_PUBLIC_BLOCKCHAIN_URL || 'https://mainnet.infura.io/v3/your-project-id',
     NEXT_PUBLIC_USE_MOCK_DATA: process.env.NEXT_PUBLIC_USE_MOCK_DATA || 'false',
   },
-  // Force Vercel to use latest commit
+  
+  // Performance optimizations
   eslint: {
     ignoreDuringBuilds: false,
   },
@@ -15,17 +16,114 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   output: 'standalone',
-  // Removed rewrites - frontend makes direct requests to backend
   
-  // Add headers to prevent caching of chunks during development
+  // Enable compression and optimization
+  compress: true,
+  
+  // Optimize images
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  
+  // Enable experimental features for better performance
+  experimental: {
+    scrollRestoration: true,
+    largePageDataBytes: 128 * 1000, // 128KB
+  },
+  
+  // Optimize webpack
+  webpack: (config, { dev, isServer }) => {
+    // Optimize for production
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          default: false,
+          vendors: false,
+          // Vendor chunk
+          vendor: {
+            name: 'vendor',
+            chunks: 'all',
+            test: /node_modules/,
+            priority: 20,
+          },
+          // Common chunk
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            priority: 10,
+            reuseExistingChunk: true,
+            enforce: true,
+          },
+        },
+      };
+    }
+    
+    return config;
+  },
+  
+  // Optimize headers for caching and performance
   async headers() {
     return [
+      // Static assets caching
       {
-        source: '/_next/static/chunks/:path*',
+        source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Images caching
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // API routes
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      // Security headers
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
           },
         ],
       },

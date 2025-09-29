@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { authService, User } from '@/lib/auth';
+import { 
+  useDeviceOptimization, 
+  getOptimizedTransform, 
+  getOptimizedStyle
+} from '@/lib/animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,7 +67,9 @@ export default function LandingPage() {
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  
+  // Use device optimization hook
+  const { deviceInfo, animationConfig } = useDeviceOptimization();
 
   // Handle logo click - redirect to dashboard if logged in, otherwise stay on landing page
   const handleLogoClick = (e: React.MouseEvent) => {
@@ -151,13 +158,16 @@ export default function LandingPage() {
   useEffect(() => {
     setIsVisible(true);
     
-    // Detect mobile device
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-    };
+    // Add loaded class after initial render
+    const timer = setTimeout(() => {
+      const mainContainer = document.querySelector('.loading');
+      if (mainContainer) {
+        mainContainer.classList.remove('loading');
+        mainContainer.classList.add('loaded');
+      }
+    }, 100);
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    return () => clearTimeout(timer);
     
     // Check authentication status
     const checkAuthStatus = async () => {
@@ -214,32 +224,11 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkMobile);
     };
   }, []);
 
-  // Helper function to get optimized transform values for mobile
-  const getTransformValue = (baseValue: number, mobileMultiplier: number = 0.5) => {
-    return isMobile ? scrollY * baseValue * mobileMultiplier : scrollY * baseValue;
-  };
-
-  // Helper function to get optimized animation styles for mobile
-  const getOptimizedStyle = (baseStyle: React.CSSProperties, mobileOptimizations: boolean = true) => {
-    if (isMobile && mobileOptimizations) {
-      return {
-        ...baseStyle,
-        // Use transform3d for better GPU acceleration on mobile
-        transform: baseStyle.transform?.toString().replace(/translateY\(/g, 'translate3d(0,').replace(/px\)/g, 'px,0)'),
-        // Optimize will-change for mobile
-        willChange: 'transform',
-        // Add backface-visibility for better performance
-        backfaceVisibility: 'hidden',
-        // Use hardware acceleration
-        WebkitTransform: baseStyle.transform?.toString().replace(/translateY\(/g, 'translate3d(0,').replace(/px\)/g, 'px,0)'),
-      };
-    }
-    return baseStyle;
-  };
+  // Get optimized animation variants (for future use)
+  // const optimizedVariants = getOptimizedVariants(deviceInfo, animationConfig);
 
   const handleGetStarted = () => {
     setIsSignupOpen(true);
@@ -469,30 +458,34 @@ export default function LandingPage() {
   };
   
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 text-gray-900 overflow-hidden ${isMobile ? 'scroll-smooth' : ''}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 text-gray-900 overflow-hidden ${deviceInfo.isMobile ? 'scroll-smooth' : ''} loading`}>
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div 
-          className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full animate-pulse"
-          style={getOptimizedStyle({
-            transform: `translateY(${getTransformValue(0.1)}px) rotate(${getTransformValue(0.05)}deg)`,
-            willChange: 'transform',
-          })}
-        ></div>
-        <div 
-          className="absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full animate-pulse delay-1000"
-          style={getOptimizedStyle({
-            transform: `translateY(${getTransformValue(-0.05)}px) rotate(${getTransformValue(-0.03)}deg)`,
-            willChange: 'transform',
-          })}
-        ></div>
-        <div 
-          className="absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full animate-pulse delay-2000"
-          style={getOptimizedStyle({
-            transform: `translateY(${getTransformValue(0.08)}px) rotate(${getTransformValue(0.02)}deg)`,
-            willChange: 'transform',
-          })}
-        ></div>
+        {animationConfig.enableParallax && (
+          <>
+            <div 
+              className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full animate-pulse"
+              style={getOptimizedStyle({
+                transform: getOptimizedTransform(scrollY * 0.1, deviceInfo, animationConfig),
+                willChange: 'transform',
+              }, deviceInfo, animationConfig)}
+            ></div>
+            <div 
+              className="absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full animate-pulse delay-1000"
+              style={getOptimizedStyle({
+                transform: getOptimizedTransform(scrollY * -0.05, deviceInfo, animationConfig),
+                willChange: 'transform',
+              }, deviceInfo, animationConfig)}
+            ></div>
+            <div 
+              className="absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full animate-pulse delay-2000"
+              style={getOptimizedStyle({
+                transform: getOptimizedTransform(scrollY * 0.08, deviceInfo, animationConfig),
+                willChange: 'transform',
+              }, deviceInfo, animationConfig)}
+            ></div>
+          </>
+        )}
         {/* Medical Grid Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
@@ -748,10 +741,10 @@ export default function LandingPage() {
             <p 
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
               style={getOptimizedStyle({
-                transform: `translateY(${getTransformValue(0.1)}px)`,
+                transform: getOptimizedTransform(scrollY * 0.1, deviceInfo, animationConfig),
                 transition: 'transform 0.1s ease-out',
                 willChange: 'transform',
-              })}
+              }, deviceInfo, animationConfig)}
             >
               Transform your healthcare experience with blockchain-powered, HIPAA-compliant health record management. 
               Secure, accessible, and completely under your control.
@@ -1004,9 +997,9 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-20"
             style={getOptimizedStyle({
-              transform: `translateY(${getTransformValue(0.03)}px)`,
+              transform: getOptimizedTransform(scrollY * 0.03, deviceInfo, animationConfig),
               willChange: 'transform',
-            })}
+            }, deviceInfo, animationConfig)}
           >
             <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
@@ -1035,10 +1028,10 @@ export default function LandingPage() {
                 key={index}
                 className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8 text-center"
                 style={getOptimizedStyle({
-                  transform: `translateY(${getTransformValue(0.01 + index * 0.005)}px)`,
+                  transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
                   transitionDelay: `${index * 100}ms`,
                   willChange: 'transform',
-                })}
+                }, deviceInfo, animationConfig)}
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <tech.icon className="w-8 h-8 text-white" />
@@ -1060,9 +1053,9 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-20"
             style={getOptimizedStyle({
-              transform: `translateY(${getTransformValue(0.02)}px)`,
+              transform: getOptimizedTransform(scrollY * 0.02, deviceInfo, animationConfig),
               willChange: 'transform',
-            })}
+            }, deviceInfo, animationConfig)}
           >
             <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
@@ -1108,10 +1101,10 @@ export default function LandingPage() {
                 key={index}
                 className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8"
                 style={getOptimizedStyle({
-                  transform: `translateY(${getTransformValue(0.01 + index * 0.005)}px)`,
+                  transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
                   transitionDelay: `${index * 100}ms`,
                   willChange: 'transform',
-                })}
+                }, deviceInfo, animationConfig)}
               >
                 <div className="flex items-center space-x-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -1152,10 +1145,10 @@ export default function LandingPage() {
           <h2 
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
             style={getOptimizedStyle({
-              transform: `translateY(${getTransformValue(0.005)}px)`,
+              transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
               paddingBottom: '0.5rem',
               willChange: 'transform',
-            })}
+            }, deviceInfo, animationConfig)}
           >
             <span 
               style={{
@@ -1170,19 +1163,19 @@ export default function LandingPage() {
           <p 
             className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-12 max-w-3xl mx-auto font-light leading-relaxed px-4"
             style={getOptimizedStyle({
-              transform: `translateY(${getTransformValue(0.005)}px)`,
+              transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
               paddingBottom: '0.25rem',
               willChange: 'transform',
-            })}
+            }, deviceInfo, animationConfig)}
           >
             Join thousands of users who trust SecureHealth with their most sensitive health information.
           </p>
           <div 
             className="flex flex-col sm:flex-row gap-6 justify-center"
             style={getOptimizedStyle({
-              transform: `translateY(${getTransformValue(0.005)}px)`,
+              transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
               willChange: 'transform',
-            })}
+            }, deviceInfo, animationConfig)}
           >
             <Button 
               size="lg"

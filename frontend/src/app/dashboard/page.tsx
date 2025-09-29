@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { authService, User } from '@/lib/auth';
+// import { useDeviceOptimization } from '@/lib/animations'; // For future use
+import { PageLoader } from '@/components/LoadingSpinner';
 import { 
   Heart, 
   Shield, 
@@ -95,6 +97,9 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
+  // Device optimization (for future use)
+  // const { deviceInfo, animationConfig } = useDeviceOptimization();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -111,22 +116,31 @@ export default function DashboardPage() {
         authService.logout();
         router.push('/');
       } finally {
-        setLoading(false);
+        // Add small delay for smoother loading experience
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
       }
     };
 
     initializeAuth();
   }, [router]);
 
+  // Add loaded class after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const mainContainer = document.querySelector('.loading');
+      if (mainContainer) {
+        mainContainer.classList.remove('loading');
+        mainContainer.classList.add('loaded');
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!user) {
@@ -134,7 +148,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen loading">
       {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
