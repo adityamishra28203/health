@@ -6,13 +6,12 @@ import { OfflineWarning } from "@/components/offline-warning";
 import { Toaster } from "sonner";
 import { ChunkLoadErrorBoundary } from "@/components/ChunkLoadErrorBoundary";
 import "@/lib/chunkLoader"; // Import chunk loader utility
-import { preloadCriticalResources } from "@/lib/animations";
+// import { preloadCriticalResources } from "@/lib/animations"; // Not needed for font optimization
 
 // Optimize font loading
 const inter = Inter({ 
   subsets: ["latin"],
   display: 'swap',
-  preload: true,
   fallback: ['system-ui', 'arial'],
 });
 
@@ -61,16 +60,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Preload critical resources on client side
-  if (typeof window !== 'undefined') {
-    preloadCriticalResources();
-  }
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Preload critical resources */}
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://health-2v5j.vercel.app" />
