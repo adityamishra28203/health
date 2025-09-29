@@ -154,7 +154,7 @@ export default function DashboardPage() {
 
   // Force visibility for debugging
   useEffect(() => {
-    const mainContainer = document.querySelector('.loading');
+    const mainContainer = document.querySelector('.loading') as HTMLElement;
     if (mainContainer) {
       mainContainer.style.opacity = '1';
       mainContainer.style.visibility = 'visible';
