@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const multer = require('multer');
 
 // Create Express app
 const app = express();
@@ -19,6 +20,26 @@ app.use(cors({
 
 // Parse JSON bodies
 app.use(express.json());
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow common file types
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt/;
+    const extname = allowedTypes.test(file.originalname.toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only images, PDFs, and documents are allowed'));
+    }
+  }
+});
 
 // Password hashing function
 function hashPassword(password) {
@@ -211,59 +232,85 @@ app.post('/auth/logout', (req, res) => {
   });
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
-    platform: 'vercel',
-    message: 'HealthWallet API is running',
-    cors: 'enabled',
-    endpoints: [
-      '/health',
-      '/',
-      '/auth/login',
-      '/auth/register',
-      '/auth/profile',
-      '/auth/logout',
-      '/health-records',
-      '/health-records/statistics',
-      '/health-records/:id',
-      '/api/health-records',
-      '/api/insurance-claims',
-      '/api/analytics',
-      '/api/docs'
-    ]
-  });
-});
-
-// Basic API endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'HealthWallet API is running!',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    platform: 'vercel',
-    status: 'public',
-    endpoints: {
-      health: '/health',
-      records: '/api/health-records',
-      claims: '/api/insurance-claims',
-      analytics: '/api/analytics',
-      docs: '/api/docs'
+// File upload endpoint
+app.post('/files/upload', upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'No file uploaded',
+        timestamp: new Date().toISOString()
+      });
     }
-  });
+
+    // Mock file upload response
+    const mockFileResponse = {
+      id: Date.now().toString(),
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+      mimeType: req.file.mimetype,
+      fileUrl: `https://securehealth-storage.com/files/${Date.now()}-${req.file.originalname}`,
+      uploadedAt: new Date().toISOString(),
+      status: 'uploaded'
+    };
+
+    res.status(200).json({
+      file: mockFileResponse,
+      message: 'File uploaded successfully'
+    });
+  } catch (error) {
+    console.error('File upload error:', error);
+    res.status(500).json({
+      error: 'Upload Error',
+      message: 'Failed to upload file',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
-// Public test endpoint
-app.get('/test', (req, res) => {
-  res.json({
-    message: 'Backend is working!',
-    timestamp: new Date().toISOString(),
-    status: 'success'
-  });
+// Avatar upload endpoint
+app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'No avatar file uploaded',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Check if it's an image
+    if (!req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Avatar must be an image file',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Mock avatar upload response
+    const mockAvatarResponse = {
+      id: Date.now().toString(),
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+      mimeType: req.file.mimetype,
+      avatarUrl: `https://securehealth-storage.com/avatars/${Date.now()}-${req.file.originalname}`,
+      uploadedAt: new Date().toISOString(),
+      status: 'uploaded'
+    };
+
+    res.status(200).json({
+      avatar: mockAvatarResponse,
+      message: 'Avatar uploaded successfully'
+    });
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    res.status(500).json({
+      error: 'Upload Error',
+      message: 'Failed to upload avatar',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Health Records endpoints (matching frontend expectations)
@@ -396,6 +443,63 @@ app.post('/health-records', (req, res) => {
   };
 
   res.status(201).json(newRecord);
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    platform: 'vercel',
+    message: 'HealthWallet API is running',
+    cors: 'enabled',
+    endpoints: [
+      '/health',
+      '/',
+      '/auth/login',
+      '/auth/register',
+      '/auth/profile',
+      '/auth/logout',
+      '/files/upload',
+      '/files/upload-avatar',
+      '/health-records',
+      '/health-records/statistics',
+      '/health-records/:id',
+      '/api/health-records',
+      '/api/insurance-claims',
+      '/api/analytics',
+      '/api/docs'
+    ]
+  });
+});
+
+// Basic API endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'HealthWallet API is running!',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    platform: 'vercel',
+    status: 'public',
+    endpoints: {
+      health: '/health',
+      records: '/api/health-records',
+      claims: '/api/insurance-claims',
+      analytics: '/api/analytics',
+      docs: '/api/docs'
+    }
+  });
+});
+
+// Public test endpoint
+app.get('/test', (req, res) => {
+  res.json({
+    message: 'Backend is working!',
+    timestamp: new Date().toISOString(),
+    status: 'success'
+  });
 });
 
 // Sample health records endpoint (keeping for backward compatibility)
