@@ -11,18 +11,48 @@ const app = express();
 
 // Enable CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') || [
-    'http://localhost:3000', 
-    'http://localhost:8081',
-    'https://healthwallet.vercel.app',
-    'https://healthwallet-frontend.vercel.app',
-    'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app',
-    'https://health-five-lac.vercel.app',
-    'https://healthify-gilt.vercel.app',
-    'https://health-psi-three.vercel.app'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
+      'http://localhost:3000', 
+      'http://localhost:8081',
+      'https://healthwallet.vercel.app',
+      'https://healthwallet-frontend.vercel.app',
+      'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app',
+      'https://health-five-lac.vercel.app',
+      'https://healthify-gilt.vercel.app',
+      'https://health-psi-three.vercel.app'
+    ];
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow all Vercel deployments for your project
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    console.log('CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200
 }));
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
 
 // Parse JSON bodies
 app.use(express.json({ limit: '50mb' }));
