@@ -118,11 +118,8 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       // Update local avatar state immediately
       setAvatar(uploadResult.url);
       
-      // Immediately update the profile with the new avatar
-      const updatedUser = await authService.updateProfile({ avatar: uploadResult.url });
-      onUpdate(updatedUser);
-      
-      toast.success('Avatar updated successfully');
+      // Don't immediately update profile - let user save manually
+      toast.success('Avatar uploaded successfully. Click Save to update your profile.');
     } catch (error: unknown) {
       console.error('Error uploading avatar:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update avatar');
