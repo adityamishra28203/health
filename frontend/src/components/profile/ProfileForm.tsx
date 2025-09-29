@@ -159,7 +159,9 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       if (formData.lastName !== undefined && formData.lastName !== user.lastName) {
         updateData.lastName = formData.lastName;
       }
-      // Email is not editable for security reasons - removed from update data
+      if (formData.email !== undefined && formData.email !== user.email) {
+        updateData.email = formData.email;
+      }
       if (formData.phone !== undefined && formData.phone !== user.phone) {
         updateData.phone = formData.phone; // Allow empty string to clear phone
       }
@@ -318,12 +320,13 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               name="email"
               type="email"
               value={formData.email}
-              disabled={true} // Always disabled for security
-              placeholder="Email cannot be changed"
-              className="mt-1 bg-gray-50 cursor-not-allowed"
+              onChange={handleInputChange}
+              disabled={!isEditing}
+              placeholder="Enter your email address"
+              className="mt-1"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Email address cannot be changed for security reasons
+              Your email address for account notifications
             </p>
           </div>
         </div>
