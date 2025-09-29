@@ -135,7 +135,7 @@ class HealthRecordsService {
       const response = await axios.get(`${API_BASE_URL}/health-records`, {
         headers: this.getAuthHeaders(),
         params: { page, limit },
-        timeout: 10000, // 10 second timeout
+        timeout: 5000, // Reduced to 5 second timeout for faster loading
       });
       return response.data;
     } catch (error: unknown) {
@@ -217,7 +217,7 @@ class HealthRecordsService {
     try {
       const response = await axios.get(`${API_BASE_URL}/health-records/statistics`, {
         headers: this.getAuthHeaders(),
-        timeout: 10000, // 10 second timeout
+        timeout: 3000, // Reduced to 3 second timeout for faster loading
       });
       return response.data;
     } catch (error: unknown) {

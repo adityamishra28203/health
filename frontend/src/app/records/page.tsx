@@ -55,11 +55,32 @@ export default function RecordsPage() {
       }
       
       setConnectionError(false); // Reset connection error state
-      const response = await healthRecordsService.getHealthRecords(1, 100);
-      setRecords(response.records);
       
-      const stats = await healthRecordsService.getHealthRecordStatistics();
-      setStatistics(stats);
+      // Make both API calls in parallel for faster loading
+      const [recordsResponse, statsResponse] = await Promise.allSettled([
+        healthRecordsService.getHealthRecords(1, 100),
+        healthRecordsService.getHealthRecordStatistics()
+      ]);
+      
+      // Handle records response
+      if (recordsResponse.status === 'fulfilled') {
+        setRecords(recordsResponse.value.records);
+        // Stop main loading as soon as we have records, don't wait for statistics
+        setLoading(false);
+      } else {
+        console.error('Failed to load records:', recordsResponse.reason);
+        setRecords([]);
+        setLoading(false);
+      }
+      
+      // Handle statistics response (non-blocking)
+      if (statsResponse.status === 'fulfilled') {
+        setStatistics(statsResponse.value);
+      } else {
+        console.error('Failed to load statistics:', statsResponse.reason);
+        setStatistics(null);
+      }
+      
     } catch (error: unknown) {
       console.error('Error loading records:', error);
       
