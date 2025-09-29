@@ -4,6 +4,8 @@ import "./globals.css";
 import Layout from "@/components/layout/Layout";
 import { OfflineWarning } from "@/components/offline-warning";
 import { Toaster } from "sonner";
+import { ChunkLoadErrorBoundary } from "@/components/ChunkLoadErrorBoundary";
+import "@/lib/chunkLoader"; // Import chunk loader utility
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,11 +44,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Layout>
-          {children}
-        </Layout>
-        <OfflineWarning />
-        <Toaster />
+        <ChunkLoadErrorBoundary>
+          <Layout>
+            {children}
+          </Layout>
+          <OfflineWarning />
+          <Toaster />
+        </ChunkLoadErrorBoundary>
       </body>
     </html>
   );
