@@ -466,17 +466,19 @@ app.post('/auth/register', async (req, res) => {
 
 app.get('/auth/profile', async (req, res) => {
   try {
-    // For now, return the first user (admin user)
+    // For now, return the first user (for demo purposes)
     // In a real app, you'd get the user ID from the JWT token
-    const user = await User.findOne({ email: 'admin@healthify.com' }).select('-password');
+    const user = await User.findOne().sort({ createdAt: 1 }).select('-password');
     
     if (!user) {
       return res.status(404).json({
         error: 'User Error',
-        message: 'User not found',
+        message: 'No users found in database',
         timestamp: new Date().toISOString()
       });
     }
+    
+    console.log('👤 Fetching profile for user:', { id: user._id, email: user.email, avatar: user.avatar });
     
     res.status(200).json({
       id: user._id,
@@ -511,15 +513,24 @@ app.put('/auth/profile', async (req, res) => {
     
     console.log('🔧 Profile update request:', { firstName, lastName, email, phone, avatar, role });
     
-    // For now, we'll update the first user (admin user)
-    // In a real app, you'd get the user ID from the JWT token
-    const user = await User.findOne({ email: 'admin@healthify.com' });
+    // Try to find user by email first, then fallback to first user
+    let user;
+    if (email) {
+      user = await User.findOne({ email: email.toLowerCase() });
+      console.log('🔍 Searching for user by email:', email.toLowerCase());
+    }
+    
+    // If not found by email, get the first user (for demo purposes)
+    if (!user) {
+      user = await User.findOne().sort({ createdAt: 1 }); // Get oldest user
+      console.log('🔍 Using first user in database');
+    }
     
     if (!user) {
-      console.log('❌ User not found in database');
+      console.log('❌ No users found in database');
       return res.status(404).json({
         error: 'User Error',
-        message: 'User not found',
+        message: 'No users found in database',
         timestamp: new Date().toISOString()
       });
     }
@@ -529,7 +540,18 @@ app.put('/auth/profile', async (req, res) => {
     // Update user fields
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
-    if (email) user.email = email.toLowerCase();
+    if (email && email !== user.email) {
+      // Check if new email is already taken by another user
+      const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
+      if (existingUser) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Email is already taken by another user',
+          timestamp: new Date().toISOString()
+        });
+      }
+      user.email = email.toLowerCase();
+    }
     if (phone) user.phone = phone;
     if (avatar) {
       console.log('🖼️ Updating avatar from:', user.avatar, 'to:', avatar);
