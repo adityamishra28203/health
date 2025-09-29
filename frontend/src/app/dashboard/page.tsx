@@ -109,7 +109,8 @@ export default function DashboardPage() {
       
       if (!isAuth) {
         console.log('Dashboard: Not authenticated, redirecting to home');
-        router.push('/');
+        // Use window.location.href for more reliable redirect
+        window.location.href = '/';
         return;
       }
 
@@ -117,22 +118,26 @@ export default function DashboardPage() {
         console.log('Dashboard: Fetching user profile...');
         const userData = await authService.getProfile();
         console.log('Dashboard: User data received:', userData);
+        console.log('Dashboard: Setting user state...');
         setUser(userData);
+        console.log('Dashboard: User state set, setting loading to false');
+        setLoading(false);
       } catch (error) {
         console.error('Dashboard: Failed to get profile:', error);
-        // Don't logout immediately, try to handle gracefully
-        setLoading(false);
+        // If profile fetch fails, redirect to login
+        console.log('Dashboard: Profile fetch failed, redirecting to home');
+        window.location.href = '/';
         return;
-      } finally {
-        // Add small delay for smoother loading experience
-        setTimeout(() => {
-          setLoading(false);
-        }, 300);
       }
     };
 
     initializeAuth();
   }, [router]);
+
+  // Debug user state changes
+  useEffect(() => {
+    console.log('Dashboard: User state changed:', user);
+  }, [user]);
 
   // Add loaded class after initial render
   useEffect(() => {
@@ -154,10 +159,18 @@ export default function DashboardPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto p-6">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your dashboard...</p>
-          <p className="text-sm text-gray-500 mt-2">If this takes too long, please try refreshing the page.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading your dashboard...</h2>
+          <p className="text-muted-foreground mb-4">Please wait while we load your health data.</p>
+          <p className="text-sm text-gray-500 mb-4">If this takes too long, you may need to log in again.</p>
+          <Button 
+            onClick={() => window.location.href = '/'}
+            variant="outline"
+            className="mt-4"
+          >
+            Go to Login
+          </Button>
         </div>
       </div>
     );
