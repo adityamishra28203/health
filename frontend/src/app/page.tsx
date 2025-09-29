@@ -228,6 +228,19 @@ export default function LandingPage() {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Auto-hide password functions
+  const handlePasswordInputFocus = (type: 'login' | 'signup' | 'confirm') => {
+    if (type === 'login') setShowLoginPassword(false);
+    else if (type === 'signup') setShowSignupPassword(false);
+    else if (type === 'confirm') setShowConfirmPassword(false);
+  };
+
+  const handlePasswordInputBlur = (type: 'login' | 'signup' | 'confirm') => {
+    if (type === 'login') setShowLoginPassword(false);
+    else if (type === 'signup') setShowSignupPassword(false);
+    else if (type === 'confirm') setShowConfirmPassword(false);
+  };
+
   // Password encryption function
   const encryptPassword = async (password: string): Promise<string> => {
     try {
@@ -1253,7 +1266,7 @@ export default function LandingPage() {
                 placeholder="Enter your email"
                 value={loginData.email}
                 onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 hover:border-blue-300 hover:shadow-lg transform hover:scale-[1.02]"
+                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 hover:border-blue-300 hover:shadow-lg transform hover:scale-[1.02]"
                 required
               />
             </motion.div>
@@ -1279,13 +1292,16 @@ export default function LandingPage() {
                   placeholder="Enter your password"
                   value={loginData.password}
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 hover:border-blue-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  onFocus={() => handlePasswordInputFocus('login')}
+                  onBlur={() => handlePasswordInputBlur('login')}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 hover:border-blue-300 hover:shadow-lg transform hover:scale-[1.02]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1"
                 >
                   {showLoginPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -1430,7 +1446,7 @@ export default function LandingPage() {
                   placeholder="First name"
                   value={signupData.firstName}
                   onChange={(e) => setSignupData({ ...signupData, firstName: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
                   required
                 />
               </div>
@@ -1450,7 +1466,7 @@ export default function LandingPage() {
                   placeholder="Last name"
                   value={signupData.lastName}
                   onChange={(e) => setSignupData({ ...signupData, lastName: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
                   required
                 />
               </div>
@@ -1476,7 +1492,7 @@ export default function LandingPage() {
                 placeholder="Enter your email"
                 value={signupData.email}
                 onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
                 required
               />
             </motion.div>
@@ -1501,7 +1517,7 @@ export default function LandingPage() {
                 placeholder="Enter your phone number"
                 value={signupData.phone}
                 onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
               />
             </motion.div>
             
@@ -1554,13 +1570,16 @@ export default function LandingPage() {
                   placeholder="Create a password"
                   value={signupData.password}
                   onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  onFocus={() => handlePasswordInputFocus('signup')}
+                  onBlur={() => handlePasswordInputBlur('signup')}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowSignupPassword(!showSignupPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1"
                 >
                   {showSignupPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -1612,13 +1631,16 @@ export default function LandingPage() {
                   placeholder="Confirm your password"
                   value={signupData.confirmPassword}
                   onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
+                  onFocus={() => handlePasswordInputFocus('confirm')}
+                  onBlur={() => handlePasswordInputBlur('confirm')}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg transform hover:scale-[1.02]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-5 h-5" />
