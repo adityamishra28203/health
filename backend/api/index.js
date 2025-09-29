@@ -681,9 +681,9 @@ app.get('/auth/profile', async (req, res) => {
 app.put('/auth/profile', async (req, res) => {
   try {
     // Mock profile update - replace with real profile update logic
-    const { firstName, lastName, email, phone, avatar, role } = req.body;
+    const { firstName, lastName, email, phone, avatar, role, bio } = req.body;
     
-    console.log('🔧 Profile update request:', { firstName, lastName, email, phone, avatar, role });
+    console.log('🔧 Profile update request:', { firstName, lastName, email, phone, avatar, role, bio });
     
     // Check if database is connected
     if (!isConnected) {
@@ -723,8 +723,8 @@ app.put('/auth/profile', async (req, res) => {
     console.log('👤 Found user:', { id: user._id, email: user.email, currentAvatar: user.avatar });
     
     // Update user fields
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
     if (email && email !== user.email) {
       // Check if new email is already taken by another user
       const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
@@ -737,7 +737,8 @@ app.put('/auth/profile', async (req, res) => {
       }
       user.email = email.toLowerCase();
     }
-    if (phone) user.phone = phone;
+    if (phone !== undefined) user.phone = phone; // Allow empty string to clear phone
+    if (bio !== undefined) user.bio = bio; // Allow empty string to clear bio
     if (avatar) {
       console.log('🖼️ Updating avatar from:', user.avatar, 'to:', avatar);
       user.avatar = avatar;
@@ -746,10 +747,24 @@ app.put('/auth/profile', async (req, res) => {
     
     // Save updated user
     try {
+      console.log('💾 Attempting to save user with data:', {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        bio: user.bio,
+        avatar: user.avatar ? 'present' : 'null'
+      });
+      
       await user.save();
       console.log('✅ User saved successfully, new avatar:', user.avatar);
     } catch (saveError) {
       console.error('❌ Error saving user:', saveError);
+      console.error('❌ Save error details:', {
+        message: saveError.message,
+        name: saveError.name,
+        errors: saveError.errors
+      });
       return res.status(500).json({
         error: 'Database Error',
         message: 'Failed to save user profile',

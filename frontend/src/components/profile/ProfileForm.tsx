@@ -138,10 +138,10 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       // Only send fields that have values or have been changed
       const updateData: Record<string, unknown> = {};
       
-      if (formData.firstName && formData.firstName !== user.firstName) {
+      if (formData.firstName !== undefined && formData.firstName !== user.firstName) {
         updateData.firstName = formData.firstName;
       }
-      if (formData.lastName && formData.lastName !== user.lastName) {
+      if (formData.lastName !== undefined && formData.lastName !== user.lastName) {
         updateData.lastName = formData.lastName;
       }
       if (formData.email && formData.email !== user.email) {
@@ -156,6 +156,8 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       if (avatar && avatar !== user.avatar) {
         updateData.avatar = avatar;
       }
+      
+      console.log('📤 Sending profile update data:', updateData);
       
       const updatedUser = await authService.updateProfile(updateData);
       
