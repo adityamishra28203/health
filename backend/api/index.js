@@ -16,7 +16,10 @@ app.use(cors({
     'http://localhost:8081',
     'https://healthwallet.vercel.app',
     'https://healthwallet-frontend.vercel.app',
-    'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app'
+    'https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app',
+    'https://health-five-lac.vercel.app',
+    'https://healthify-gilt.vercel.app',
+    'https://health-psi-three.vercel.app'
   ],
   credentials: true,
 }));

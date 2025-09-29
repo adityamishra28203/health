@@ -25,6 +25,9 @@ async function bootstrap() {
         'http://localhost:3002',
         'https://healthwallet.vercel.app',
         'https://healthwallet-frontend.vercel.app',
+        'https://health-five-lac.vercel.app',
+        'https://healthify-gilt.vercel.app',
+        'https://health-psi-three.vercel.app',
         process.env.FRONTEND_URL
       ].filter(Boolean) as string[];
       
