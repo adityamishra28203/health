@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const mongoose = require('mongoose');
 
 // Create Express app
 const app = express();
@@ -65,184 +68,465 @@ function hashEncryptedPassword(encryptedPassword) {
 // Pre-compute the SHA-256 hash of 'Admin123!' for testing
 const ADMIN_PASSWORD_SHA256 = '3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121';
 
-// Mock user database with hashed passwords
-const mockUsers = [
-  {
-    id: '1',
-    firstName: 'Admin',
-    lastName: 'User',
-    email: 'admin@healthify.com',
-    role: 'patient',
-    avatar: null,
-    password: hashEncryptedPassword(ADMIN_PASSWORD_SHA256), // Pre-hashed encrypted password
-    createdAt: new Date().toISOString()
-  }
-];
+// MongoDB connection and User schema
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://adityamishraubi:9460%40Mongodb@cluster0.2rqwy.mongodb.net/health';
 
-// Authentication routes
-app.post('/auth/login', (req, res) => {
-  const { email, password } = req.body;
+// User schema for MongoDB
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
+  role: {
+    type: String,
+    enum: ['patient', 'doctor', 'hospital_admin', 'insurer', 'system_admin'],
+    default: 'patient'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'suspended', 'pending_verification'],
+    default: 'active'
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  avatar: {
+    type: String
+  },
+  bio: {
+    type: String,
+    maxlength: 500
+  },
+  emergencyContact: {
+    type: String
+  },
+  bloodType: {
+    type: String
+  },
+  allergies: [{
+    type: String
+  }],
+  medications: [{
+    type: String
+  }],
+  medicalConditions: [{
+    type: String
+  }],
+  organization: {
+    type: String
+  },
+  licenseNumber: {
+    type: String
+  },
+  specialization: {
+    type: String
+  },
+  lastLogin: {
+    type: Date
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+  lockUntil: {
+    type: Date
+  }
+}, {
+  timestamps: true
+});
+
+// Virtual for account lock status
+userSchema.virtual('isLocked').get(function() {
+  return !!(this.lockUntil && this.lockUntil > new Date());
+});
+
+// Method to compare password
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) return false;
   
-  // Basic validation
-  if (!email || !password) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'Email and password are required',
-      timestamp: new Date().toISOString()
+  try {
+    const bcrypt = require('bcryptjs');
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw new Error('Password comparison failed');
+  }
+};
+
+// Method to increment login attempts
+userSchema.methods.incLoginAttempts = function() {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.lockUntil && this.lockUntil < new Date()) {
+    return this.updateOne({
+      $unset: { lockUntil: 1 },
+      $set: { loginAttempts: 1 }
     });
   }
-
-  // Password validation (skip for encrypted passwords - they are 64 character SHA-256 hashes)
-  if (password.length === 64 && /^[a-f0-9]+$/.test(password)) {
-    // This is an encrypted password (SHA-256 hash), skip format validation
-  } else {
-    // This is a plain text password, validate format
-    if (password.length < 8) {
-      return res.status(400).json({
-        error: 'Validation Error',
-        message: 'Password must be at least 8 characters long',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
-    if (!passwordRegex.test(password)) {
-      return res.status(400).json({
-        error: 'Validation Error',
-        message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-        timestamp: new Date().toISOString()
-      });
-    }
+  
+  const updates = { $inc: { loginAttempts: 1 } };
+  
+  // Lock account after 5 failed attempts for 2 hours
+  if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
+    updates.$set = { lockUntil: new Date(Date.now() + 2 * 60 * 60 * 1000) };
   }
+  
+  return this.updateOne(updates);
+};
 
-  // Find user and verify password
-  const user = mockUsers.find(u => u.email === email);
-  if (user && verifyPassword(password, user.password)) {
-    const { password: _, ...userWithoutPassword } = user; // Remove password from response
+// Method to reset login attempts
+userSchema.methods.resetLoginAttempts = function() {
+  return this.updateOne({
+    $unset: { loginAttempts: 1, lockUntil: 1 }
+  });
+};
+
+const User = mongoose.model('User', userSchema);
+
+// Connect to MongoDB
+let isConnected = false;
+
+async function connectToDatabase() {
+  if (isConnected) {
+    return;
+  }
+  
+  try {
+    console.log('🔌 Connecting to MongoDB...');
+    await mongoose.connect(MONGODB_URI);
+    isConnected = true;
+    console.log('✅ Connected to MongoDB successfully!');
+    
+    // Create default admin user if it doesn't exist
+    const existingAdmin = await User.findOne({ email: 'admin@healthify.com' });
+    if (!existingAdmin) {
+      const adminUser = new User({
+        email: 'admin@healthify.com',
+        password: hashEncryptedPassword(ADMIN_PASSWORD_SHA256),
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'patient',
+        status: 'active',
+        emailVerified: true
+      });
+      
+      await adminUser.save();
+      console.log('✅ Created default admin user');
+    }
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error);
+    // Fallback to in-memory storage if MongoDB fails
+    console.log('⚠️ Falling back to in-memory storage');
+  }
+}
+
+// Initialize database connection
+connectToDatabase();
+
+// Authentication routes
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Basic validation
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Email and password are required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Password validation (skip for encrypted passwords - they are 64 character SHA-256 hashes)
+    if (password.length === 64 && /^[a-f0-9]+$/.test(password)) {
+      // This is an encrypted password (SHA-256 hash), skip format validation
+    } else {
+      // This is a plain text password, validate format
+      if (password.length < 8) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Password must be at least 8 characters long',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Find user in database
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(401).json({
+        error: 'Authentication Error',
+        message: 'Invalid email or password',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Check if account is locked
+    if (user.isLocked) {
+      const lockTime = user.lockUntil;
+      const timeRemaining = lockTime ? Math.ceil((lockTime.getTime() - Date.now()) / (1000 * 60)) : 0;
+      return res.status(401).json({
+        error: 'Account Locked',
+        message: `Account is temporarily locked. Try again in ${timeRemaining} minutes.`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      // Increment login attempts
+      await user.incLoginAttempts();
+      return res.status(401).json({
+        error: 'Authentication Error',
+        message: 'Invalid email or password',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Reset login attempts on successful login
+    if (user.loginAttempts > 0) {
+      await user.resetLoginAttempts();
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate token
     const mockToken = 'mock-jwt-token-' + Date.now();
     
     return res.status(200).json({
-      user: userWithoutPassword,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        status: user.status,
+        emailVerified: user.emailVerified,
+        avatar: user.avatar,
+        createdAt: user.createdAt
+      },
       accessToken: mockToken,
       message: 'Login successful'
     });
-  }
 
-  // Invalid credentials
-  res.status(401).json({
-    error: 'Authentication Error',
-    message: 'Invalid email or password',
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.post('/auth/register', (req, res) => {
-  const { firstName, lastName, email, password, phone, role } = req.body;
-  
-  // Basic validation
-  if (!firstName || !lastName || !email || !password || !role) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'All required fields must be provided',
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'An error occurred during login',
       timestamp: new Date().toISOString()
     });
   }
+});
 
-  // Password validation (skip for encrypted passwords - they are 64 character SHA-256 hashes)
-  if (password.length === 64 && /^[a-f0-9]+$/.test(password)) {
-    // This is an encrypted password (SHA-256 hash), skip format validation
-  } else {
-    // This is a plain text password, validate format
-    if (password.length < 8) {
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, phone, role } = req.body;
+    
+    // Basic validation
+    if (!firstName || !lastName || !email || !password || !role) {
       return res.status(400).json({
         error: 'Validation Error',
-        message: 'Password must be at least 8 characters long',
+        message: 'All required fields must be provided',
         timestamp: new Date().toISOString()
       });
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
-    if (!passwordRegex.test(password)) {
+    // Password validation (skip for encrypted passwords - they are 64 character SHA-256 hashes)
+    if (password.length === 64 && /^[a-f0-9]+$/.test(password)) {
+      // This is an encrypted password (SHA-256 hash), skip format validation
+    } else {
+      // This is a plain text password, validate format
+      if (password.length < 8) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Password must be at least 8 characters long',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
       return res.status(400).json({
         error: 'Validation Error',
-        message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+        message: 'User with this email already exists',
         timestamp: new Date().toISOString()
       });
     }
-  }
 
-  // Check if user already exists
-  const existingUser = mockUsers.find(u => u.email === email);
-  if (existingUser) {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: 'User with this email already exists',
+    // Create new user with hashed encrypted password
+    const hashedPassword = hashEncryptedPassword(password);
+    const newUser = new User({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      phone: phone?.trim(),
+      role,
+      status: 'active',
+      emailVerified: false,
+      phoneVerified: false
+    });
+
+    // Save to database
+    await newUser.save();
+
+    // Generate token
+    const mockToken = 'mock-jwt-token-' + Date.now();
+    
+    res.status(201).json({
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+        status: newUser.status,
+        emailVerified: newUser.emailVerified,
+        avatar: newUser.avatar,
+        createdAt: newUser.createdAt
+      },
+      accessToken: mockToken,
+      message: 'Registration successful'
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'User with this email already exists',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'An error occurred during registration',
       timestamp: new Date().toISOString()
     });
   }
-
-  // Create new user with hashed encrypted password
-  const hashedPassword = hashEncryptedPassword(password);
-  const newUser = {
-    id: Date.now().toString(),
-    firstName,
-    lastName,
-    email,
-    role,
-    phone: phone || null,
-    avatar: null,
-    password: hashedPassword,
-    createdAt: new Date().toISOString()
-  };
-
-  // Add to mock database
-  mockUsers.push(newUser);
-
-  const { password: _, ...userWithoutPassword } = newUser; // Remove password from response
-  const mockToken = 'mock-jwt-token-' + Date.now();
-  
-  res.status(201).json({
-    user: userWithoutPassword,
-    accessToken: mockToken,
-    message: 'Registration successful'
-  });
 });
 
-app.get('/auth/profile', (req, res) => {
-  // Mock profile - replace with real profile logic
-  const mockUser = {
-    id: '1',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    role: 'patient',
-    phone: '+1234567890',
-    avatar: null,
-    createdAt: new Date().toISOString()
-  };
-  
-  res.status(200).json(mockUser);
+app.get('/auth/profile', async (req, res) => {
+  try {
+    // For now, return the first user (admin user)
+    // In a real app, you'd get the user ID from the JWT token
+    const user = await User.findOne({ email: 'admin@healthify.com' }).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        error: 'User Error',
+        message: 'User not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    res.status(200).json({
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      avatar: user.avatar,
+      bio: user.bio,
+      bloodType: user.bloodType,
+      allergies: user.allergies,
+      medications: user.medications,
+      medicalConditions: user.medicalConditions,
+      emergencyContact: user.emergencyContact,
+      createdAt: user.createdAt
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'Failed to fetch profile',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
-app.put('/auth/profile', (req, res) => {
+app.put('/auth/profile', async (req, res) => {
   try {
     // Mock profile update - replace with real profile update logic
     const { firstName, lastName, email, phone, avatar, role } = req.body;
     
-    const updatedUser = {
-      id: '1',
-      firstName: firstName || 'John',
-      lastName: lastName || 'Doe',
-      email: email || 'john.doe@example.com',
-      role: role || 'patient',
-      phone: phone || '+1234567890',
-      avatar: avatar || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    // For now, we'll update the first user (admin user)
+    // In a real app, you'd get the user ID from the JWT token
+    const user = await User.findOne({ email: 'admin@healthify.com' });
+    
+    if (!user) {
+      return res.status(404).json({
+        error: 'User Error',
+        message: 'User not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Update user fields
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (email) user.email = email.toLowerCase();
+    if (phone) user.phone = phone;
+    if (avatar) user.avatar = avatar;
+    if (role) user.role = role;
+    
+    // Save updated user
+    await user.save();
+    
+    const { password: _, ...userWithoutPassword } = user.toObject();
     
     res.status(200).json({
-      user: updatedUser,
+      user: userWithoutPassword,
       message: 'Profile updated successfully'
     });
   } catch (error) {
