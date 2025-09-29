@@ -683,7 +683,35 @@ app.put('/auth/profile', async (req, res) => {
     // Mock profile update - replace with real profile update logic
     const { firstName, lastName, email, phone, avatar, role, bio } = req.body;
     
-    console.log('🔧 Profile update request:', { firstName, lastName, email, phone, avatar, role, bio });
+    // Check if any data is provided
+    if (!firstName && !lastName && !email && !phone && !avatar && !role && !bio) {
+      console.log('❌ No data provided for profile update');
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'No data provided for profile update',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    console.log('🔧 Profile update request:', { 
+      firstName, 
+      lastName, 
+      email, 
+      phone, 
+      avatar: avatar ? `data URL (${avatar.length} chars)` : null, 
+      role, 
+      bio 
+    });
+    
+    // Validate avatar data size if present
+    if (avatar && avatar.length > 10000000) { // 10MB limit
+      console.log('❌ Avatar data too large:', avatar.length, 'characters');
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Avatar image is too large. Please use a smaller image.',
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Check if database is connected
     if (!isConnected) {
