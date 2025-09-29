@@ -817,30 +817,69 @@ export default function LandingPage() {
                   delay: 700
                 }
               ].map((feature, index) => (
-                <Card 
+                <motion.div
                   key={index}
-                  className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 hover:scale-105 rounded-3xl group"
-                  style={{
-                    transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
-                    transitionDelay: `${feature.delay}ms`,
-                    boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                  initial={{ opacity: 0, y: 80, scale: 0.8 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ 
+                    duration: 0.7, 
+                    delay: index * 0.2,
+                    ease: [0.25, 0.46, 0.45, 0.94]
                   }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    y: -15,
+                    transition: { duration: 0.3 }
+                  }}
+                  className="group"
                 >
-                  <CardContent className="p-8 text-center">
-                    <div 
-                      className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 group-hover:scale-110 shadow-lg`}
-                      style={{
-                        transform: `rotate(${scrollY * 0.02}deg)`,
-                      }}
-                    >
-                      <feature.icon className="w-10 h-10 text-white" />
-                    </div>
-                    <h3 className="text-2xl font-semibold text-gray-800 mb-3">{feature.title}</h3>
-                    <p className="text-gray-600 text-lg">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
+                  <Card 
+                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl"
+                    style={{
+                      transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
+                      boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                    }}
+                  >
+                    <CardContent className="p-8 text-center">
+                      <motion.div 
+                        className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg`}
+                        style={{
+                          transform: `rotate(${scrollY * 0.02}deg)`,
+                        }}
+                        whileHover={{ 
+                          rotate: 360,
+                          scale: 1.2,
+                          transition: { duration: 0.6 }
+                        }}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <feature.icon className="w-10 h-10 text-white" />
+                        </motion.div>
+                      </motion.div>
+                      
+                      <motion.h3 
+                        className="text-2xl font-semibold text-gray-800 mb-3"
+                        whileHover={{ color: "#0891b2" }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {feature.title}
+                      </motion.h3>
+                      
+                      <motion.p 
+                        className="text-gray-600 text-lg"
+                        initial={{ opacity: 0.8 }}
+                        whileHover={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {feature.description}
+                      </motion.p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -860,39 +899,84 @@ export default function LandingPage() {
               { number: "256-bit", label: "Encryption", icon: Lock },
               { number: "24/7", label: "Support", icon: Heart }
             ].map((stat, index) => (
-              <Card 
+              <motion.div
                 key={index}
-                className="text-center bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-2xl transition-all duration-500 hover:scale-105 rounded-3xl p-8"
-                style={{
-                  transform: `translateY(${scrollY * (0.01 + index * 0.005)}px)`,
-                  transitionDelay: `${index * 100}ms`,
-                  boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
-                  minHeight: '280px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
+                initial={{ opacity: 0, y: 60, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ 
+                  duration: 0.7, 
+                  delay: index * 0.15,
+                  ease: [0.25, 0.46, 0.45, 0.94]
                 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -10,
+                  transition: { duration: 0.3 }
+                }}
+                className="group"
               >
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                  <stat.icon className="w-10 h-10 text-white" />
-                </div>
-                <div 
-                  className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
+                <Card 
+                  className="text-center bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl p-8"
                   style={{
-                    background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '0 2px 4px rgba(30, 64, 175, 0.1)',
-                    lineHeight: '1.3',
-                    paddingBottom: '0.5rem',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
+                    transform: `translateY(${scrollY * (0.01 + index * 0.005)}px)`,
+                    boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                    minHeight: '280px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                   }}
                 >
-                  {stat.number}
-                </div>
-                <div className="text-base md:text-lg text-gray-600 font-medium leading-relaxed">{stat.label}</div>
-              </Card>
+                  <motion.div 
+                    className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+                    whileHover={{ 
+                      rotate: 360,
+                      scale: 1.1,
+                      transition: { duration: 0.6 }
+                    }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <stat.icon className="w-10 h-10 text-white" />
+                    </motion.div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                    style={{
+                      background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 2px 4px rgba(30, 64, 175, 0.1)',
+                      lineHeight: '1.3',
+                      paddingBottom: '0.5rem',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                    }}
+                    whileHover={{ 
+                      background: 'linear-gradient(135deg, #0891b2 0%, #1e40af 100%)',
+                      transition: { duration: 0.3 }
+                    }}
+                  >
+                    {stat.number}
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="text-base md:text-lg text-gray-600 font-medium leading-relaxed"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    whileHover={{ color: "#1e40af" }}
+                  >
+                    {stat.label}
+                  </motion.div>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -1024,21 +1108,57 @@ export default function LandingPage() {
               { icon: Globe, title: "Cloud-Native", description: "Scalable and always available" },
               { icon: Smartphone, title: "Mobile-First", description: "Access your data anywhere, anytime" }
             ].map((tech, index) => (
-              <Card 
+              <motion.div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8 text-center"
-                style={getOptimizedStyle({
-                  transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
-                  transitionDelay: `${index * 100}ms`,
-                  willChange: 'transform',
-                }, deviceInfo, animationConfig)}
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ 
+                  duration: 0.6, 
+                  delay: index * 0.1,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -10,
+                  transition: { duration: 0.3 }
+                }}
+                className="group"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                  <tech.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">{tech.title}</h3>
-                <p className="text-gray-600">{tech.description}</p>
-              </Card>
+                <Card 
+                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-8 text-center cursor-pointer"
+                  style={getOptimizedStyle({
+                    transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
+                    willChange: 'transform',
+                  }, deviceInfo, animationConfig)}
+                >
+                  <motion.div 
+                    className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+                    whileHover={{ 
+                      rotate: 360,
+                      scale: 1.1,
+                      transition: { duration: 0.5 }
+                    }}
+                  >
+                    <tech.icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform duration-300" />
+                  </motion.div>
+                  <motion.h3 
+                    className="text-xl font-semibold text-gray-800 mb-3"
+                    whileHover={{ color: "#0891b2" }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {tech.title}
+                  </motion.h3>
+                  <motion.p 
+                    className="text-gray-600"
+                    initial={{ opacity: 0.8 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {tech.description}
+                  </motion.p>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -1097,29 +1217,73 @@ export default function LandingPage() {
                 rating: 5
               }
             ].map((testimonial, index) => (
-              <Card 
+              <motion.div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8"
-                style={getOptimizedStyle({
-                  transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
-                  transitionDelay: `${index * 100}ms`,
-                  willChange: 'transform',
-                }, deviceInfo, animationConfig)}
+                initial={{ opacity: 0, y: 60, rotateY: -15 }}
+                whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ 
+                  duration: 0.8, 
+                  delay: index * 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94]
+                }}
+                whileHover={{ 
+                  scale: 1.03,
+                  y: -8,
+                  rotateY: 5,
+                  transition: { duration: 0.3 }
+                }}
+                className="group perspective-1000"
               >
-                <div className="flex items-center space-x-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                      </div>
-                <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                  &ldquo;{testimonial.content}&rdquo;
-                </p>
-                <div className="border-t border-blue-100 pt-4">
-                  <div className="font-semibold text-gray-800">{testimonial.name}</div>
-                  <div className="text-gray-600">{testimonial.role}</div>
-                  <div className="text-blue-600 font-medium">{testimonial.company}</div>
+                <Card 
+                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-8 cursor-pointer h-full"
+                  style={getOptimizedStyle({
+                    transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
+                    willChange: 'transform',
+                  }, deviceInfo, animationConfig)}
+                >
+                  <motion.div 
+                    className="flex items-center space-x-1 mb-4"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                  >
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 + index * 0.1 + i * 0.1 }}
+                      >
+                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                  
+                  <motion.p 
+                    className="text-gray-700 text-lg leading-relaxed mb-6"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                    whileHover={{ color: "#1e40af" }}
+                  >
+                    &ldquo;{testimonial.content}&rdquo;
+                  </motion.p>
+                  
+                  <motion.div 
+                    className="border-t border-blue-100 pt-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                  >
+                    <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
+                      {testimonial.name}
                     </div>
+                    <div className="text-gray-600">{testimonial.role}</div>
+                    <div className="text-blue-600 font-medium">{testimonial.company}</div>
+                  </motion.div>
                 </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -1142,26 +1306,39 @@ export default function LandingPage() {
         </div>
 
         <div className="max-w-4xl mx-auto text-center text-white relative z-10">
-          <h2 
+          <motion.h2 
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={getOptimizedStyle({
               transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
               paddingBottom: '0.5rem',
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
-            <span 
+            <motion.span 
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
+              whileHover={{ 
+                background: 'linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%)',
+                transition: { duration: 0.3 }
+              }}
             >
               Ready to Secure Your Health Data?
-            </span>
-            </h2>
-          <p 
+            </motion.span>
+            </motion.h2>
+            
+          <motion.p 
             className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-12 max-w-3xl mx-auto font-light leading-relaxed px-4"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={getOptimizedStyle({
               transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
               paddingBottom: '0.25rem',
@@ -1169,30 +1346,59 @@ export default function LandingPage() {
             }, deviceInfo, animationConfig)}
           >
             Join thousands of users who trust SecureHealth with their most sensitive health information.
-          </p>
-          <div 
+          </motion.p>
+          
+          <motion.div 
             className="flex flex-col sm:flex-row gap-6 justify-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={getOptimizedStyle({
               transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
-            <Button 
-              size="lg"
-              onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
-              className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
-              <ArrowRight className="w-6 h-6 ml-3" />
+              <Button 
+                size="lg"
+                onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
+                className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-blue-500/25"
+              >
+                {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
+                <motion.div
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowRight className="w-6 h-6 ml-3" />
+                </motion.div>
               </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
-              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 bg-white"
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {isAuthenticated ? 'View Plans' : 'Sign In'}
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 bg-white"
+              >
+                {isAuthenticated ? 'View Plans' : 'Sign In'}
               </Button>
+            </motion.div>
             </div>
         </div>
       </section>
