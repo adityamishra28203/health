@@ -224,6 +224,37 @@ app.get('/auth/profile', (req, res) => {
   res.status(200).json(mockUser);
 });
 
+app.put('/auth/profile', (req, res) => {
+  try {
+    // Mock profile update - replace with real profile update logic
+    const { firstName, lastName, email, phone, avatar, role } = req.body;
+    
+    const updatedUser = {
+      id: '1',
+      firstName: firstName || 'John',
+      lastName: lastName || 'Doe',
+      email: email || 'john.doe@example.com',
+      role: role || 'patient',
+      phone: phone || '+1234567890',
+      avatar: avatar || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    res.status(200).json({
+      user: updatedUser,
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      error: 'Update Error',
+      message: 'Failed to update profile',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 app.post('/auth/logout', (req, res) => {
   // Mock logout - replace with real logout logic
   res.status(200).json({

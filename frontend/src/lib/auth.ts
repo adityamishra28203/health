@@ -169,9 +169,9 @@ class AuthService {
   async uploadAvatar(file: File): Promise<{ url: string; ipfsHash: string }> {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('avatar', file);
       
-      const response = await axios.post(`${API_BASE_URL}/files/upload`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/files/upload-avatar`, formData, {
         headers: {
           ...this.getAuthHeaders(),
           'Content-Type': 'multipart/form-data',
@@ -179,8 +179,8 @@ class AuthService {
       });
 
       return {
-        url: response.data.url,
-        ipfsHash: response.data.ipfsHash
+        url: response.data.avatar.avatarUrl,
+        ipfsHash: response.data.avatar.id
       };
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error, 'Failed to upload avatar'));
