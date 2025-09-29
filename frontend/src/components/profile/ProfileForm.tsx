@@ -115,6 +115,9 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       // Upload file to backend
       const uploadResult = await authService.uploadAvatar(compressedFile);
       
+      // Update local avatar state immediately
+      setAvatar(uploadResult.url);
+      
       // Immediately update the profile with the new avatar
       const updatedUser = await authService.updateProfile({ avatar: uploadResult.url });
       onUpdate(updatedUser);

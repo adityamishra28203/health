@@ -1210,7 +1210,7 @@ export default function LandingPage() {
 
       {/* Login Dialog */}
       <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md mx-auto bg-white rounded-3xl shadow-2xl border-0 overflow-hidden p-0 animate-in fade-in-0 zoom-in-95 duration-300 m-4">
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md bg-white rounded-3xl shadow-2xl border-0 overflow-hidden p-0">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -1385,7 +1385,7 @@ export default function LandingPage() {
 
       {/* Signup Dialog */}
       <Dialog open={isSignupOpen} onOpenChange={setIsSignupOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md mx-auto bg-white rounded-3xl shadow-2xl border-0 overflow-hidden max-h-[85vh] p-0 animate-in fade-in-0 zoom-in-95 duration-300 m-4">
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[500px] max-w-md bg-white rounded-3xl shadow-2xl border-0 overflow-hidden max-h-[85vh] p-0">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
