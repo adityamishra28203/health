@@ -72,6 +72,7 @@ class AuthService {
   constructor() {
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('accessToken');
+      console.log('AuthService: Initialized with token:', !!this.token);
     }
   }
 
@@ -227,7 +228,9 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.token;
+    const hasToken = !!this.token;
+    console.log('AuthService: isAuthenticated check - hasToken:', hasToken);
+    return hasToken;
   }
 
   // Comprehensive logout function that clears everything

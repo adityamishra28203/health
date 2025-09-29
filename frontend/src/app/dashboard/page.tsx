@@ -103,18 +103,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      if (!authService.isAuthenticated()) {
+      // Check if user is authenticated
+      const isAuth = authService.isAuthenticated();
+      console.log('Dashboard: isAuthenticated =', isAuth);
+      
+      if (!isAuth) {
+        console.log('Dashboard: Not authenticated, redirecting to home');
         router.push('/');
         return;
       }
 
       try {
+        console.log('Dashboard: Fetching user profile...');
         const userData = await authService.getProfile();
+        console.log('Dashboard: User data received:', userData);
         setUser(userData);
       } catch (error) {
-        console.error('Failed to get profile:', error);
-        authService.logout();
-        router.push('/');
+        console.error('Dashboard: Failed to get profile:', error);
+        // Don't logout immediately, try to handle gracefully
+        setLoading(false);
+        return;
       } finally {
         // Add small delay for smoother loading experience
         setTimeout(() => {
@@ -144,7 +152,15 @@ export default function DashboardPage() {
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">If this takes too long, please try refreshing the page.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
