@@ -170,7 +170,7 @@ class AuthService {
     } catch (error: unknown) {
       console.error('❌ Profile update error:', error);
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as any;
+        const axiosError = error as { response?: { status?: number; data?: unknown } };
         console.error('❌ Response status:', axiosError.response?.status);
         console.error('❌ Response data:', axiosError.response?.data);
       }
