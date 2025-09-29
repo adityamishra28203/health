@@ -212,11 +212,13 @@ let isConnected = false;
 
 async function connectToDatabase() {
   if (isConnected) {
+    console.log('🔌 Database already connected');
     return;
   }
   
   try {
     console.log('🔌 Connecting to MongoDB...');
+    console.log('🔗 MongoDB URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
     await mongoose.connect(MONGODB_URI);
     isConnected = true;
     console.log('✅ Connected to MongoDB successfully!');
@@ -224,6 +226,7 @@ async function connectToDatabase() {
     // Create default admin user if it doesn't exist
     const existingAdmin = await User.findOne({ email: 'admin@healthify.com' });
     if (!existingAdmin) {
+      console.log('👤 Creating default admin user...');
       const adminUser = new User({
         email: 'admin@healthify.com',
         password: hashEncryptedPassword(ADMIN_PASSWORD_SHA256),
@@ -236,6 +239,12 @@ async function connectToDatabase() {
       
       await adminUser.save();
       console.log('✅ Created default admin user');
+    } else {
+      console.log('👤 Admin user already exists:', { 
+        id: existingAdmin._id, 
+        email: existingAdmin.email, 
+        avatar: existingAdmin.avatar 
+      });
     }
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
@@ -500,11 +509,14 @@ app.put('/auth/profile', async (req, res) => {
     // Mock profile update - replace with real profile update logic
     const { firstName, lastName, email, phone, avatar, role } = req.body;
     
+    console.log('🔧 Profile update request:', { firstName, lastName, email, phone, avatar, role });
+    
     // For now, we'll update the first user (admin user)
     // In a real app, you'd get the user ID from the JWT token
     const user = await User.findOne({ email: 'admin@healthify.com' });
     
     if (!user) {
+      console.log('❌ User not found in database');
       return res.status(404).json({
         error: 'User Error',
         message: 'User not found',
@@ -512,16 +524,23 @@ app.put('/auth/profile', async (req, res) => {
       });
     }
     
+    console.log('👤 Found user:', { id: user._id, email: user.email, currentAvatar: user.avatar });
+    
     // Update user fields
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (email) user.email = email.toLowerCase();
     if (phone) user.phone = phone;
-    if (avatar) user.avatar = avatar;
+    if (avatar) {
+      console.log('🖼️ Updating avatar from:', user.avatar, 'to:', avatar);
+      user.avatar = avatar;
+    }
     if (role) user.role = role;
     
     // Save updated user
     await user.save();
+    
+    console.log('✅ User saved successfully, new avatar:', user.avatar);
     
     const { password: _, ...userWithoutPassword } = user.toObject();
     
@@ -586,7 +605,15 @@ app.post('/files/upload', upload.single('file'), (req, res) => {
 // Avatar upload endpoint
 app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
   try {
+    console.log('📁 Avatar upload request received');
+    console.log('📄 Request file:', req.file ? { 
+      originalname: req.file.originalname, 
+      size: req.file.size, 
+      mimetype: req.file.mimetype 
+    } : 'No file');
+    
     if (!req.file) {
+      console.log('❌ No file uploaded');
       return res.status(400).json({
         error: 'Validation Error',
         message: 'No avatar file uploaded',
@@ -596,6 +623,7 @@ app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
 
     // Check if it's an image
     if (!req.file.mimetype.startsWith('image/')) {
+      console.log('❌ File is not an image:', req.file.mimetype);
       return res.status(400).json({
         error: 'Validation Error',
         message: 'Avatar must be an image file',
@@ -613,6 +641,8 @@ app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
       uploadedAt: new Date().toISOString(),
       status: 'uploaded'
     };
+
+    console.log('✅ Avatar upload successful:', mockAvatarResponse);
 
     res.status(200).json({
       avatar: mockAvatarResponse,
