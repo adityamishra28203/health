@@ -705,7 +705,7 @@ app.put('/auth/profile', async (req, res) => {
     });
     
     // Validate avatar data size if present
-    if (avatar && avatar.length > 5000000) { // 5MB limit for base64
+    if (avatar && avatar.length > 1000000) { // 1MB limit for base64 (reduced from 5MB)
       console.log('❌ Avatar data too large:', avatar.length, 'characters');
       return res.status(400).json({
         error: 'Validation Error',
@@ -807,6 +807,11 @@ app.put('/auth/profile', async (req, res) => {
       const validationError = user.validateSync();
       if (validationError) {
         console.log('❌ Validation error before save:', validationError);
+        console.log('❌ Validation error details:', {
+          name: validationError.name,
+          message: validationError.message,
+          errors: validationError.errors
+        });
         return res.status(400).json({
           error: 'Validation Error',
           message: 'Profile validation failed',
