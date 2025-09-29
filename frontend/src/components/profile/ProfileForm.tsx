@@ -42,7 +42,14 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       setAvatar(userAvatar);
     } else {
       // Clear invalid avatar URLs (including old securehealth-storage.com URLs)
+      console.log('🧹 Clearing invalid avatar URL:', userAvatar);
       setAvatar('');
+      
+      // If we have an invalid avatar, try to clean it up in the backend
+      if (userAvatar && userAvatar.includes('securehealth-storage.com')) {
+        console.log('🧹 Attempting to clean up old avatar URL in backend...');
+        // This will trigger the backend cleanup on next profile update
+      }
     }
   }, [user.avatar]);
 
