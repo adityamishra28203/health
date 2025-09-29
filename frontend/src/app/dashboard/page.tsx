@@ -1,461 +1,356 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { authService, User } from '@/lib/auth';
 import { 
   Heart, 
-  FileText, 
   Shield, 
-  CreditCard, 
-  TrendingUp, 
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Plus,
-  Eye,
-  Download,
-  Share2,
-  Activity
-} from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
+  FileText, 
+  Lock, 
+  Smartphone, 
+  Globe, 
+  CheckCircle, 
+  ArrowRight,
+  Users,
+  ShieldCheck,
+  User as UserIcon,
+  Activity,
+  TrendingUp
+} from 'lucide-react';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-const healthData = [
-  { name: "Jan", value: 85 },
-  { name: "Feb", value: 78 },
-  { name: "Mar", value: 92 },
-  { name: "Apr", value: 88 },
-  { name: "May", value: 95 },
-  { name: "Jun", value: 90 },
-];
-
-const recentRecords = [
+const features = [
   {
-    id: "1",
-    type: "Prescription",
-    doctor: "Dr. Priya Sharma",
-    hospital: "Apollo Hospital",
-    date: "2024-01-15",
-    status: "verified",
-    hash: "0x1234...5678"
+    icon: <Lock className="h-6 w-6" />,
+    title: "End-to-End Encryption",
+    description: "Your health data is encrypted using military-grade security protocols.",
   },
   {
-    id: "2",
-    type: "Lab Report",
-    doctor: "Dr. Rajesh Kumar",
-    hospital: "Fortis Healthcare",
-    date: "2024-01-10",
-    status: "pending",
-    hash: "0x2345...6789"
+    icon: <Shield className="h-6 w-6" />,
+    title: "Blockchain Verification",
+    description: "All records are verified on blockchain for tamper-proof authenticity.",
   },
   {
-    id: "3",
-    type: "Discharge Summary",
-    doctor: "Dr. Sunita Patel",
-    hospital: "Max Hospital",
-    date: "2024-01-05",
-    status: "verified",
-    hash: "0x3456...7890"
+    icon: <FileText className="h-6 w-6" />,
+    title: "Digital Signatures",
+    description: "Medical records are digitally signed by verified healthcare providers.",
+  },
+  {
+    icon: <Smartphone className="h-6 w-6" />,
+    title: "Mobile Access",
+    description: "Access your health records anytime, anywhere on your mobile device.",
+  },
+  {
+    icon: <Globe className="h-6 w-6" />,
+    title: "Multi-language Support",
+    description: "Available in English and Hindi for better accessibility.",
+  },
+  {
+    icon: <CheckCircle className="h-6 w-6" />,
+    title: "HIPAA & DISHA Compliant",
+    description: "Fully compliant with international and Indian health data regulations.",
   },
 ];
 
-const recentClaims = [
-  {
-    id: "C001",
-    amount: 25000,
-    status: "approved",
-    date: "2024-01-15",
-    description: "Cardiology Treatment"
-  },
-  {
-    id: "C002",
-    amount: 15000,
-    status: "pending",
-    date: "2024-01-12",
-    description: "Lab Tests"
-  },
-  {
-    id: "C003",
-    amount: 50000,
-    status: "rejected",
-    date: "2024-01-08",
-    description: "Surgery"
-  },
+const stats = [
+  { label: "Health Records", value: "12", icon: <FileText className="h-4 w-4" /> },
+  { label: "Insurance Claims", value: "3", icon: <Shield className="h-4 w-4" /> },
+  { label: "Doctors Connected", value: "5", icon: <Users className="h-4 w-4" /> },
+  { label: "Health Score", value: "85%", icon: <Activity className="h-4 w-4" /> },
 ];
 
-const pieData = [
-  { name: "Prescriptions", value: 45, color: "#8884d8" },
-  { name: "Lab Reports", value: 30, color: "#82ca9d" },
-  { name: "Discharge Summaries", value: 15, color: "#ffc658" },
-  { name: "Other", value: 10, color: "#ff7300" },
+const quickActions = [
+  {
+    title: "View Health Records",
+    description: "Access your medical records",
+    href: "/records",
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    title: "Insurance Claims",
+    description: "Manage your insurance claims",
+    href: "/claims",
+    icon: <Shield className="h-5 w-5" />,
+  },
+  {
+    title: "Profile Settings",
+    description: "Update your profile information",
+    href: "/profile",
+    icon: <UserIcon className="h-5 w-5" />,
+  },
+  {
+    title: "Analytics",
+    description: "View your health analytics",
+    href: "/analytics",
+    icon: <TrendingUp className="h-5 w-5" />,
+  },
 ];
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [healthScore] = useState(85);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem("user");
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+    const initializeAuth = async () => {
+      if (!authService.isAuthenticated()) {
+        router.push('/');
+        return;
       }
-    } catch (error) {
-      console.error('Error loading user from localStorage:', error);
-    }
-  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "verified":
-        return "bg-green-500";
-      case "pending":
-        return "bg-yellow-500";
-      case "rejected":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+      try {
+        const userData = await authService.getProfile();
+        setUser(userData);
+      } catch (error) {
+        console.error('Failed to get profile:', error);
+        authService.logout();
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "verified":
-        return <CheckCircle className="h-4 w-4" />;
-      case "pending":
-        return <Clock className="h-4 w-4" />;
-      case "rejected":
-        return <AlertCircle className="h-4 w-4" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
+    initializeAuth();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen">
       {/* Welcome Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold">Welcome back, {user?.name || "User"}!</h1>
-          <p className="text-muted-foreground">Here&apos;s your health data overview</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Record
-          </Button>
-          <Button variant="outline">
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
-        </div>
-      </motion.div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="space-y-8"
+            >
+              <div className="space-y-4">
+                <Badge variant="secondary" className="w-fit">
+                  <ShieldCheck className="h-3 w-3 mr-1" />
+                  Welcome back, {user.firstName}!
+                </Badge>
+                <h1 className="text-4xl lg:text-6xl font-bold tracking-tight">
+                  Your Health Data,
+                  <span className="text-primary"> Your Control</span>
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl">
+                  Manage your medical records with complete privacy and control. 
+                  Access your health data anytime, anywhere.
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" asChild>
+                  <Link href="/records">
+                    View Records
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/profile">Update Profile</Link>
+                </Button>
+              </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          {
-            title: "Health Records",
-            value: "24",
-            change: "+3 this month",
-            icon: <FileText className="h-5 w-5" />,
-            color: "text-blue-600",
-            bgColor: "bg-blue-50 dark:bg-blue-950",
-          },
-          {
-            title: "Active Claims",
-            value: "3",
-            change: "1 pending",
-            icon: <CreditCard className="h-5 w-5" />,
-            color: "text-green-600",
-            bgColor: "bg-green-50 dark:bg-green-950",
-          },
-          {
-            title: "Health Score",
-            value: `${healthScore}%`,
-            change: "+5% this week",
-            icon: <Heart className="h-5 w-5" />,
-            color: "text-red-600",
-            bgColor: "bg-red-50 dark:bg-red-950",
-          },
-          {
-            title: "Blockchain Verified",
-            value: "18",
-            change: "100% secure",
-            icon: <Shield className="h-5 w-5" />,
-            color: "text-purple-600",
-            bgColor: "bg-purple-50 dark:bg-purple-950",
-          },
-        ].map((stat, index) => (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8">
+                {stats.map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    className="text-center p-4 bg-background/50 rounded-lg border border-border/50 hover:border-primary/20 transition-all-smooth"
+                  >
+                    <div className="text-2xl font-bold text-primary flex items-center justify-center gap-2 mb-1">
+                      {stat.icon}
+                      {stat.value}
+                    </div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative z-10">
+                <Card className="card-enhanced p-6 shadow-2xl">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center space-x-3">
+                      <Heart className="h-6 w-6 text-primary" />
+                      <CardTitle className="text-xl font-semibold">Your Health Dashboard</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="card-spacing">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-primary/10 rounded-lg transition-all-smooth hover:bg-primary/20">
+                        <div className="text-2xl font-bold">12</div>
+                        <div className="text-sm text-muted-foreground">Records</div>
+                      </div>
+                      <div className="p-4 bg-green-500/10 rounded-lg transition-all-smooth hover:bg-green-500/20">
+                        <div className="text-2xl font-bold">3</div>
+                        <div className="text-sm text-muted-foreground">Claims</div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm font-medium">
+                        <span>Health Score</span>
+                        <span>85%</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-3">
+                        <div className="bg-primary h-3 rounded-full w-4/5 transition-all-smooth"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Floating elements */}
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute -top-4 -right-4 bg-primary text-primary-foreground p-3 rounded-full shadow-lg"
+              >
+                <Shield className="h-5 w-5" />
+              </motion.div>
+              
+              <motion.div
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute -bottom-4 -left-4 bg-green-500 text-white p-3 rounded-full shadow-lg"
+              >
+                <CheckCircle className="h-5 w-5" />
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Actions Section */}
+      <section className="py-16 sm:py-20 bg-background">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
-            key={stat.title}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
           >
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.change}</p>
-                  </div>
-                  <div className={`p-3 rounded-full ${stat.bgColor} ${stat.color}`}>
-                    {stat.icon}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+              Quick Actions
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Access your most important features and manage your health data efficiently.
+            </p>
           </motion.div>
-        ))}
-      </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Health Score Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="lg:col-span-2"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="h-5 w-5" />
-                <span>Health Score Trend</span>
-              </CardTitle>
-              <CardDescription>Your health score over the last 6 months</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={healthData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke="#8884d8" 
-                      strokeWidth={2}
-                      dot={{ fill: "#8884d8", strokeWidth: 2, r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Health Score Progress */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Activity className="h-5 w-5" />
-                <span>Health Score</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary">{healthScore}%</div>
-                <p className="text-sm text-muted-foreground">Overall Health Score</p>
-              </div>
-              <Progress value={healthScore} className="h-2" />
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Physical Health</span>
-                  <span>92%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Mental Health</span>
-                  <span>78%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Lifestyle</span>
-                  <span>85%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Records and Claims Tabs */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        <Tabs defaultValue="records" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="records">Recent Records</TabsTrigger>
-            <TabsTrigger value="claims">Insurance Claims</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="records" className="space-y-4">
-            <div className="grid gap-4">
-              {recentRecords.map((record, index) => (
-                <motion.div
-                  key={record.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className={`p-2 rounded-full ${getStatusColor(record.status)} text-white`}>
-                            {getStatusIcon(record.status)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{record.type}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {record.doctor} • {record.hospital}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(record.date).toLocaleDateString()} • {record.hash}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={record.status === "verified" ? "default" : "secondary"}>
-                            {record.status}
-                          </Badge>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
+          <div className="grid-responsive-cards grid-equal-height max-w-7xl mx-auto">
+            {quickActions.map((action, index) => (
+              <motion.div
+                key={action.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="animate-slide-in-bottom"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <Card className="card-enhanced h-full cursor-pointer group hover:shadow-lg transition-all-smooth flex flex-col">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all-smooth">
+                        {action.icon}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </TabsContent>
+                      <CardTitle className="text-lg font-semibold">{action.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="card-spacing flex flex-col flex-grow">
+                    <CardDescription className="text-base mb-6 leading-relaxed flex-grow">
+                      {action.description}
+                    </CardDescription>
+                    <Button asChild variant="outline" className="w-full btn-enhanced mt-auto">
+                      <Link href={action.href}>
+                        Go to {action.title}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <TabsContent value="claims" className="space-y-4">
-            <div className="grid gap-4">
-              {recentClaims.map((claim, index) => (
-                <motion.div
-                  key={claim.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className={`p-2 rounded-full ${getStatusColor(claim.status)} text-white`}>
-                            {getStatusIcon(claim.status)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">Claim #{claim.id}</h3>
-                            <p className="text-sm text-muted-foreground">{claim.description}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(claim.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <div className="font-semibold">₹{claim.amount.toLocaleString()}</div>
-                            <Badge variant={claim.status === "approved" ? "default" : "secondary"}>
-                              {claim.status}
-                            </Badge>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
+      {/* Features Section */}
+      <section className="py-20 bg-secondary/20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+              Why Choose SecureHealth?
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Built with cutting-edge blockchain technology and designed for maximum security and user control.
+            </p>
+          </motion.div>
+
+          <div className="grid-responsive-cards-sm grid-equal-height max-w-7xl mx-auto">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="animate-slide-in-bottom"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <Card className="card-enhanced h-full hover:shadow-lg transition-all-smooth flex flex-col">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-3 bg-primary/10 rounded-lg text-primary">
+                        {feature.icon}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Record Types Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          dataKey="value"
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Monthly Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={healthData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="value" fill="#8884d8" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </motion.div>
+                      <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="card-spacing flex flex-col flex-grow">
+                    <CardDescription className="text-base leading-relaxed flex-grow">
+                      {feature.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -80,3 +80,6 @@ echo "1. Set up SSL certificates for HTTPS"
 echo "2. Configure your domain name"
 echo "3. Set up monitoring and backups"
 echo "4. Update environment variables with production values"
+
+
+

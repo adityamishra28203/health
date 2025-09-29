@@ -56,7 +56,7 @@ export default function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <Heart className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">HealthWallet</span>
+              <span className="text-xl font-bold">SecureHealth</span>
             </Link>
             <p className="text-muted-foreground mb-4 max-w-sm">
               Secure, blockchain-powered health records and insurance platform. 
@@ -190,7 +190,7 @@ export default function Footer() {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground"
         >
-          <p>&copy; {currentYear} HealthWallet. All rights reserved.</p>
+          <p>&copy; {currentYear} SecureHealth. All rights reserved.</p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
             <div className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />

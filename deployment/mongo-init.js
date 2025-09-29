@@ -18,3 +18,4 @@ db.notifications.createIndex({ "userId": 1 });
 db.notifications.createIndex({ "createdAt": -1 });
 
 print('Database initialized successfully');
+

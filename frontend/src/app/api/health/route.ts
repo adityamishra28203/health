@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           uptime: 3600,
           environment: 'development',
           platform: 'vercel',
-          message: 'HealthWallet API is running (mock)',
+          message: 'SecureHealth API is running (mock)',
           cors: 'enabled',
           endpoints: [
             '/health',
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         uptime: 3600,
         environment: 'development',
         platform: 'vercel',
-        message: 'HealthWallet API is running (mock)',
+        message: 'SecureHealth API is running (mock)',
         cors: 'enabled',
         endpoints: [
           '/health',

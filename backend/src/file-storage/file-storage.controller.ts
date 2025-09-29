@@ -11,6 +11,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Multer } from 'multer';
+import { diskStorage } from 'multer';
 
 import { FileStorageService } from './file-storage.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -23,11 +24,27 @@ export class FileStorageController {
   constructor(private readonly fileStorageService: FileStorageService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 1024 * 1024, // 1MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      // Only allow image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'), false);
+      }
+    },
+  }))
   @ApiOperation({ summary: 'Upload file to IPFS' })
   @ApiResponse({ status: 201, description: 'File uploaded successfully' })
+  @ApiResponse({ status: 413, description: 'File too large. Maximum size is 1MB.' })
   @ApiConsumes('multipart/form-data')
   async uploadFile(@UploadedFile() file: Multer.File) {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
     return this.fileStorageService.uploadFile(file);
   }
 

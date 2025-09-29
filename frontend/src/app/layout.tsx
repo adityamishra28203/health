@@ -3,23 +3,24 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/layout/Layout";
 import { OfflineWarning } from "@/components/offline-warning";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HealthWallet - Blockchain Health Records & Insurance Platform",
+  title: "SecureHealth - Blockchain Health Records & Insurance Platform",
   description: "Secure, blockchain-powered health records and insurance platform. Manage your medical data with complete privacy and control.",
   keywords: ["health", "blockchain", "medical records", "insurance", "privacy", "HIPAA", "DISHA"],
-  authors: [{ name: "HealthWallet Team" }],
+  authors: [{ name: "SecureHealth Team" }],
   openGraph: {
-    title: "HealthWallet - Blockchain Health Records & Insurance Platform",
+    title: "SecureHealth - Blockchain Health Records & Insurance Platform",
     description: "Secure, blockchain-powered health records and insurance platform.",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HealthWallet - Blockchain Health Records & Insurance Platform",
+    title: "SecureHealth - Blockchain Health Records & Insurance Platform",
     description: "Secure, blockchain-powered health records and insurance platform.",
   },
   robots: {
@@ -45,6 +46,7 @@ export default function RootLayout({
           {children}
         </Layout>
         <OfflineWarning />
+        <Toaster />
       </body>
     </html>
   );

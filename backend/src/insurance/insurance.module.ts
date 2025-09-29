@@ -7,7 +7,7 @@ import { InsuranceClaim, InsuranceClaimSchema } from '../schemas/insurance-claim
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: InsuranceClaim.name, schema: InsuranceClaimSchema }]),
+    MongooseModule.forFeature([{ name: 'InsuranceClaim', schema: InsuranceClaimSchema }]),
   ],
   providers: [InsuranceService],
   controllers: [InsuranceController],

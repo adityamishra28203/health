@@ -130,7 +130,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
   // For state-changing operations, require CSRF token
   const csrfToken = req.headers['x-csrf-token'] as string;
-  const sessionCsrfToken = req.session?.csrfToken;
+  const sessionCsrfToken = (req as any).session?.csrfToken;
 
   if (!csrfToken || !sessionCsrfToken || csrfToken !== sessionCsrfToken) {
     return res.status(403).json({
@@ -211,3 +211,4 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   
   next();
 };
+

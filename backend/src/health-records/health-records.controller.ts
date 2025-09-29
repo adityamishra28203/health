@@ -9,19 +9,28 @@ import {
   Query,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Multer } from 'multer';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 
 import { HealthRecordsService } from './health-records.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateHealthRecordDto, UpdateHealthRecordDto } from './dto/health-record.dto';
+import { FileStorageService } from '../file-storage/file-storage.service';
 
 @ApiTags('Health Records')
 @Controller('health-records')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class HealthRecordsController {
-  constructor(private readonly healthRecordsService: HealthRecordsService) {}
+  constructor(
+    private readonly healthRecordsService: HealthRecordsService,
+    private readonly fileStorageService: FileStorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create health record' })
@@ -31,6 +40,72 @@ export class HealthRecordsController {
       ...createHealthRecordDto,
       patientId: req.user.sub,
     });
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit for health documents
+    },
+    fileFilter: (req, file, cb) => {
+      // Allow common health document formats
+      const allowedMimes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/tiff',
+        'application/dicom',
+        'text/plain'
+      ];
+      
+      if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new BadRequestException('File type not allowed. Only PDF, images, DICOM, and text files are accepted.'), false);
+      }
+    },
+  }))
+  @ApiOperation({ summary: 'Upload health record with file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Health record uploaded successfully' })
+  async uploadRecord(
+    @UploadedFile() file: Multer.File,
+    @Body() createHealthRecordDto: CreateHealthRecordDto,
+    @Request() req
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    try {
+      // Upload file to storage
+      const uploadResult = await this.fileStorageService.uploadFile(file);
+      
+      // Create health record with file information
+      const record = await this.healthRecordsService.create({
+        ...createHealthRecordDto,
+        patientId: req.user.sub,
+        fileHash: uploadResult.fileHash,
+        ipfsHash: uploadResult.ipfsHash,
+        fileName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        fileUrl: uploadResult.url,
+      });
+
+      return {
+        message: 'Health record uploaded successfully',
+        record,
+        file: {
+          originalName: file.originalname,
+          size: file.size,
+          mimeType: file.mimetype,
+          url: uploadResult.url,
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException(`Failed to upload health record: ${error.message}`);
+    }
   }
 
   @Get()

@@ -2,9 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import * as helmet from 'helmet';
-import * as cors from 'cors';
-import * as rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,7 +22,7 @@ async function bootstrap() {
       'https://healthwallet.vercel.app',
       'https://healthwallet-frontend.vercel.app',
       process.env.FRONTEND_URL
-    ].filter(Boolean),
+    ].filter(Boolean) as string[],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -36,6 +37,35 @@ async function bootstrap() {
     standardHeaders: true,
     legacyHeaders: false,
   }));
+
+  // Body parsing middleware - configure before our custom middleware
+  app.use(json({ limit: '2mb' })); // Increased to handle base64 avatar data
+  app.use(urlencoded({ extended: true, limit: '2mb' }));
+
+  // File upload size limits
+  app.use((req, res, next) => {
+    // For multipart/form-data (file uploads), limit to 1MB
+    if (req.headers['content-type']?.includes('multipart/form-data')) {
+      if (req.headers['content-length'] && parseInt(req.headers['content-length']) > 1024 * 1024) {
+        return res.status(413).json({
+          statusCode: 413,
+          message: 'Request entity too large. Maximum file size is 1MB.',
+          error: 'Payload Too Large'
+        });
+      }
+    }
+    // For JSON requests (profile updates with base64 avatars), allow up to 2MB
+    else if (req.headers['content-type']?.includes('application/json')) {
+      if (req.headers['content-length'] && parseInt(req.headers['content-length']) > 2 * 1024 * 1024) {
+        return res.status(413).json({
+          statusCode: 413,
+          message: 'Request entity too large. Maximum JSON payload size is 2MB.',
+          error: 'Payload Too Large'
+        });
+      }
+    }
+    next();
+  });
 
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
@@ -66,7 +96,7 @@ async function bootstrap() {
     });
   });
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3003;
   await app.listen(port);
   
   console.log(`🚀 HealthWallet API running on port ${port}`);

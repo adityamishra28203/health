@@ -1,232 +1,128 @@
-import { Request, Response } from 'express';
-import { User } from '../schemas/user.schema';
-import { firebaseAuthService } from './firebase-auth.service';
-import { jwtService } from './jwt.service';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Request,
+  Put,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RegisterDto, ChangePasswordDto, UpdateProfileDto } from './dto/register.dto';
+import { LoginDto, ForgotPasswordDto, ResetPasswordDto } from './dto/login.dto';
 
+@ApiTags('Authentication')
+@Controller('auth')
 export class AuthController {
-  async phoneOTPSignIn(req: Request, res: Response) {
-    try {
-      const { idToken, role } = req.body;
-      const firebaseUser = await firebaseAuthService.verifyFirebaseToken(idToken);
-      const authResult = await firebaseAuthService.authenticateUser(firebaseUser, { role });
+  constructor(private readonly authService: AuthService) {}
 
-      res.cookie('refreshToken', authResult.refreshToken, jwtService.getCookieOptions(true));
-      res.cookie('accessToken', authResult.accessToken, jwtService.getCookieOptions(false));
-
-      res.json({
-        success: true,
-        message: 'Phone OTP sign-in successful',
-        user: authResult.user,
-        accessToken: authResult.accessToken
-      });
-    } catch (error) {
-      res.status(401).json({
-        success: false,
-        message: 'Phone OTP sign-in failed'
-      });
-    }
+  @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ status: 409, description: 'User already exists' })
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 
-  async googleSignIn(req: Request, res: Response) {
-    try {
-      const { idToken, role } = req.body;
-      const firebaseUser = await firebaseAuthService.verifyFirebaseToken(idToken);
-      const authResult = await firebaseAuthService.authenticateUser(firebaseUser, { role });
-
-      res.cookie('refreshToken', authResult.refreshToken, jwtService.getCookieOptions(true));
-      res.cookie('accessToken', authResult.accessToken, jwtService.getCookieOptions(false));
-
-      res.json({
-        success: true,
-        message: 'Google sign-in successful',
-        user: authResult.user,
-        accessToken: authResult.accessToken
-      });
-    } catch (error) {
-      res.status(401).json({
-        success: false,
-        message: 'Google sign-in failed'
-      });
-    }
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login user with email and password' })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
   }
 
-  async emailSignUp(req: Request, res: Response) {
-    try {
-      const { email, password, firstName, lastName, role } = req.body;
-
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'User already exists with this email'
-        });
-      }
-
-      const user = new User({
-        email,
-        password,
-        firstName,
-        lastName,
-        role: role || 'patient',
-        status: 'pending_verification',
-        emailVerified: false
-      });
-
-      await user.save();
-
-      const verificationLink = await firebaseAuthService.generateEmailVerificationLink(email);
-      console.log('Email verification link:', verificationLink);
-
-      res.status(201).json({
-        success: true,
-        message: 'User created successfully. Please check your email for verification.',
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          emailVerified: user.emailVerified
-        }
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Sign-up failed'
-      });
-    }
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  async getProfile(@Request() req) {
+    const user = await this.authService.findUserById(req.user.userId);
+    return {
+      message: 'Profile retrieved successfully',
+      user,
+    };
   }
 
-  async emailSignIn(req: Request, res: Response) {
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
-      
-      if (!user || !(await user.comparePassword(password))) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid credentials'
-        });
-      }
-
-      const tokens = jwtService.generateTokenPair({
-        userId: user._id,
-        email: user.email,
-        role: user.role
-      });
-
-      res.cookie('refreshToken', tokens.refreshToken, jwtService.getCookieOptions(true));
-      res.cookie('accessToken', tokens.accessToken, jwtService.getCookieOptions(false));
-
-      res.json({
-        success: true,
-        message: 'Sign-in successful',
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified
-        },
-        accessToken: tokens.accessToken
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Sign-in failed'
-      });
-    }
+  @UseGuards(JwtAuthGuard)
+  @Put('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    const user = await this.authService.updateUserProfile(req.user.userId, updateProfileDto as any);
+    return {
+      message: 'Profile updated successfully',
+      user,
+    };
   }
 
-  async refreshToken(req: Request, res: Response) {
-    try {
-      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-      const decoded = jwtService.verifyRefreshToken(refreshToken);
-      const user = await User.findById(decoded.userId);
-      
-      if (!user || !user.refreshTokens?.includes(refreshToken)) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid refresh token'
-        });
-      }
-
-      const newAccessToken = jwtService.generateAccessToken({
-        userId: user._id,
-        email: user.email,
-        role: user.role
-      });
-
-      res.cookie('accessToken', newAccessToken, jwtService.getCookieOptions(false));
-
-      res.json({
-        success: true,
-        message: 'Token refreshed successfully',
-        accessToken: newAccessToken
-      });
-    } catch (error) {
-      res.status(401).json({
-        success: false,
-        message: 'Token refresh failed'
-      });
-    }
+  @UseGuards(JwtAuthGuard)
+  @Put('change-password')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Current password is incorrect' })
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+    await this.authService.changePassword(
+      req.user.userId,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
+    return {
+      message: 'Password changed successfully',
+    };
   }
 
-  async logout(req: Request, res: Response) {
-    try {
-      const refreshToken = req.cookies.refreshToken;
-      
-      if (refreshToken) {
-        const decoded = jwtService.verifyRefreshToken(refreshToken);
-        const user = await User.findById(decoded.userId);
-        
-        if (user && user.refreshTokens) {
-          user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
-          await user.save();
-        }
-      }
-
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
-
-      res.json({
-        success: true,
-        message: 'Logout successful'
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Logout failed'
-      });
-    }
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent' })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    // TODO: Implement forgot password functionality
+    return {
+      message: 'Password reset functionality will be implemented',
+    };
   }
 
-  async getCurrentUser(req: Request, res: Response) {
-    try {
-      const user = req.user;
-      
-      res.json({
-        success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-          avatar: user.avatar,
-          emailVerified: user.emailVerified,
-          phoneVerified: user.phoneVerified
-        }
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get user information'
-      });
-    }
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    // TODO: Implement reset password functionality
+    return {
+      message: 'Password reset functionality will be implemented',
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  async logout(@Request() req) {
+    // TODO: Implement token blacklisting if needed
+    return {
+      message: 'Logout successful',
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('delete-account')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete user account and all associated data' })
+  @ApiResponse({ status: 200, description: 'Account deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async deleteAccount(@Request() req) {
+    await this.authService.deleteAccount(req.user.userId);
+    return {
+      message: 'Account deleted successfully',
+    };
   }
 }
-
-export const authController = new AuthController();

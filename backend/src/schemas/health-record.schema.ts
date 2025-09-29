@@ -22,19 +22,39 @@ export enum RecordStatus {
 
 @Schema({ timestamps: true })
 export class HealthRecord {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ 
+    required: [true, 'Patient ID is required'], 
+    type: Types.ObjectId, 
+    ref: 'User' 
+  })
   patientId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ 
+    required: [true, 'Doctor ID is required'], 
+    type: Types.ObjectId, 
+    ref: 'User' 
+  })
   doctorId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
-  hospitalId: Types.ObjectId;
+  @Prop({ 
+    type: Types.ObjectId, 
+    ref: 'User',
+    required: false 
+  })
+  hospitalId?: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'Title is required'],
+    trim: true,
+    minlength: [5, 'Title must be at least 5 characters long'],
+    maxlength: [200, 'Title cannot exceed 200 characters']
+  })
   title: string;
 
-  @Prop()
+  @Prop({ 
+    trim: true,
+    maxlength: [1000, 'Description cannot exceed 1000 characters']
+  })
   description?: string;
 
   @Prop({ type: String, enum: RecordType, required: true })
@@ -43,28 +63,79 @@ export class HealthRecord {
   @Prop({ type: String, enum: RecordStatus, default: RecordStatus.PENDING })
   status: RecordStatus;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'File hash is required'],
+    match: [/^[a-fA-F0-9]{64}$/, 'File hash must be a valid SHA-256 hash']
+  })
   fileHash: string;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'IPFS hash is required'],
+    match: [/^Qm[1-9A-HJ-NP-Za-km-z]{44}$/, 'IPFS hash must be a valid CID']
+  })
   ipfsHash: string;
 
-  @Prop()
+  @Prop({ 
+    required: false,
+    trim: true,
+    maxlength: [255, 'File name cannot exceed 255 characters']
+  })
+  fileName?: string;
+
+  @Prop({ 
+    required: false,
+    min: [0, 'File size must be positive']
+  })
+  fileSize?: number;
+
+  @Prop({ 
+    required: false,
+    trim: true,
+    maxlength: [100, 'MIME type cannot exceed 100 characters']
+  })
+  mimeType?: string;
+
+  @Prop({ 
+    required: false,
+    trim: true,
+    maxlength: [2048, 'File URL cannot exceed 2048 characters']
+  })
+  fileUrl?: string;
+
+  @Prop({ 
+    match: [/^0x[a-fA-F0-9]{64}$/, 'Blockchain transaction hash must be a valid hex string']
+  })
   blockchainTxHash?: string;
 
-  @Prop()
+  @Prop({ 
+    maxlength: [2048, 'Digital signature cannot exceed 2048 characters']
+  })
   digitalSignature?: string;
 
-  @Prop()
+  @Prop({ 
+    maxlength: [2048, 'Doctor signature cannot exceed 2048 characters']
+  })
   doctorSignature?: string;
 
-  @Prop()
+  @Prop({ 
+    maxlength: [2048, 'Hospital signature cannot exceed 2048 characters']
+  })
   hospitalSignature?: string;
 
-  @Prop()
+  @Prop({ 
+    maxlength: [2048, 'Patient signature cannot exceed 2048 characters']
+  })
   patientSignature?: string;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'Record date is required'],
+    validate: {
+      validator: function(v: Date) {
+        return v <= new Date();
+      },
+      message: 'Record date cannot be in the future'
+    }
+  })
   recordDate: Date;
 
   @Prop()

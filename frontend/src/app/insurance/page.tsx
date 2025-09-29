@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { authService } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 interface InsurancePolicy {
   id: string;
@@ -101,8 +103,31 @@ const mockClaims: InsuranceClaim[] = [
 ];
 
 export default function InsurancePage() {
+  const router = useRouter();
   const [policies] = useState<InsurancePolicy[]>(mockPolicies);
   const [claims] = useState<InsuranceClaim[]>(mockClaims);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check authentication on component mount
+    const checkAuth = async () => {
+      try {
+        if (!authService.isAuthenticated()) {
+          router.push('/');
+          return;
+        }
+        
+        // If authenticated, load insurance data
+        // TODO: Replace with actual API call
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.push('/');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -133,6 +158,17 @@ export default function InsurancePage() {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading insurance information...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

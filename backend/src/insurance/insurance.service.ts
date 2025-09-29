@@ -7,7 +7,7 @@ import { InsuranceClaim, InsuranceClaimDocument, ClaimStatus, ClaimType } from '
 @Injectable()
 export class InsuranceService {
   constructor(
-    @InjectModel(InsuranceClaim.name) private insuranceClaimModel: Model<InsuranceClaimDocument>,
+    @InjectModel('InsuranceClaim') private insuranceClaimModel: Model<InsuranceClaimDocument>,
   ) {}
 
   async create(createClaimDto: any): Promise<InsuranceClaim> {

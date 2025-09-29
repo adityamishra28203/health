@@ -17,16 +17,19 @@ export class FileStorageService {
     // Generate file hash
     const fileHash = crypto.createHash('sha256').update(file.buffer).digest('hex');
     
-    // Simulate IPFS upload
+    // For development: return base64 data URL instead of fake IPFS URL
+    const base64Data = file.buffer.toString('base64');
+    const dataUrl = `data:${file.mimetype};base64,${base64Data}`;
+    
+    // Generate a unique identifier for the file
     const ipfsHash = 'Qm' + crypto.randomBytes(32).toString('hex');
     
-    // In production, this would upload to IPFS
-    this.logger.log(`File uploaded to IPFS: ${ipfsHash}`);
+    this.logger.log(`File uploaded (development mode): ${ipfsHash}`);
     
     return {
       fileHash,
       ipfsHash,
-      url: `https://ipfs.io/ipfs/${ipfsHash}`,
+      url: dataUrl, // Use data URL for development
     };
   }
 

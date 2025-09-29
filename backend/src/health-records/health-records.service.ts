@@ -7,7 +7,7 @@ import { HealthRecord, HealthRecordDocument, RecordType, RecordStatus } from '..
 @Injectable()
 export class HealthRecordsService {
   constructor(
-    @InjectModel(HealthRecord.name) private healthRecordModel: Model<HealthRecordDocument>,
+    @InjectModel('HealthRecord') private healthRecordModel: Model<HealthRecordDocument>,
   ) {}
 
   async create(createHealthRecordDto: any): Promise<HealthRecord> {

@@ -55,6 +55,26 @@ export class CreateHealthRecordDto {
   @ApiProperty({ example: true })
   @IsBoolean()
   isEncrypted: boolean;
+
+  @ApiProperty({ example: 'document.pdf', required: false })
+  @IsOptional()
+  @IsString()
+  fileName?: string;
+
+  @ApiProperty({ example: 1024000, required: false })
+  @IsOptional()
+  @IsNumber()
+  fileSize?: number;
+
+  @ApiProperty({ example: 'application/pdf', required: false })
+  @IsOptional()
+  @IsString()
+  mimeType?: string;
+
+  @ApiProperty({ example: 'https://storage.example.com/file.pdf', required: false })
+  @IsOptional()
+  @IsString()
+  fileUrl?: string;
 }
 
 export class UpdateHealthRecordDto {

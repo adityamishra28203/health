@@ -1,12 +1,43 @@
 {
-  "framework": "nextjs",
   "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
   "installCommand": "npm install",
+  "devCommand": "npm run dev",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://health-j0gvmolnu-adityamishra28203s-projects.vercel.app",
-    "NEXT_PUBLIC_IPFS_URL": "https://ipfs.infura.io:5001",
-    "NEXT_PUBLIC_BLOCKCHAIN_URL": "https://mainnet.infura.io/v3/your-project-id",
-    "NEXT_PUBLIC_USE_MOCK_DATA": "true"
-  }
+    "NEXT_PUBLIC_API_URL": "@next_public_api_url",
+    "NEXT_PUBLIC_IPFS_URL": "@next_public_ipfs_url",
+    "NEXT_PUBLIC_BLOCKCHAIN_URL": "@next_public_blockchain_url",
+    "NEXT_PUBLIC_USE_MOCK_DATA": "@next_public_use_mock_data"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
 }

@@ -1,48 +1,23 @@
-import { IsEmail, IsString, IsOptional, IsPhoneNumber, IsEnum } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export enum LoginMethod {
-  EMAIL = 'email',
-  PHONE = 'phone',
-  GOOGLE = 'google',
-}
-
 export class LoginDto {
-  @ApiProperty({ description: 'Email address or phone number' })
-  @IsString()
-  identifier: string;
+  @ApiProperty({ 
+    description: 'Email address',
+    example: 'user@example.com'
+  })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  @MaxLength(100, { message: 'Email cannot exceed 100 characters' })
+  email: string;
 
-  @ApiProperty({ description: 'Password (not required for Google OAuth)' })
-  @IsOptional()
-  @IsString()
-  password?: string;
-
-  @ApiProperty({ description: 'Login method', enum: LoginMethod })
-  @IsEnum(LoginMethod)
-  method: LoginMethod;
-
-  @ApiProperty({ description: 'Google OAuth token', required: false })
-  @IsOptional()
-  @IsString()
-  googleToken?: string;
-
-  @ApiProperty({ description: 'Remember me for extended session', required: false })
-  @IsOptional()
-  rememberMe?: boolean;
-}
-
-export class OtpLoginDto {
-  @ApiProperty({ description: 'Phone number or email' })
-  @IsString()
-  identifier: string;
-
-  @ApiProperty({ description: 'OTP code' })
-  @IsString()
-  otpCode: string;
-
-  @ApiProperty({ description: 'Type of OTP', enum: ['email', 'phone'] })
-  @IsEnum(['email', 'phone'])
-  type: 'email' | 'phone';
+  @ApiProperty({ 
+    description: 'Password',
+    example: 'MySecure123'
+  })
+  @IsString({ message: 'Password must be a string' })
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @MaxLength(128, { message: 'Password cannot exceed 128 characters' })
+  password: string;
 }
 
 export class RefreshTokenDto {
@@ -64,5 +39,7 @@ export class ResetPasswordDto {
 
   @ApiProperty({ description: 'New password' })
   @IsString()
+  @MinLength(8)
   newPassword: string;
 }
+

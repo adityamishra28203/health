@@ -5,28 +5,28 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { User, UserDocument } from '../../schemas/user.schema';
+import { User, IUser } from '../../schemas/user.schema';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel('User') private userModel: Model<IUser>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'),
+      secretOrKey: configService.get<string>('JWT_SECRET') || 'your-secret-key',
     });
   }
 
   async validate(payload: any) {
-    const user = await this.userModel.findById(payload.sub);
+    const user = await this.userModel.findById(payload.userId);
     if (!user || user.status !== 'active') {
       throw new UnauthorizedException();
     }
     return {
-      sub: (user._id as any).toString(),
+      userId: user._id.toString(),
       email: user.email,
       role: user.role,
     };

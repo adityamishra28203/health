@@ -25,16 +25,34 @@ export enum ClaimType {
 
 @Schema({ timestamps: true })
 export class InsuranceClaim {
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ 
+    required: [true, 'Patient ID is required'], 
+    type: Types.ObjectId, 
+    ref: 'User' 
+  })
   patientId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  @Prop({ 
+    required: [true, 'Insurer ID is required'], 
+    type: Types.ObjectId, 
+    ref: 'User' 
+  })
   insurerId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'Claim number is required'],
+    unique: true,
+    trim: true,
+    match: [/^CLM-[0-9]{8}$/, 'Claim number must be in format CLM-XXXXXXXX']
+  })
   claimNumber: string;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'Policy number is required'],
+    trim: true,
+    minlength: [8, 'Policy number must be at least 8 characters long'],
+    maxlength: [20, 'Policy number cannot exceed 20 characters']
+  })
   policyNumber: string;
 
   @Prop({ type: String, enum: ClaimType, required: true })
@@ -43,16 +61,36 @@ export class InsuranceClaim {
   @Prop({ type: String, enum: ClaimStatus, default: ClaimStatus.DRAFT })
   status: ClaimStatus;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'Amount is required'],
+    min: [0, 'Amount cannot be negative'],
+    max: [10000000, 'Amount cannot exceed 10,000,000']
+  })
   amount: number;
 
-  @Prop()
+  @Prop({ 
+    min: [0, 'Approved amount cannot be negative'],
+    max: [10000000, 'Approved amount cannot exceed 10,000,000']
+  })
   approvedAmount?: number;
 
-  @Prop()
+  @Prop({ 
+    required: [true, 'Description is required'],
+    trim: true,
+    minlength: [10, 'Description must be at least 10 characters long'],
+    maxlength: [1000, 'Description cannot exceed 1000 characters']
+  })
   description: string;
 
-  @Prop({ required: true })
+  @Prop({ 
+    required: [true, 'Incident date is required'],
+    validate: {
+      validator: function(v: Date) {
+        return v <= new Date();
+      },
+      message: 'Incident date cannot be in the future'
+    }
+  })
   incidentDate: Date;
 
   @Prop()

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   NavigationMenu,
@@ -33,26 +32,24 @@ import {
   X,
   Sun,
   Moon,
-  User,
+  User as UserIcon,
   CreditCard,
   Building2
 } from "lucide-react";
 
+import { authService, User } from '@/lib/auth';
+import SettingsModal from '@/components/settings/SettingsModal';
+
 interface HeaderProps {
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    avatar?: string;
-  };
+  user?: User;
   darkMode: boolean;
   onToggleDarkMode: () => void;
+  onUserUpdate?: (updatedUser: User) => void;
 }
 
-export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps) {
+export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const navigationItems = [
     {
@@ -83,38 +80,31 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
   ];
 
   const handleLogout = async () => {
+    // Clear localStorage immediately to prevent any authentication checks
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    
     try {
-      // Clear all user data from localStorage
-      localStorage.removeItem('user');
-      localStorage.removeItem('firebase_user');
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('auth_provider');
-      
-      // Clear session storage
-      sessionStorage.removeItem('firebase_confirmation_result');
-      
-      // If using Firebase, sign out from Firebase
-      if (typeof window !== 'undefined') {
-        try {
-          const { firebaseAuthService } = await import('@/lib/firebase-auth');
-          await firebaseAuthService.signOut();
-        } catch {
-          console.log('Firebase sign out not available or user not signed in');
-        }
-      }
-      
-      // Redirect to home page
-      router.push("/");
-      
-      // Reload the page to clear any cached state
-      window.location.reload();
+      // Use auth service logout
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if there's an error, clear local data and redirect
-      localStorage.clear();
-      router.push("/");
-      window.location.reload();
+    }
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('auth-logout'));
+    
+    // Redirect to landing page
+    window.location.replace("/");
+  };
+
+  const handleSettingsClick = () => {
+    setIsSettingsOpen(true);
+  };
+
+  const handleUserUpdate = (updatedUser: User) => {
+    if (onUserUpdate) {
+      onUserUpdate(updatedUser);
     }
   };
 
@@ -127,11 +117,11 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Heart className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">HealthWallet</span>
+            <span className="text-xl font-bold">SecureHealth</span>
           </Link>
         </motion.div>
 
@@ -180,9 +170,9 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
                     <AvatarFallback>
-                      {user.name.split(" ").map(n => n[0]).join("")}
+                      {`${user.firstName[0]}${user.lastName[0]}`}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -190,7 +180,7 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">{`${user.firstName} ${user.lastName}`}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
@@ -201,12 +191,18 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link href="/dashboard">
+                    <Heart className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/profile">
-                    <User className="mr-2 h-4 w-4" />
+                    <UserIcon className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSettingsClick}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
@@ -219,11 +215,8 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
             </DropdownMenu>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
-                <Link href="/auth/login">Login</Link>
-              </Button>
               <Button asChild>
-                <Link href="/auth/register">Sign Up</Link>
+                <Link href="/">Go to Landing Page</Link>
               </Button>
             </div>
           )}
@@ -264,6 +257,16 @@ export default function Header({ user, darkMode, onToggleDarkMode }: HeaderProps
             </nav>
           </div>
         </motion.div>
+      )}
+
+      {/* Settings Modal */}
+      {user && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          user={user}
+          onUpdate={handleUserUpdate}
+        />
       )}
     </header>
   );

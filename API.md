@@ -627,3 +627,6 @@ For API support and questions:
 - **Email**: api-support@healthwallet.com
 - **Documentation**: https://docs.healthwallet.com/api
 - **Status Page**: https://status.healthwallet.com
+
+
+
