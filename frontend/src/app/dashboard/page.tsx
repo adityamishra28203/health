@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { authService, User } from '@/lib/auth';
-// import { useDeviceOptimization } from '@/lib/animations'; // For future use
 import { PageLoader } from '@/components/LoadingSpinner';
 import { 
   Heart, 
@@ -23,60 +22,23 @@ import {
   ShieldCheck,
   User as UserIcon,
   Activity,
-  TrendingUp
+  TrendingUp,
+  Calendar,
+  Clock,
+  Plus
 } from 'lucide-react';
 
 const features = [
   {
-    icon: <Lock className="h-6 w-6" />,
-    title: "End-to-End Encryption",
-    description: "Your health data is encrypted using military-grade security protocols.",
-  },
-  {
-    icon: <Shield className="h-6 w-6" />,
-    title: "Blockchain Verification",
-    description: "All records are verified on blockchain for tamper-proof authenticity.",
-  },
-  {
-    icon: <FileText className="h-6 w-6" />,
-    title: "Digital Signatures",
-    description: "Medical records are digitally signed by verified healthcare providers.",
-  },
-  {
-    icon: <Smartphone className="h-6 w-6" />,
-    title: "Mobile Access",
-    description: "Access your health records anytime, anywhere on your mobile device.",
-  },
-  {
-    icon: <Globe className="h-6 w-6" />,
-    title: "Multi-language Support",
-    description: "Available in English and Hindi for better accessibility.",
-  },
-  {
-    icon: <CheckCircle className="h-6 w-6" />,
-    title: "HIPAA & DISHA Compliant",
-    description: "Fully compliant with international and Indian health data regulations.",
-  },
-];
-
-const stats = [
-  { label: "Health Records", value: "12", icon: <FileText className="h-4 w-4" /> },
-  { label: "Insurance Claims", value: "3", icon: <Shield className="h-4 w-4" /> },
-  { label: "Doctors Connected", value: "5", icon: <Users className="h-4 w-4" /> },
-  { label: "Health Score", value: "85%", icon: <Activity className="h-4 w-4" /> },
-];
-
-const quickActions = [
-  {
-    title: "View Health Records",
-    description: "Access your medical records",
+    title: "Health Records",
+    description: "View and manage your medical records",
     href: "/records",
     icon: <FileText className="h-5 w-5" />,
   },
   {
-    title: "Insurance Claims",
-    description: "Manage your insurance claims",
-    href: "/claims",
+    title: "Security Center",
+    description: "Monitor your account security",
+    href: "/security",
     icon: <Shield className="h-5 w-5" />,
   },
   {
@@ -97,9 +59,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  
-  // Device optimization (for future use)
-  // const { deviceInfo, animationConfig } = useDeviceOptimization();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -109,7 +68,6 @@ export default function DashboardPage() {
       
       if (!isAuth) {
         console.log('Dashboard: Not authenticated, redirecting to home');
-        // Use window.location.href for more reliable redirect
         window.location.href = '/';
         return;
       }
@@ -124,20 +82,17 @@ export default function DashboardPage() {
         setLoading(false);
       } catch (error) {
         console.error('Dashboard: Failed to get profile:', error);
-        // If profile fetch fails, redirect to login
         console.log('Dashboard: Profile fetch failed, redirecting to home');
         window.location.href = '/';
         return;
       }
     };
 
+    // Reset state when component mounts or route changes
+    setLoading(true);
+    setUser(null);
     initializeAuth();
-  }, [router]);
-
-  // Debug user state changes
-  useEffect(() => {
-    console.log('Dashboard: User state changed:', user);
-  }, [user]);
+  }, [router.pathname]);
 
   // Add loaded class after initial render
   useEffect(() => {
@@ -152,33 +107,18 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Force visibility for debugging
-  useEffect(() => {
-    const mainContainer = document.querySelector('.loading') as HTMLElement;
-    if (mainContainer) {
-      mainContainer.style.opacity = '1';
-      mainContainer.style.visibility = 'visible';
-      mainContainer.style.display = 'block';
-    }
-  }, [loading, user]);
-
-  // Debug current state
-  console.log('Dashboard render - loading:', loading, 'user:', user);
-
   if (loading) {
     return <PageLoader />;
   }
 
   if (!user) {
-    console.log('Dashboard: No user data, showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading your dashboard...</h2>
           <p className="text-muted-foreground mb-4">Please wait while we load your health data.</p>
-          <p className="text-sm text-gray-500 mb-4">If this takes too long, you may need to log in again.</p>
-          <Button 
+          <Button
             onClick={() => window.location.href = '/'}
             variant="outline"
             className="mt-4"
@@ -190,17 +130,10 @@ export default function DashboardPage() {
     );
   }
 
-  console.log('Dashboard: Rendering main content with user:', user);
-  
   return (
-    <div className="min-h-screen loading" style={{ backgroundColor: '#f0f9ff' }}>
-      {/* Debug info */}
-      <div style={{ position: 'fixed', top: '10px', left: '10px', background: 'red', color: 'white', padding: '10px', zIndex: 9999 }}>
-        Dashboard Rendered - User: {user?.firstName || 'No User'}
-      </div>
-      
+    <div className="min-h-screen loading">
       {/* Welcome Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
         <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             <motion.div
@@ -216,9 +149,9 @@ export default function DashboardPage() {
                 </Badge>
                 <h1 className="text-4xl lg:text-6xl font-bold tracking-tight">
                   Your Health Data,
-                  <span className="text-primary"> Your Control</span>
+                  <span className="text-blue-600"> Your Control</span>
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl">
+                <p className="text-xl text-gray-600 max-w-2xl">
                   Manage your medical records with complete privacy and control. 
                   Access your health data anytime, anywhere.
                 </p>
@@ -235,24 +168,6 @@ export default function DashboardPage() {
                   <Link href="/profile">Update Profile</Link>
                 </Button>
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8">
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="text-center p-4 bg-background/50 rounded-lg border border-border/50 hover:border-primary/20 transition-all-smooth"
-                  >
-                    <div className="text-2xl font-bold text-primary flex items-center justify-center gap-2 mb-1">
-                      {stat.icon}
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </div>
             </motion.div>
 
             <motion.div
@@ -262,101 +177,100 @@ export default function DashboardPage() {
               className="relative"
             >
               <div className="relative z-10">
-                <Card className="card-enhanced p-6 shadow-2xl">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center space-x-3">
-                      <Heart className="h-6 w-6 text-primary" />
-                      <CardTitle className="text-xl font-semibold">Your Health Dashboard</CardTitle>
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-100/50 shadow-lg"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl mb-4">
+                      <FileText className="h-6 w-6 text-blue-600" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="card-spacing">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-primary/10 rounded-lg transition-all-smooth hover:bg-primary/20">
-                        <div className="text-2xl font-bold">12</div>
-                        <div className="text-sm text-muted-foreground">Records</div>
-                      </div>
-                      <div className="p-4 bg-green-500/10 rounded-lg transition-all-smooth hover:bg-green-500/20">
-                        <div className="text-2xl font-bold">3</div>
-                        <div className="text-sm text-muted-foreground">Claims</div>
-                      </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Records</h3>
+                    <p className="text-sm text-gray-600">12 files</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.5 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-green-100/50 shadow-lg"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl mb-4">
+                      <Shield className="h-6 w-6 text-green-600" />
                     </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm font-medium">
-                        <span>Health Score</span>
-                        <span>85%</span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-3">
-                        <div className="bg-primary h-3 rounded-full w-4/5 transition-all-smooth"></div>
-                      </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Security</h3>
+                    <p className="text-sm text-gray-600">Protected</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100/50 shadow-lg"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-4">
+                      <Activity className="h-6 w-6 text-purple-600" />
                     </div>
-                  </CardContent>
-                </Card>
+                    <h3 className="font-semibold text-gray-900 mb-2">Activity</h3>
+                    <p className="text-sm text-gray-600">Active</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.7 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-100/50 shadow-lg"
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-xl mb-4">
+                      <TrendingUp className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Analytics</h3>
+                    <p className="text-sm text-gray-600">Growing</p>
+                  </motion.div>
+                </div>
               </div>
-              
-              {/* Floating elements */}
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -top-4 -right-4 bg-primary text-primary-foreground p-3 rounded-full shadow-lg"
-              >
-                <Shield className="h-5 w-5" />
-              </motion.div>
-              
-              <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="absolute -bottom-4 -left-4 bg-green-500 text-white p-3 rounded-full shadow-lg"
-              >
-                <CheckCircle className="h-5 w-5" />
-              </motion.div>
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* Quick Actions Section */}
-      <section className="py-16 sm:py-20 bg-background">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Quick Actions
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Access your most important features and manage your health data efficiently.
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Access your most important health management tools
             </p>
           </motion.div>
 
-          <div className="grid-responsive-cards grid-equal-height max-w-7xl mx-auto">
-            {quickActions.map((action, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
               <motion.div
-                key={action.title}
+                key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="animate-slide-in-bottom"
-                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <Card className="card-enhanced h-full cursor-pointer group hover:shadow-lg transition-all-smooth flex flex-col">
+                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer group">
                   <CardHeader className="pb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-3 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all-smooth">
-                        {action.icon}
-                      </div>
-                      <CardTitle className="text-lg font-semibold">{action.title}</CardTitle>
+                    <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl mb-4 group-hover:bg-blue-200 transition-colors">
+                      {feature.icon}
                     </div>
+                    <CardTitle className="text-lg">{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="card-spacing flex flex-col flex-grow">
-                    <CardDescription className="text-base mb-6 leading-relaxed flex-grow">
-                      {action.description}
-                    </CardDescription>
-                    <Button asChild variant="outline" className="w-full btn-enhanced mt-auto">
-                      <Link href={action.href}>
-                        Go to {action.title}
+                  <CardContent>
+                    <Button variant="ghost" size="sm" asChild className="w-full">
+                      <Link href={feature.href}>
+                        Access
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -368,51 +282,123 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-secondary/20">
-        <div className="container mx-auto px-4">
+      {/* Recent Activity Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Why Choose SecureHealth?
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Built with cutting-edge blockchain technology and designed for maximum security and user control.
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Recent Activity</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Your latest health data updates and activities
             </p>
           </motion.div>
 
-          <div className="grid-responsive-cards-sm grid-equal-height max-w-7xl mx-auto">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="animate-slide-in-bottom"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <Card className="card-enhanced h-full hover:shadow-lg transition-all-smooth flex flex-col">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-3 bg-primary/10 rounded-lg text-primary">
-                        {feature.icon}
-                      </div>
-                      <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Card className="h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
+                      <FileText className="h-5 w-5 text-blue-600" />
                     </div>
-                  </CardHeader>
-                  <CardContent className="card-spacing flex flex-col flex-grow">
-                    <CardDescription className="text-base leading-relaxed flex-grow">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    <div>
+                      <CardTitle className="text-base">New Record Added</CardTitle>
+                      <CardDescription>Blood test results</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="h-4 w-4" />
+                    2 hours ago
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <Card className="h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
+                      <Shield className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">Security Update</CardTitle>
+                      <CardDescription>Password changed</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="h-4 w-4" />
+                    1 day ago
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <Card className="h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full">
+                      <UserIcon className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">Profile Updated</CardTitle>
+                      <CardDescription>Contact information</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Clock className="h-4 w-4" />
+                    3 days ago
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-cyan-600">
+        <div className="container mx-auto px-4 sm:px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-white"
+          >
+            <h2 className="text-3xl font-bold mb-4">Ready to Add New Records?</h2>
+            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              Upload your latest medical documents and keep your health data up to date
+            </p>
+            <Button size="lg" variant="secondary" asChild>
+              <Link href="/records">
+                <Plus className="mr-2 h-5 w-5" />
+                Add New Record
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
     </div>
