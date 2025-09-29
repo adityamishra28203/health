@@ -727,6 +727,16 @@ app.put('/auth/profile', async (req, res) => {
       });
     }
     
+    console.log('📝 Profile update request received:', { 
+      firstName: firstName ? 'provided' : 'not provided',
+      lastName: lastName ? 'provided' : 'not provided', 
+      email: email ? 'provided' : 'not provided',
+      phone: phone ? 'provided' : 'not provided',
+      avatar: avatar ? `provided (${avatar.length} chars)` : 'not provided',
+      role: role ? 'provided' : 'not provided',
+      bio: bio ? 'provided' : 'not provided'
+    });
+    
     console.log('🔧 Profile update request:', { 
       firstName, 
       lastName, 
@@ -786,24 +796,28 @@ app.put('/auth/profile', async (req, res) => {
     
     // Update user fields
     if (firstName !== undefined) {
-      if (firstName.trim() === '') {
+      if (firstName && firstName.trim() === '') {
         return res.status(400).json({
           error: 'Validation Error',
           message: 'First name cannot be empty',
           timestamp: new Date().toISOString()
         });
       }
-      user.firstName = firstName.trim();
+      if (firstName) {
+        user.firstName = firstName.trim();
+      }
     }
     if (lastName !== undefined) {
-      if (lastName.trim() === '') {
+      if (lastName && lastName.trim() === '') {
         return res.status(400).json({
           error: 'Validation Error',
           message: 'Last name cannot be empty',
           timestamp: new Date().toISOString()
         });
       }
-      user.lastName = lastName.trim();
+      if (lastName) {
+        user.lastName = lastName.trim();
+      }
     }
     
     // Clean up old invalid avatar URLs
