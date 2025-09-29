@@ -769,7 +769,7 @@ app.put('/auth/profile', async (req, res) => {
     if (phone !== undefined) user.phone = phone; // Allow empty string to clear phone
     if (bio !== undefined) user.bio = bio; // Allow empty string to clear bio
     if (avatar) {
-      console.log('🖼️ Updating avatar from:', user.avatar, 'to:', avatar);
+      console.log('🖼️ Updating avatar from:', user.avatar ? `present (${user.avatar.length} chars)` : 'null', 'to:', `present (${avatar.length} chars)`);
       user.avatar = avatar;
     }
     if (role) user.role = role;
@@ -782,11 +782,23 @@ app.put('/auth/profile', async (req, res) => {
         email: user.email,
         phone: user.phone,
         bio: user.bio,
-        avatar: user.avatar ? 'present' : 'null'
+        avatar: user.avatar ? `present (${user.avatar.length} chars)` : 'null'
       });
       
+      // Validate the user object before saving
+      const validationError = user.validateSync();
+      if (validationError) {
+        console.log('❌ Validation error before save:', validationError);
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Profile validation failed',
+          details: validationError.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       await user.save();
-      console.log('✅ User saved successfully, new avatar:', user.avatar);
+      console.log('✅ User saved successfully, new avatar:', user.avatar ? `present (${user.avatar.length} chars)` : 'null');
     } catch (saveError) {
       console.error('❌ Error saving user:', saveError);
       console.error('❌ Save error details:', {

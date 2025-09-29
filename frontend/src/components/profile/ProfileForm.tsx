@@ -110,7 +110,7 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       setIsLoading(true);
       
       // Compress image before upload to reduce base64 size
-      const compressedFile = await compressImage(file, 0.5, 400); // 50% quality, max 400px width for much smaller files
+      const compressedFile = await compressImage(file, 0.3, 300); // 30% quality, max 300px width for very small files
       
       // Upload file to backend
       const uploadResult = await authService.uploadAvatar(compressedFile);
@@ -150,7 +150,7 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
       }
       if (avatar && avatar !== user.avatar) {
         // Check if avatar data is too large
-        if (avatar.length > 1000000) { // 1MB limit for base64
+        if (avatar.length > 500000) { // 500KB limit for base64
           toast.error('Avatar image is too large. Please use a smaller image.');
           return;
         }
