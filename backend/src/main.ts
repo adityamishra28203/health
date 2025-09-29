@@ -13,18 +13,38 @@ async function bootstrap() {
   // Security middleware
   app.use(helmet());
   
-  // CORS configuration
+  // CORS configuration - dynamic origin matching for Vercel deployments
   app.use(cors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'https://healthwallet.vercel.app',
-      'https://healthwallet-frontend.vercel.app',
-      'https://healthify-g78z95f7h-adityamishra28203s-projects.vercel.app',
-      'https://healthify-gdebttmrm-adityamishra28203s-projects.vercel.app',
-      process.env.FRONTEND_URL
-    ].filter(Boolean) as string[],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'https://healthwallet.vercel.app',
+        'https://healthwallet-frontend.vercel.app',
+        process.env.FRONTEND_URL
+      ].filter(Boolean) as string[];
+      
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Allow all Vercel deployments for your project
+      if (origin.includes('adityamishra28203s-projects.vercel.app')) {
+        return callback(null, true);
+      }
+      
+      // Allow all healthify subdomains
+      if (origin.includes('healthify') && origin.includes('vercel.app')) {
+        return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
