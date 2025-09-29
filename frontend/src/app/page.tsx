@@ -228,6 +228,21 @@ export default function LandingPage() {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Password encryption function
+  const encryptPassword = async (password: string): Promise<string> => {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    } catch (error) {
+      console.error('Password encryption error:', error);
+      return password; // Fallback to plain text if encryption fails
+    }
+  };
+
   // Login form validation
   const validateLoginForm = () => {
     if (!loginData.email || !loginData.password) {
@@ -247,9 +262,9 @@ export default function LandingPage() {
       return false;
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
     if (!passwordRegex.test(loginData.password)) {
-      setLoginError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      setLoginError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
       return false;
     }
 
@@ -268,9 +283,10 @@ export default function LandingPage() {
     }
 
     try {
+      const encryptedPassword = await encryptPassword(loginData.password);
       const response = await authService.login({
         email: loginData.email,
-        password: loginData.password
+        password: encryptedPassword
       });
       if (response) {
         setUser(response.user);
@@ -329,9 +345,9 @@ export default function LandingPage() {
       return false;
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
     if (!passwordRegex.test(signupData.password)) {
-      setSignupError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      setSignupError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
       return false;
     }
 
@@ -355,11 +371,12 @@ export default function LandingPage() {
     }
 
     try {
+      const encryptedPassword = await encryptPassword(signupData.password);
       const response = await authService.register({
         firstName: signupData.firstName,
         lastName: signupData.lastName,
         email: signupData.email,
-        password: signupData.password,
+        password: encryptedPassword,
         phone: signupData.phone,
         role: signupData.role || 'patient'
       });

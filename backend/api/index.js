@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 
 // Create Express app
 const app = express();
@@ -18,6 +19,44 @@ app.use(cors({
 
 // Parse JSON bodies
 app.use(express.json());
+
+// Password hashing function
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+
+// Password verification function
+function verifyPassword(password, hashedPassword) {
+  const [salt, hash] = hashedPassword.split(':');
+  const verifyHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return hash === verifyHash;
+}
+
+// Hash SHA-256 password with PBKDF2 (for encrypted passwords from frontend)
+function hashEncryptedPassword(encryptedPassword) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(encryptedPassword, salt, 1000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
+
+// Pre-compute the SHA-256 hash of 'Admin123!' for testing
+const ADMIN_PASSWORD_SHA256 = '3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121';
+
+// Mock user database with hashed passwords
+const mockUsers = [
+  {
+    id: '1',
+    firstName: 'Admin',
+    lastName: 'User',
+    email: 'admin@healthify.com',
+    role: 'patient',
+    avatar: null,
+    password: hashEncryptedPassword(ADMIN_PASSWORD_SHA256), // Pre-hashed encrypted password
+    createdAt: new Date().toISOString()
+  }
+];
 
 // Authentication routes
 app.post('/auth/login', (req, res) => {
@@ -41,31 +80,23 @@ app.post('/auth/login', (req, res) => {
     });
   }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
   if (!passwordRegex.test(password)) {
     return res.status(400).json({
       error: 'Validation Error',
-      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
       timestamp: new Date().toISOString()
     });
   }
 
-  // Mock authentication - replace with real authentication logic
-  if (email === 'admin@healthify.com' && password === 'Admin123') {
-    const mockUser = {
-      id: '1',
-      firstName: 'Admin',
-      lastName: 'User',
-      email: 'admin@healthify.com',
-      role: 'patient',
-      avatar: null,
-      createdAt: new Date().toISOString()
-    };
-
+  // Find user and verify password
+  const user = mockUsers.find(u => u.email === email);
+  if (user && verifyPassword(password, user.password)) {
+    const { password: _, ...userWithoutPassword } = user; // Remove password from response
     const mockToken = 'mock-jwt-token-' + Date.now();
     
     return res.status(200).json({
-      user: mockUser,
+      user: userWithoutPassword,
       accessToken: mockToken,
       message: 'Login successful'
     });
@@ -100,17 +131,28 @@ app.post('/auth/register', (req, res) => {
     });
   }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/;
   if (!passwordRegex.test(password)) {
     return res.status(400).json({
       error: 'Validation Error',
-      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
       timestamp: new Date().toISOString()
     });
   }
 
-  // Mock user creation - replace with real registration logic
-  const mockUser = {
+  // Check if user already exists
+  const existingUser = mockUsers.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'User with this email already exists',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Create new user with hashed encrypted password
+  const hashedPassword = hashEncryptedPassword(password);
+  const newUser = {
     id: Date.now().toString(),
     firstName,
     lastName,
@@ -118,13 +160,18 @@ app.post('/auth/register', (req, res) => {
     role,
     phone: phone || null,
     avatar: null,
+    password: hashedPassword,
     createdAt: new Date().toISOString()
   };
 
+  // Add to mock database
+  mockUsers.push(newUser);
+
+  const { password: _, ...userWithoutPassword } = newUser; // Remove password from response
   const mockToken = 'mock-jwt-token-' + Date.now();
   
   res.status(201).json({
-    user: mockUser,
+    user: userWithoutPassword,
     accessToken: mockToken,
     message: 'Registration successful'
   });
@@ -171,6 +218,9 @@ app.get('/health', (req, res) => {
       '/auth/register',
       '/auth/profile',
       '/auth/logout',
+      '/health-records',
+      '/health-records/statistics',
+      '/health-records/:id',
       '/api/health-records',
       '/api/insurance-claims',
       '/api/analytics',
@@ -206,7 +256,139 @@ app.get('/test', (req, res) => {
   });
 });
 
-// Sample health records endpoint
+// Health Records endpoints (matching frontend expectations)
+app.get('/health-records', (req, res) => {
+  // Mock health records data
+  const mockRecords = [
+    {
+      id: '1',
+      patientId: '1',
+      doctorId: '1',
+      title: 'Blood Test Report',
+      description: 'Complete blood count and lipid profile',
+      type: 'lab_report',
+      status: 'verified',
+      fileHash: 'abc123',
+      ipfsHash: 'ipfs123',
+      fileName: 'blood_test.pdf',
+      fileSize: 1024000,
+      mimeType: 'application/pdf',
+      fileUrl: 'https://example.com/blood_test.pdf',
+      recordDate: '2024-01-15',
+      tags: ['blood', 'test', 'lab'],
+      medicalData: { hemoglobin: '14.2', cholesterol: '180' },
+      consentGiven: true,
+      isEncrypted: true,
+      createdAt: '2024-01-15T10:00:00Z',
+      updatedAt: '2024-01-15T10:00:00Z'
+    },
+    {
+      id: '2',
+      patientId: '1',
+      doctorId: '1',
+      title: 'X-Ray Report',
+      description: 'Chest X-ray examination',
+      type: 'imaging',
+      status: 'pending',
+      fileHash: 'def456',
+      ipfsHash: 'ipfs456',
+      fileName: 'chest_xray.jpg',
+      fileSize: 2048000,
+      mimeType: 'image/jpeg',
+      fileUrl: 'https://example.com/chest_xray.jpg',
+      recordDate: '2024-01-20',
+      tags: ['x-ray', 'chest', 'imaging'],
+      medicalData: { findings: 'Normal chest X-ray' },
+      consentGiven: true,
+      isEncrypted: true,
+      createdAt: '2024-01-20T14:30:00Z',
+      updatedAt: '2024-01-20T14:30:00Z'
+    }
+  ];
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  
+  res.json({
+    records: mockRecords.slice(startIndex, endIndex),
+    total: mockRecords.length,
+    page: page,
+    limit: limit,
+    totalPages: Math.ceil(mockRecords.length / limit)
+  });
+});
+
+app.get('/health-records/statistics', (req, res) => {
+  res.json({
+    totalRecords: 2,
+    verifiedRecords: 1,
+    pendingRecords: 1,
+    recordsByType: {
+      'lab_report': 1,
+      'imaging': 1
+    }
+  });
+});
+
+app.get('/health-records/:id', (req, res) => {
+  const { id } = req.params;
+  
+  // Mock single record
+  const mockRecord = {
+    id: id,
+    patientId: '1',
+    doctorId: '1',
+    title: 'Blood Test Report',
+    description: 'Complete blood count and lipid profile',
+    type: 'lab_report',
+    status: 'verified',
+    fileHash: 'abc123',
+    ipfsHash: 'ipfs123',
+    fileName: 'blood_test.pdf',
+    fileSize: 1024000,
+    mimeType: 'application/pdf',
+    fileUrl: 'https://example.com/blood_test.pdf',
+    recordDate: '2024-01-15',
+    tags: ['blood', 'test', 'lab'],
+    medicalData: { hemoglobin: '14.2', cholesterol: '180' },
+    consentGiven: true,
+    isEncrypted: true,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  };
+
+  res.json(mockRecord);
+});
+
+app.post('/health-records', (req, res) => {
+  const { title, description, type, recordDate, tags, medicalData, consentGiven, isEncrypted } = req.body;
+  
+  // Mock creating a new record
+  const newRecord = {
+    id: Date.now().toString(),
+    patientId: '1',
+    doctorId: '1',
+    title,
+    description,
+    type,
+    status: 'pending',
+    fileHash: 'new123',
+    ipfsHash: 'ipfs_new123',
+    recordDate,
+    tags: tags || [],
+    medicalData: medicalData || {},
+    consentGiven: consentGiven || false,
+    isEncrypted: isEncrypted || true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  res.status(201).json(newRecord);
+});
+
+// Sample health records endpoint (keeping for backward compatibility)
 app.get('/api/health-records', (req, res) => {
   res.json({
     records: [
