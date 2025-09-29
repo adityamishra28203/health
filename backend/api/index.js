@@ -680,9 +680,24 @@ app.post('/auth/register', async (req, res) => {
 
 app.get('/auth/profile', async (req, res) => {
   try {
-    // For now, return the first user (for demo purposes)
-    // In a real app, you'd get the user ID from the JWT token
-    const user = await User.findOne().sort({ createdAt: 1 }).select('-password');
+    // Get the authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        error: 'Authentication Error',
+        message: 'No valid authorization token provided',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // For mock tokens, find the most recently updated user (who likely just logged in)
+    // This is a simple way to identify the current user without proper JWT decoding
+    let user = await User.findOne().sort({ updatedAt: -1 }).select('-password');
+    
+    // If no user found by updatedAt, try by creation date (newest first)
+    if (!user) {
+      user = await User.findOne().sort({ createdAt: -1 }).select('-password');
+    }
     
     if (!user) {
       return res.status(404).json({
@@ -692,7 +707,7 @@ app.get('/auth/profile', async (req, res) => {
       });
     }
     
-    console.log('👤 Fetching profile for user:', { id: user._id, email: user.email, avatar: user.avatar });
+    console.log('👤 Fetching profile for user:', { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName });
     
     res.status(200).json({
       id: user._id,
@@ -778,17 +793,17 @@ app.put('/auth/profile', async (req, res) => {
       }
     }
     
-    // Try to find user by email first, then fallback to first user
+    // Try to find user by email first, then fallback to most recently updated user
     let user;
     if (email) {
       user = await User.findOne({ email: email.toLowerCase() });
       console.log('🔍 Searching for user by email:', email.toLowerCase());
     }
     
-    // If not found by email, get the first user (for demo purposes)
+    // If not found by email, get the most recently updated user (who likely just logged in)
     if (!user) {
-      user = await User.findOne().sort({ createdAt: 1 }); // Get oldest user
-      console.log('🔍 Using first user in database');
+      user = await User.findOne().sort({ updatedAt: -1 }); // Get most recently updated user
+      console.log('🔍 Using most recently updated user in database');
     }
     
     if (!user) {
