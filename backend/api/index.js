@@ -119,7 +119,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    maxlength: 5000000 // 5MB limit for base64 data URLs
+    maxlength: 1000000 // 1MB limit for base64 data URLs
   },
   bio: {
     type: String,
