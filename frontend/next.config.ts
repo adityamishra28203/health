@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BLOCKCHAIN_URL: process.env.NEXT_PUBLIC_BLOCKCHAIN_URL || 'https://mainnet.infura.io/v3/your-project-id',
     NEXT_PUBLIC_USE_MOCK_DATA: process.env.NEXT_PUBLIC_USE_MOCK_DATA || 'false',
   },
+  // Force Vercel to use latest commit
   eslint: {
     ignoreDuringBuilds: false,
   },
