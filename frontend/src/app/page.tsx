@@ -79,10 +79,14 @@ export default function LandingPage() {
       await authService.logout();
       setUser(null);
       setIsAuthenticated(false);
-      // Stay on landing page after logout
-      router.refresh();
+      // Force a clean reload to ensure proper state reset
+      window.location.reload();
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if logout fails, clear the state and reload
+      setUser(null);
+      setIsAuthenticated(false);
+      window.location.reload();
     }
   };
 
@@ -215,14 +219,24 @@ export default function LandingPage() {
   }, []);
 
   // Helper function to get optimized transform values for mobile
-  const getTransformValue = (baseValue: number, mobileMultiplier: number = 0.3) => {
+  const getTransformValue = (baseValue: number, mobileMultiplier: number = 0.5) => {
     return isMobile ? scrollY * baseValue * mobileMultiplier : scrollY * baseValue;
   };
 
-  // Helper function to disable animations on mobile for better performance
-  const getMobileOptimizedStyle = (baseStyle: React.CSSProperties, disableOnMobile: boolean = false) => {
-    if (isMobile && disableOnMobile) {
-      return { ...baseStyle, transform: 'none' };
+  // Helper function to get optimized animation styles for mobile
+  const getOptimizedStyle = (baseStyle: React.CSSProperties, mobileOptimizations: boolean = true) => {
+    if (isMobile && mobileOptimizations) {
+      return {
+        ...baseStyle,
+        // Use transform3d for better GPU acceleration on mobile
+        transform: baseStyle.transform?.toString().replace(/translateY\(/g, 'translate3d(0,').replace(/px\)/g, 'px,0)'),
+        // Optimize will-change for mobile
+        willChange: 'transform',
+        // Add backface-visibility for better performance
+        backfaceVisibility: 'hidden',
+        // Use hardware acceleration
+        WebkitTransform: baseStyle.transform?.toString().replace(/translateY\(/g, 'translate3d(0,').replace(/px\)/g, 'px,0)'),
+      };
     }
     return baseStyle;
   };
@@ -340,7 +354,11 @@ export default function LandingPage() {
         setIsAuthenticated(true);
         setIsLoginOpen(false);
         setLoginData({ email: '', password: '' });
-        router.push('/dashboard');
+        
+        // Use window.location.href for immediate navigation without race conditions
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 100);
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
@@ -455,25 +473,25 @@ export default function LandingPage() {
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div 
-          className={`absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full ${isMobile ? '' : 'animate-pulse'}`}
-          style={getMobileOptimizedStyle({
-            transform: `translateY(${getTransformValue(0.1, 0.3)}px) rotate(${getTransformValue(0.05, 0.3)}deg)`,
+          className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full animate-pulse"
+          style={getOptimizedStyle({
+            transform: `translateY(${getTransformValue(0.1)}px) rotate(${getTransformValue(0.05)}deg)`,
             willChange: 'transform',
-          }, true)}
+          })}
         ></div>
         <div 
-          className={`absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full ${isMobile ? '' : 'animate-pulse delay-1000'}`}
-          style={getMobileOptimizedStyle({
-            transform: `translateY(${getTransformValue(-0.05, 0.3)}px) rotate(${getTransformValue(-0.03, 0.3)}deg)`,
+          className="absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full animate-pulse delay-1000"
+          style={getOptimizedStyle({
+            transform: `translateY(${getTransformValue(-0.05)}px) rotate(${getTransformValue(-0.03)}deg)`,
             willChange: 'transform',
-          }, true)}
+          })}
         ></div>
         <div 
-          className={`absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full ${isMobile ? '' : 'animate-pulse delay-2000'}`}
-          style={getMobileOptimizedStyle({
-            transform: `translateY(${getTransformValue(0.08, 0.3)}px) rotate(${getTransformValue(0.02, 0.3)}deg)`,
+          className="absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full animate-pulse delay-2000"
+          style={getOptimizedStyle({
+            transform: `translateY(${getTransformValue(0.08)}px) rotate(${getTransformValue(0.02)}deg)`,
             willChange: 'transform',
-          }, true)}
+          })}
         ></div>
         {/* Medical Grid Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -729,11 +747,11 @@ export default function LandingPage() {
             
             <p 
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
-              style={{
-                transform: `translateY(${getTransformValue(0.1, 0.3)}px)`,
+              style={getOptimizedStyle({
+                transform: `translateY(${getTransformValue(0.1)}px)`,
                 transition: 'transform 0.1s ease-out',
                 willChange: 'transform',
-              }}
+              })}
             >
               Transform your healthcare experience with blockchain-powered, HIPAA-compliant health record management. 
               Secure, accessible, and completely under your control.
@@ -985,10 +1003,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div 
             className="text-center space-y-6 mb-20"
-            style={{
+            style={getOptimizedStyle({
               transform: `translateY(${getTransformValue(0.03)}px)`,
               willChange: 'transform',
-            }}
+            })}
           >
             <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
@@ -1016,11 +1034,11 @@ export default function LandingPage() {
               <Card 
                 key={index}
                 className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8 text-center"
-                style={{
-                  transform: `translateY(${getTransformValue(0.01 + index * 0.005, 0.2)}px)`,
+                style={getOptimizedStyle({
+                  transform: `translateY(${getTransformValue(0.01 + index * 0.005)}px)`,
                   transitionDelay: `${index * 100}ms`,
                   willChange: 'transform',
-                }}
+                })}
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <tech.icon className="w-8 h-8 text-white" />
@@ -1041,10 +1059,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div 
             className="text-center space-y-6 mb-20"
-            style={{
+            style={getOptimizedStyle({
               transform: `translateY(${getTransformValue(0.02)}px)`,
               willChange: 'transform',
-            }}
+            })}
           >
             <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
@@ -1089,11 +1107,11 @@ export default function LandingPage() {
               <Card 
                 key={index}
                 className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 hover:scale-105 rounded-3xl p-8"
-                style={{
-                  transform: `translateY(${getTransformValue(0.01 + index * 0.005, 0.2)}px)`,
+                style={getOptimizedStyle({
+                  transform: `translateY(${getTransformValue(0.01 + index * 0.005)}px)`,
                   transitionDelay: `${index * 100}ms`,
                   willChange: 'transform',
-                }}
+                })}
               >
                 <div className="flex items-center space-x-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -1133,11 +1151,11 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center text-white relative z-10">
           <h2 
             className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
-            style={{
-              transform: `translateY(${getTransformValue(0.005, 0.1)}px)`,
+            style={getOptimizedStyle({
+              transform: `translateY(${getTransformValue(0.005)}px)`,
               paddingBottom: '0.5rem',
               willChange: 'transform',
-            }}
+            })}
           >
             <span 
               style={{
@@ -1151,20 +1169,20 @@ export default function LandingPage() {
             </h2>
           <p 
             className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-12 max-w-3xl mx-auto font-light leading-relaxed px-4"
-            style={{
-              transform: `translateY(${getTransformValue(0.005, 0.1)}px)`,
+            style={getOptimizedStyle({
+              transform: `translateY(${getTransformValue(0.005)}px)`,
               paddingBottom: '0.25rem',
               willChange: 'transform',
-            }}
+            })}
           >
             Join thousands of users who trust SecureHealth with their most sensitive health information.
           </p>
           <div 
             className="flex flex-col sm:flex-row gap-6 justify-center"
-            style={{
-              transform: `translateY(${getTransformValue(0.005, 0.1)}px)`,
+            style={getOptimizedStyle({
+              transform: `translateY(${getTransformValue(0.005)}px)`,
               willChange: 'transform',
-            }}
+            })}
           >
             <Button 
               size="lg"

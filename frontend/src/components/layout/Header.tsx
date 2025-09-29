@@ -114,8 +114,8 @@ export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate 
       console.error('Logout error:', error);
     }
     
-    // Redirect to landing page
-    window.location.replace("/");
+    // Force a clean reload to ensure proper state reset
+    window.location.reload();
   };
 
   const handleSettingsClick = () => {
