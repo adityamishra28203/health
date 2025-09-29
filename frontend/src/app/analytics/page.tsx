@@ -8,13 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
   TrendingUp, 
-  TrendingDown,
   Activity,
   Heart,
   Shield,
   FileText,
-  Users,
-  Calendar,
   Download,
   Filter,
   BarChart3,
@@ -282,7 +279,7 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {analytics.trends.map((trend, index) => (
+                    {analytics.trends.map((trend) => (
                       <div key={trend.month} className="flex items-center justify-between">
                         <span className="font-medium">{trend.month}</span>
                         <div className="flex items-center gap-4">
@@ -364,7 +361,7 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {analytics.monthlyActivity.map((activity, index) => (
+                  {analytics.monthlyActivity.map((activity) => (
                     <div key={activity.month} className="text-center p-6 bg-muted/50 rounded-lg">
                       <h3 className="font-semibold text-lg mb-4">{activity.month}</h3>
                       <div className="space-y-3">

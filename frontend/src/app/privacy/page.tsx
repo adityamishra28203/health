@@ -158,12 +158,12 @@ export default function PrivacyPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-3">
                     <AlertTriangle className="h-6 w-6 text-yellow-500" />
-                    What We DON'T Collect
+                    What We DON&apos;T Collect
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    <li>• Your actual medical record content (it's encrypted)</li>
+                    <li>• Your actual medical record content (it&apos;s encrypted)</li>
                     <li>• Location data unless you explicitly share it</li>
                     <li>• Browsing history from other websites</li>
                     <li>• Personal data for marketing purposes</li>

@@ -10,7 +10,6 @@ import {
   Database,
   Key,
   CheckCircle,
-  AlertTriangle,
   Globe,
   Smartphone,
   Server

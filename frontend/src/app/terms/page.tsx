@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
   Scale,
-  CheckCircle,
   AlertTriangle,
   Shield
 } from 'lucide-react';

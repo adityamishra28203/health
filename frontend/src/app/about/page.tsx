@@ -8,8 +8,7 @@ import {
   Shield, 
   Users, 
   Award, 
-  Target, 
-  Globe,
+  Target,
   CheckCircle,
   ArrowRight
 } from 'lucide-react';
@@ -83,7 +82,7 @@ export default function AboutPage() {
               <span className="text-primary"> Secure Technology</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              We're building the future of healthcare where patients have complete control over their medical data, 
+              We&apos;re building the future of healthcare where patients have complete control over their medical data, 
               powered by cutting-edge blockchain technology and military-grade security.
             </p>
           </motion.div>

@@ -24,7 +24,7 @@ const contactInfo = [
     icon: <Mail className="h-6 w-6" />,
     title: "Email",
     details: ["support@securehealth.com", "info@securehealth.com"],
-    description: "Send us an email and we'll respond within 24 hours"
+    description: "Send us an email and we&apos;ll respond within 24 hours"
   },
   {
     icon: <Phone className="h-6 w-6" />,
@@ -42,7 +42,7 @@ const contactInfo = [
     icon: <Clock className="h-6 w-6" />,
     title: "Business Hours",
     details: ["Monday - Friday: 9 AM - 6 PM", "Saturday: 10 AM - 4 PM"],
-    description: "We're here to help during business hours"
+    description: "We&apos;re here to help during business hours"
   }
 ];
 
@@ -87,8 +87,8 @@ export default function ContactPage() {
               <span className="text-primary"> Touch</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              Have questions about SecureHealth? We're here to help. Reach out to our team 
-              and we'll get back to you as soon as possible.
+              Have questions about SecureHealth? We&apos;re here to help. Reach out to our team 
+              and we&apos;ll get back to you as soon as possible.
             </p>
           </motion.div>
         </div>
@@ -156,7 +156,7 @@ export default function ContactPage() {
                 Send us a Message
               </h2>
               <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                Fill out the form below and we'll get back to you within 24 hours. 
+                Fill out the form below and we&apos;ll get back to you within 24 hours. 
                 For urgent matters, please call us directly.
               </p>
               
@@ -200,7 +200,7 @@ export default function ContactPage() {
                       <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">Message Sent!</h3>
                       <p className="text-muted-foreground">
-                        Thank you for contacting us. We'll get back to you within 24 hours.
+                        Thank you for contacting us. We&apos;ll get back to you within 24 hours.
                       </p>
                     </div>
                   ) : (

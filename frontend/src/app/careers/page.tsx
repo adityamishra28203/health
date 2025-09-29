@@ -282,7 +282,7 @@ export default function CareersPage() {
                 <CardContent className="text-center">
                   <div className="text-6xl mb-4">🏥</div>
                   <p className="text-muted-foreground leading-relaxed mb-6">
-                    Be part of a team that's revolutionizing healthcare through 
+                    Be part of a team that&apos;s revolutionizing healthcare through 
                     secure, patient-controlled health data management.
                   </p>
                   <Button className="w-full">
