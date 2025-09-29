@@ -513,6 +513,19 @@ app.put('/auth/profile', async (req, res) => {
     
     console.log('🔧 Profile update request:', { firstName, lastName, email, phone, avatar, role });
     
+    // Check if database is connected
+    if (!isConnected) {
+      console.log('❌ Database not connected, attempting to reconnect...');
+      await connectToDatabase();
+      if (!isConnected) {
+        return res.status(500).json({
+          error: 'Database Error',
+          message: 'Database connection failed',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+    
     // Try to find user by email first, then fallback to first user
     let user;
     if (email) {
@@ -560,9 +573,18 @@ app.put('/auth/profile', async (req, res) => {
     if (role) user.role = role;
     
     // Save updated user
-    await user.save();
-    
-    console.log('✅ User saved successfully, new avatar:', user.avatar);
+    try {
+      await user.save();
+      console.log('✅ User saved successfully, new avatar:', user.avatar);
+    } catch (saveError) {
+      console.error('❌ Error saving user:', saveError);
+      return res.status(500).json({
+        error: 'Database Error',
+        message: 'Failed to save user profile',
+        details: saveError.message,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     const { password: _, ...userWithoutPassword } = user.toObject();
     
@@ -653,18 +675,22 @@ app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
       });
     }
 
-    // Mock avatar upload response
+    // Convert file to base64 data URL for immediate use
+    const base64Data = req.file.buffer.toString('base64');
+    const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
+    // Mock avatar upload response with base64 data URL
     const mockAvatarResponse = {
       id: Date.now().toString(),
       fileName: req.file.originalname,
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
-      avatarUrl: `https://securehealth-storage.com/avatars/${Date.now()}-${req.file.originalname}`,
+      avatarUrl: dataUrl, // Use base64 data URL instead of fake URL
       uploadedAt: new Date().toISOString(),
       status: 'uploaded'
     };
 
-    console.log('✅ Avatar upload successful:', mockAvatarResponse);
+    console.log('✅ Avatar upload successful, data URL length:', dataUrl.length);
 
     res.status(200).json({
       avatar: mockAvatarResponse,
