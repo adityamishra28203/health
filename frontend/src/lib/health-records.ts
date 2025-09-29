@@ -139,13 +139,13 @@ class HealthRecordsService {
       const response = await axios.get(`${API_BASE_URL}/health-records`, {
         headers: this.getAuthHeaders(),
         params: { page, limit },
-        timeout: 5000, // 5 second timeout
+        timeout: 10000, // 10 second timeout
       });
       return response.data;
     } catch (error: unknown) {
-      console.warn('Backend not accessible, using mock data:', error);
-      // Fallback to mock data if backend is not accessible
-      return this.getMockHealthRecords(page, limit);
+      console.error('Failed to fetch health records:', error);
+      // Don't show mock data to real users - throw proper error instead
+      throw new Error(getErrorMessage(error, 'Unable to connect to server. Please check your internet connection and try again.'));
     }
   }
 
@@ -153,10 +153,12 @@ class HealthRecordsService {
     try {
       const response = await axios.get(`${API_BASE_URL}/health-records/${id}`, {
         headers: this.getAuthHeaders(),
+        timeout: 10000, // 10 second timeout
       });
       return response.data;
     } catch (error: unknown) {
-      throw new Error(getErrorMessage(error, 'Failed to fetch health record'));
+      console.error('Failed to fetch health record:', error);
+      throw new Error(getErrorMessage(error, 'Unable to connect to server. Please check your internet connection and try again.'));
     }
   }
 
@@ -223,13 +225,13 @@ class HealthRecordsService {
 
       const response = await axios.get(`${API_BASE_URL}/health-records/statistics`, {
         headers: this.getAuthHeaders(),
-        timeout: 5000, // 5 second timeout
+        timeout: 10000, // 10 second timeout
       });
       return response.data;
     } catch (error: unknown) {
-      console.warn('Backend not accessible, using mock statistics:', error);
-      // Fallback to mock data if backend is not accessible
-      return this.getMockStatistics();
+      console.error('Failed to fetch health record statistics:', error);
+      // Don't show mock data to real users - throw proper error instead
+      throw new Error(getErrorMessage(error, 'Unable to connect to server. Please check your internet connection and try again.'));
     }
   }
 

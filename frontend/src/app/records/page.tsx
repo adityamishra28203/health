@@ -42,6 +42,7 @@ export default function RecordsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(false);
 
   const loadRecords = async () => {
     try {
@@ -53,6 +54,7 @@ export default function RecordsPage() {
         return;
       }
       
+      setConnectionError(false); // Reset connection error state
       const response = await healthRecordsService.getHealthRecords(1, 100);
       setRecords(response.records);
       
@@ -67,7 +69,13 @@ export default function RecordsPage() {
         return;
       }
       
-      toast.error('Failed to load health records');
+      // Show specific error message for connection issues
+      if (error instanceof Error && error.message?.includes('Unable to connect to server')) {
+        setConnectionError(true);
+        toast.error('Unable to connect to server. Please check your internet connection and try again.');
+      } else {
+        toast.error('Failed to load health records. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -274,21 +282,42 @@ export default function RecordsPage() {
           {filteredRecords.length === 0 ? (
             <Card className="card-enhanced animate-fade-in">
               <CardContent className="p-16 text-center">
-                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {records.length === 0 ? 'No health records yet' : 'No records match your filters'}
-                </h3>
-                <p className="text-gray-600 mb-8 text-lg">
-                  {records.length === 0 
-                    ? 'Upload your first health record to get started'
-                    : 'Try adjusting your search terms or filters'
-                  }
-                </p>
-                {records.length === 0 && (
-                  <Button onClick={() => setIsAddRecordOpen(true)} className="btn-enhanced" size="lg">
-                    <Upload className="h-5 w-5 mr-2" />
-                    Upload Your First Record
-                  </Button>
+                {connectionError ? (
+                  <>
+                    <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                      Unable to Connect to Server
+                    </h3>
+                    <p className="text-gray-600 mb-8 text-lg">
+                      We're having trouble connecting to our servers. Please check your internet connection and try again.
+                    </p>
+                    <Button onClick={loadRecords} className="btn-enhanced" size="lg">
+                      Try Again
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                      {records.length === 0 ? 'No health records yet' : 'No records match your filters'}
+                    </h3>
+                    <p className="text-gray-600 mb-8 text-lg">
+                      {records.length === 0 
+                        ? 'Upload your first health record to get started'
+                        : 'Try adjusting your search terms or filters'
+                      }
+                    </p>
+                    {records.length === 0 && (
+                      <Button onClick={() => setIsAddRecordOpen(true)} className="btn-enhanced" size="lg">
+                        <Upload className="h-5 w-5 mr-2" />
+                        Upload Your First Record
+                      </Button>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
