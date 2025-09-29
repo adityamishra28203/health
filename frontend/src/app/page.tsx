@@ -472,7 +472,7 @@ export default function LandingPage() {
           willChange: 'transform, background-color'
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-4">
           <Link 
             href="/" 
             onClick={handleLogoClick}
@@ -606,10 +606,10 @@ export default function LandingPage() {
                 
                 {/* Mobile Menu Button */}
                 <button 
-                  className="md:hidden p-2"
+                  className="md:hidden p-2 ml-2 flex-shrink-0"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               </>
             ) : (
@@ -633,10 +633,10 @@ export default function LandingPage() {
                 
                 {/* Mobile Menu Button */}
                 <button 
-                  className="md:hidden p-2"
+                  className="md:hidden p-2 ml-2 flex-shrink-0"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
               </>
             )}
@@ -1099,10 +1099,10 @@ export default function LandingPage() {
 
         <div className="max-w-4xl mx-auto text-center text-white relative z-10">
           <h2 
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 tracking-tight leading-tight"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
             style={{
-              transform: `translateY(${scrollY * 0.03}px)`,
-              paddingBottom: '1rem',
+              transform: `translateY(${scrollY * 0.005}px)`,
+              paddingBottom: '0.5rem',
             }}
           >
             <span 
@@ -1116,10 +1116,10 @@ export default function LandingPage() {
             </span>
             </h2>
           <p 
-            className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto font-light leading-relaxed"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-12 max-w-3xl mx-auto font-light leading-relaxed px-4"
             style={{
-              transform: `translateY(${scrollY * 0.02}px)`,
-              paddingBottom: '0.5rem',
+              transform: `translateY(${scrollY * 0.005}px)`,
+              paddingBottom: '0.25rem',
             }}
           >
             Join thousands of users who trust SecureHealth with their most sensitive health information.
@@ -1127,13 +1127,13 @@ export default function LandingPage() {
           <div 
             className="flex flex-col sm:flex-row gap-6 justify-center"
             style={{
-              transform: `translateY(${scrollY * 0.01}px)`,
+              transform: `translateY(${scrollY * 0.005}px)`,
             }}
           >
             <Button 
               size="lg"
               onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
-              className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-16 py-6 text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
+              className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
             >
               {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
               <ArrowRight className="w-6 h-6 ml-3" />
@@ -1142,7 +1142,7 @@ export default function LandingPage() {
               variant="outline" 
               size="lg"
               onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
-              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-16 py-6 text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 bg-white"
+              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 bg-white"
             >
               {isAuthenticated ? 'View Plans' : 'Sign In'}
               </Button>
