@@ -1267,7 +1267,7 @@ export default function LandingPage() {
                 placeholder="Enter your email"
                 value={loginData.email}
                 onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-blue-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02]"
+                className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-blue-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                 required
               />
             </motion.div>
@@ -1293,7 +1293,7 @@ export default function LandingPage() {
                   placeholder="Enter your password"
                   value={loginData.password}
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-blue-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-blue-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                   required
                 />
                 <button
@@ -1324,11 +1324,15 @@ export default function LandingPage() {
                   >
                     {loginLoading ? 'Signing In...' : 'Sign In'}
                     <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="w-4 h-4"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center"
                     >
-                      →
+                      <motion.div
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="w-2 h-2 bg-white rounded-full"
+                      />
                     </motion.div>
                   </motion.span>
                 </Button>
@@ -1441,7 +1445,7 @@ export default function LandingPage() {
                   placeholder="First name"
                   value={signupData.firstName}
                   onChange={(e) => setSignupData({ ...signupData, firstName: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                   required
                 />
               </div>
@@ -1461,7 +1465,7 @@ export default function LandingPage() {
                   placeholder="Last name"
                   value={signupData.lastName}
                   onChange={(e) => setSignupData({ ...signupData, lastName: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                   required
                 />
               </div>
@@ -1531,7 +1535,7 @@ export default function LandingPage() {
                 I am a
               </Label>
               <Select value={signupData.role} onValueChange={(value) => setSignupData({ ...signupData, role: value })}>
-                <SelectTrigger className="w-full px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02] bg-white text-gray-900">
+                <SelectTrigger className="w-full px-3 sm:px-4 py-3 sm:py-4 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1565,7 +1569,7 @@ export default function LandingPage() {
                   placeholder="Create a password"
                   value={signupData.password}
                   onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                   required
                 />
                 <button
@@ -1620,7 +1624,7 @@ export default function LandingPage() {
                   placeholder="Confirm your password"
                   value={signupData.confirmPassword}
                   onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:bg-white focus:text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:bg-white hover:text-gray-900 transform hover:scale-[1.02]"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 sm:py-4 pr-12 rounded-2xl border-2 border-gray-200 !bg-white !text-gray-900 placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:!bg-white focus:!text-gray-900 transition-all duration-300 hover:border-emerald-300 hover:shadow-lg hover:!bg-white hover:!text-gray-900 transform hover:scale-[1.02]"
                   required
                 />
                 <button
