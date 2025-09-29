@@ -19,13 +19,104 @@ app.use(cors({
 // Parse JSON bodies
 app.use(express.json());
 
-// Authentication routes (temporarily disabled for debugging)
-// app.use('/auth', googleSignup);
-// app.use('/auth', googleLogin);
-// app.use('/auth', sendOtp);
-// app.use('/auth', verifyOtpSignup);
-// app.use('/auth', verifyOtpLogin);
-// app.use('/auth', firebaseGoogle);
+// Authentication routes
+app.post('/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  // Basic validation
+  if (!email || !password) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Email and password are required',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Mock authentication - replace with real authentication logic
+  if (email === 'admin@healthify.com' && password === 'admin123') {
+    const mockUser = {
+      id: '1',
+      firstName: 'Admin',
+      lastName: 'User',
+      email: 'admin@healthify.com',
+      role: 'patient',
+      avatar: null,
+      createdAt: new Date().toISOString()
+    };
+
+    const mockToken = 'mock-jwt-token-' + Date.now();
+    
+    return res.status(200).json({
+      user: mockUser,
+      token: mockToken,
+      message: 'Login successful'
+    });
+  }
+
+  // Invalid credentials
+  res.status(401).json({
+    error: 'Authentication Error',
+    message: 'Invalid email or password',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/auth/register', (req, res) => {
+  const { firstName, lastName, email, password, phone, role } = req.body;
+  
+  // Basic validation
+  if (!firstName || !lastName || !email || !password || !role) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'All required fields must be provided',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Mock user creation - replace with real registration logic
+  const mockUser = {
+    id: Date.now().toString(),
+    firstName,
+    lastName,
+    email,
+    role,
+    phone: phone || null,
+    avatar: null,
+    createdAt: new Date().toISOString()
+  };
+
+  const mockToken = 'mock-jwt-token-' + Date.now();
+  
+  res.status(201).json({
+    user: mockUser,
+    token: mockToken,
+    message: 'Registration successful'
+  });
+});
+
+app.get('/auth/profile', (req, res) => {
+  // Mock profile - replace with real profile logic
+  const mockUser = {
+    id: '1',
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com',
+    role: 'patient',
+    phone: '+1234567890',
+    avatar: null,
+    createdAt: new Date().toISOString()
+  };
+  
+  res.status(200).json(mockUser);
+});
+
+app.post('/auth/logout', (req, res) => {
+  // Mock logout - replace with real logout logic
+  res.status(200).json({
+    message: 'Logout successful',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -40,6 +131,10 @@ app.get('/health', (req, res) => {
     endpoints: [
       '/health',
       '/',
+      '/auth/login',
+      '/auth/register',
+      '/auth/profile',
+      '/auth/logout',
       '/api/health-records',
       '/api/insurance-claims',
       '/api/analytics',
