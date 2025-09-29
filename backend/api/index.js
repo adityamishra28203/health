@@ -1412,6 +1412,42 @@ app.get('/test', (req, res) => {
   });
 });
 
+// Simple login test endpoint (no database)
+app.post('/auth/login-test', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log('Login test - email:', email, 'password length:', password?.length);
+    
+    // Simple test - just return success for any valid email/password
+    if (email && password && password.length >= 3) {
+      res.json({
+        user: {
+          id: 'test-user-id',
+          email: email,
+          firstName: 'Test',
+          lastName: 'User',
+          role: 'patient'
+        },
+        accessToken: 'test-token-' + Date.now(),
+        message: 'Login test successful'
+      });
+    } else {
+      res.status(400).json({
+        error: 'Validation Error',
+        message: 'Email and password required',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('Login test error:', error);
+    res.status(500).json({
+      error: 'Server Error',
+      message: 'Login test failed: ' + error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Sample health records endpoint (keeping for backward compatibility)
 app.get('/api/health-records', (req, res) => {
   res.json({
