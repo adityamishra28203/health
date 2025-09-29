@@ -752,8 +752,26 @@ app.put('/auth/profile', async (req, res) => {
     console.log('👤 Found user:', { id: user._id, email: user.email, currentAvatar: user.avatar });
     
     // Update user fields
-    if (firstName !== undefined) user.firstName = firstName;
-    if (lastName !== undefined) user.lastName = lastName;
+    if (firstName !== undefined) {
+      if (firstName.trim() === '') {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'First name cannot be empty',
+          timestamp: new Date().toISOString()
+        });
+      }
+      user.firstName = firstName.trim();
+    }
+    if (lastName !== undefined) {
+      if (lastName.trim() === '') {
+        return res.status(400).json({
+          error: 'Validation Error',
+          message: 'Last name cannot be empty',
+          timestamp: new Date().toISOString()
+        });
+      }
+      user.lastName = lastName.trim();
+    }
     if (email && email !== user.email) {
       // Check if new email is already taken by another user
       const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
