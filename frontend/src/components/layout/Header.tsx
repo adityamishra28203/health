@@ -107,19 +107,12 @@ export default function Header({ user, darkMode, onToggleDarkMode, onUserUpdate 
   ];
 
   const handleLogout = async () => {
-    // Clear localStorage immediately to prevent any authentication checks
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    
     try {
-      // Use auth service logout
+      // Use auth service logout (it handles all cleanup)
       await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     }
-    
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent('auth-logout'));
     
     // Redirect to landing page
     window.location.replace("/");

@@ -133,13 +133,14 @@ class AuthService {
       console.error('Logout error:', error);
     } finally {
       // Always clear local state, even if server logout fails
-      this.token = null;
+      this.clearAllAuthData();
+      
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        
         // Dispatch custom event to notify components
         window.dispatchEvent(new CustomEvent('auth-state-changed'));
+        window.dispatchEvent(new CustomEvent('auth-logout'));
+        
+        console.log('✅ Logout completed - all auth data cleared');
       }
     }
   }
@@ -227,6 +228,43 @@ class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.token;
+  }
+
+  // Comprehensive logout function that clears everything
+  clearAllAuthData(): void {
+    if (typeof window !== 'undefined') {
+      // Clear all possible authentication-related localStorage data
+      const authKeys = [
+        'accessToken', 'user', 'authToken', 'authUser', 
+        'userData', 'session', 'token', 'auth', 'login'
+      ];
+      
+      authKeys.forEach(key => {
+        localStorage.removeItem(key);
+        localStorage.removeItem(key.toLowerCase());
+        localStorage.removeItem(key.toUpperCase());
+      });
+      
+      // Clear sessionStorage completely
+      sessionStorage.clear();
+      
+      // Clear any cookies that might contain auth data
+      document.cookie.split(";").forEach(cookie => {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        if (name.trim().toLowerCase().includes('auth') || 
+            name.trim().toLowerCase().includes('token') ||
+            name.trim().toLowerCase().includes('session')) {
+          document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+        }
+      });
+      
+      // Reset token
+      this.token = null;
+      
+      console.log('🧹 All authentication data cleared from localStorage, sessionStorage, and cookies');
+    }
   }
 
   getCurrentUser(): User | null {
