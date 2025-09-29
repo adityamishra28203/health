@@ -207,6 +207,130 @@ userSchema.methods.resetLoginAttempts = function() {
 
 const User = mongoose.model('User', userSchema);
 
+// Health Records schema
+const healthRecordSchema = new mongoose.Schema({
+  patientId: {
+    type: String,
+    required: true,
+    ref: 'User'
+  },
+  doctorId: {
+    type: String,
+    ref: 'User'
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    trim: true
+  },
+  type: {
+    type: String,
+    enum: ['lab_report', 'prescription', 'x_ray', 'mri', 'ct_scan', 'ultrasound', 'blood_test', 'vaccination', 'consultation', 'other'],
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'verified', 'rejected', 'archived'],
+    default: 'pending'
+  },
+  fileHash: {
+    type: String
+  },
+  ipfsHash: {
+    type: String
+  },
+  fileName: {
+    type: String
+  },
+  fileSize: {
+    type: Number
+  },
+  mimeType: {
+    type: String
+  },
+  fileUrl: {
+    type: String
+  },
+  recordDate: {
+    type: Date,
+    required: true
+  },
+  tags: [{
+    type: String
+  }],
+  medicalData: {
+    type: mongoose.Schema.Types.Mixed
+  },
+  consentGiven: {
+    type: Boolean,
+    default: false
+  },
+  isEncrypted: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true
+});
+
+const HealthRecord = mongoose.model('HealthRecord', healthRecordSchema);
+
+// Insurance Claims schema
+const insuranceClaimSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+    ref: 'User'
+  },
+  claimNumber: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  insuranceProvider: {
+    type: String,
+    required: true
+  },
+  claimType: {
+    type: String,
+    enum: ['medical', 'prescription', 'dental', 'vision', 'emergency'],
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['submitted', 'under_review', 'approved', 'rejected', 'paid'],
+    default: 'submitted'
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  submissionDate: {
+    type: Date,
+    default: Date.now
+  },
+  processedDate: {
+    type: Date
+  },
+  documents: [{
+    fileName: String,
+    fileUrl: String,
+    fileHash: String
+  }]
+}, {
+  timestamps: true
+});
+
+const InsuranceClaim = mongoose.model('InsuranceClaim', insuranceClaimSchema);
+
 // Connect to MongoDB
 let isConnected = false;
 
@@ -245,6 +369,53 @@ async function connectToDatabase() {
         email: existingAdmin.email, 
         avatar: existingAdmin.avatar 
       });
+    }
+    
+    // Create sample health records if none exist
+    const existingRecords = await HealthRecord.countDocuments();
+    if (existingRecords === 0) {
+      console.log('📋 Creating sample health records...');
+      
+      const sampleRecords = [
+        new HealthRecord({
+          patientId: existingAdmin._id,
+          doctorId: existingAdmin._id,
+          title: 'Blood Test Report',
+          description: 'Complete blood count and lipid profile',
+          type: 'lab_report',
+          status: 'verified',
+          recordDate: new Date('2024-01-15'),
+          tags: ['blood', 'test', 'lab'],
+          medicalData: { 
+            hemoglobin: '14.2 g/dL', 
+            cholesterol: '180 mg/dL',
+            whiteBloodCells: '7.2 K/μL'
+          },
+          consentGiven: true,
+          isEncrypted: true
+        }),
+        new HealthRecord({
+          patientId: existingAdmin._id,
+          doctorId: existingAdmin._id,
+          title: 'X-Ray Chest',
+          description: 'Chest X-ray for routine checkup',
+          type: 'x_ray',
+          status: 'verified',
+          recordDate: new Date('2024-01-10'),
+          tags: ['x-ray', 'chest', 'routine'],
+          medicalData: { 
+            findings: 'Normal chest X-ray',
+            impression: 'No acute findings'
+          },
+          consentGiven: true,
+          isEncrypted: false
+        })
+      ];
+      
+      await HealthRecord.insertMany(sampleRecords);
+      console.log('✅ Created sample health records');
+    } else {
+      console.log(`📋 Health records already exist: ${existingRecords} records`);
     }
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
@@ -706,136 +877,250 @@ app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
   }
 });
 
-// Health Records endpoints (matching frontend expectations)
-app.get('/health-records', (req, res) => {
-  // Mock health records data
-  const mockRecords = [
-    {
-      id: '1',
-      patientId: '1',
-      doctorId: '1',
-      title: 'Blood Test Report',
-      description: 'Complete blood count and lipid profile',
-      type: 'lab_report',
-      status: 'verified',
-      fileHash: 'abc123',
-      ipfsHash: 'ipfs123',
-      fileName: 'blood_test.pdf',
-      fileSize: 1024000,
-      mimeType: 'application/pdf',
-      fileUrl: 'https://example.com/blood_test.pdf',
-      recordDate: '2024-01-15',
-      tags: ['blood', 'test', 'lab'],
-      medicalData: { hemoglobin: '14.2', cholesterol: '180' },
-      consentGiven: true,
-      isEncrypted: true,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z'
-    },
-    {
-      id: '2',
-      patientId: '1',
-      doctorId: '1',
-      title: 'X-Ray Report',
-      description: 'Chest X-ray examination',
-      type: 'imaging',
+// Health Records endpoints (using database)
+app.get('/health-records', async (req, res) => {
+  try {
+    console.log('📋 Fetching health records from database');
+    
+    // Check if database is connected
+    if (!isConnected) {
+      await connectToDatabase();
+    }
+    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Get health records from database with pagination
+    const records = await HealthRecord.find()
+      .sort({ recordDate: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await HealthRecord.countDocuments();
+    
+    console.log(`✅ Found ${records.length} health records in database (${total} total)`);
+    
+    // Convert MongoDB documents to frontend format
+    const formattedRecords = records.map(record => ({
+      id: record._id,
+      patientId: record.patientId,
+      doctorId: record.doctorId,
+      title: record.title,
+      description: record.description,
+      type: record.type,
+      status: record.status,
+      fileHash: record.fileHash,
+      ipfsHash: record.ipfsHash,
+      fileName: record.fileName,
+      fileSize: record.fileSize,
+      mimeType: record.mimeType,
+      fileUrl: record.fileUrl,
+      recordDate: record.recordDate.toISOString().split('T')[0],
+      tags: record.tags,
+      medicalData: record.medicalData,
+      consentGiven: record.consentGiven,
+      isEncrypted: record.isEncrypted,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt
+    }));
+    
+    res.json({
+      records: formattedRecords,
+      total: total,
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('❌ Error fetching health records:', error);
+    res.status(500).json({
+      error: 'Database Error',
+      message: 'Failed to fetch health records',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/health-records/statistics', async (req, res) => {
+  try {
+    console.log('📊 Fetching health records statistics from database');
+    
+    // Check if database is connected
+    if (!isConnected) {
+      await connectToDatabase();
+    }
+    
+    // Get statistics from database
+    const totalRecords = await HealthRecord.countDocuments();
+    const verifiedRecords = await HealthRecord.countDocuments({ status: 'verified' });
+    const pendingRecords = await HealthRecord.countDocuments({ status: 'pending' });
+    
+    // Get records by type
+    const recordsByType = await HealthRecord.aggregate([
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // Convert to object format
+    const recordsByTypeObj = {};
+    recordsByType.forEach(item => {
+      recordsByTypeObj[item._id] = item.count;
+    });
+    
+    const statistics = {
+      totalRecords,
+      verifiedRecords,
+      pendingRecords,
+      recordsByType: recordsByTypeObj
+    };
+    
+    console.log('✅ Health records statistics:', statistics);
+    
+    res.json(statistics);
+  } catch (error) {
+    console.error('❌ Error fetching health records statistics:', error);
+    res.status(500).json({
+      error: 'Database Error',
+      message: 'Failed to fetch health records statistics',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/health-records/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`📋 Fetching health record ${id} from database`);
+    
+    // Check if database is connected
+    if (!isConnected) {
+      await connectToDatabase();
+    }
+    
+    // Find record by ID
+    const record = await HealthRecord.findById(id);
+    
+    if (!record) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Health record not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Convert to frontend format
+    const formattedRecord = {
+      id: record._id,
+      patientId: record.patientId,
+      doctorId: record.doctorId,
+      title: record.title,
+      description: record.description,
+      type: record.type,
+      status: record.status,
+      fileHash: record.fileHash,
+      ipfsHash: record.ipfsHash,
+      fileName: record.fileName,
+      fileSize: record.fileSize,
+      mimeType: record.mimeType,
+      fileUrl: record.fileUrl,
+      recordDate: record.recordDate.toISOString().split('T')[0],
+      tags: record.tags,
+      medicalData: record.medicalData,
+      consentGiven: record.consentGiven,
+      isEncrypted: record.isEncrypted,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt
+    };
+    
+    console.log('✅ Found health record:', formattedRecord.title);
+    res.json(formattedRecord);
+  } catch (error) {
+    console.error('❌ Error fetching health record:', error);
+    res.status(500).json({
+      error: 'Database Error',
+      message: 'Failed to fetch health record',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.post('/health-records', async (req, res) => {
+  try {
+    const { title, description, type, recordDate, tags, medicalData, consentGiven, isEncrypted } = req.body;
+    console.log('📋 Creating new health record:', { title, type, recordDate });
+    
+    // Check if database is connected
+    if (!isConnected) {
+      await connectToDatabase();
+    }
+    
+    // Get the first user as patient (for demo purposes)
+    const patient = await User.findOne().sort({ createdAt: 1 });
+    if (!patient) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'No patient found in database',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Create new health record
+    const newRecord = new HealthRecord({
+      patientId: patient._id,
+      doctorId: patient._id, // For demo, using same user as doctor
+      title: title.trim(),
+      description: description?.trim(),
+      type: type,
       status: 'pending',
-      fileHash: 'def456',
-      ipfsHash: 'ipfs456',
-      fileName: 'chest_xray.jpg',
-      fileSize: 2048000,
-      mimeType: 'image/jpeg',
-      fileUrl: 'https://example.com/chest_xray.jpg',
-      recordDate: '2024-01-20',
-      tags: ['x-ray', 'chest', 'imaging'],
-      medicalData: { findings: 'Normal chest X-ray' },
-      consentGiven: true,
-      isEncrypted: true,
-      createdAt: '2024-01-20T14:30:00Z',
-      updatedAt: '2024-01-20T14:30:00Z'
-    }
-  ];
-
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  
-  res.json({
-    records: mockRecords.slice(startIndex, endIndex),
-    total: mockRecords.length,
-    page: page,
-    limit: limit,
-    totalPages: Math.ceil(mockRecords.length / limit)
-  });
-});
-
-app.get('/health-records/statistics', (req, res) => {
-  res.json({
-    totalRecords: 2,
-    verifiedRecords: 1,
-    pendingRecords: 1,
-    recordsByType: {
-      'lab_report': 1,
-      'imaging': 1
-    }
-  });
-});
-
-app.get('/health-records/:id', (req, res) => {
-  const { id } = req.params;
-  
-  // Mock single record
-  const mockRecord = {
-    id: id,
-    patientId: '1',
-    doctorId: '1',
-    title: 'Blood Test Report',
-    description: 'Complete blood count and lipid profile',
-    type: 'lab_report',
-    status: 'verified',
-    fileHash: 'abc123',
-    ipfsHash: 'ipfs123',
-    fileName: 'blood_test.pdf',
-    fileSize: 1024000,
-    mimeType: 'application/pdf',
-    fileUrl: 'https://example.com/blood_test.pdf',
-    recordDate: '2024-01-15',
-    tags: ['blood', 'test', 'lab'],
-    medicalData: { hemoglobin: '14.2', cholesterol: '180' },
-    consentGiven: true,
-    isEncrypted: true,
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z'
-  };
-
-  res.json(mockRecord);
-});
-
-app.post('/health-records', (req, res) => {
-  const { title, description, type, recordDate, tags, medicalData, consentGiven, isEncrypted } = req.body;
-  
-  // Mock creating a new record
-  const newRecord = {
-    id: Date.now().toString(),
-    patientId: '1',
-    doctorId: '1',
-    title,
-    description,
-    type,
-    status: 'pending',
-    fileHash: 'new123',
-    ipfsHash: 'ipfs_new123',
-    recordDate,
-    tags: tags || [],
-    medicalData: medicalData || {},
-    consentGiven: consentGiven || false,
-    isEncrypted: isEncrypted || true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-
-  res.status(201).json(newRecord);
+      recordDate: new Date(recordDate),
+      tags: tags || [],
+      medicalData: medicalData || {},
+      consentGiven: consentGiven || false,
+      isEncrypted: isEncrypted !== false // Default to true
+    });
+    
+    // Save to database
+    await newRecord.save();
+    
+    // Convert to frontend format
+    const formattedRecord = {
+      id: newRecord._id,
+      patientId: newRecord.patientId,
+      doctorId: newRecord.doctorId,
+      title: newRecord.title,
+      description: newRecord.description,
+      type: newRecord.type,
+      status: newRecord.status,
+      fileHash: newRecord.fileHash,
+      ipfsHash: newRecord.ipfsHash,
+      fileName: newRecord.fileName,
+      fileSize: newRecord.fileSize,
+      mimeType: newRecord.mimeType,
+      fileUrl: newRecord.fileUrl,
+      recordDate: newRecord.recordDate.toISOString().split('T')[0],
+      tags: newRecord.tags,
+      medicalData: newRecord.medicalData,
+      consentGiven: newRecord.consentGiven,
+      isEncrypted: newRecord.isEncrypted,
+      createdAt: newRecord.createdAt,
+      updatedAt: newRecord.updatedAt
+    };
+    
+    console.log('✅ Created health record:', formattedRecord.title);
+    res.status(201).json(formattedRecord);
+  } catch (error) {
+    console.error('❌ Error creating health record:', error);
+    res.status(500).json({
+      error: 'Database Error',
+      message: 'Failed to create health record',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Health check endpoint
