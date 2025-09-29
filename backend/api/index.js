@@ -772,6 +772,12 @@ app.put('/auth/profile', async (req, res) => {
       }
       user.lastName = lastName.trim();
     }
+    
+    // Clean up old invalid avatar URLs
+    if (user.avatar && (user.avatar.includes('securehealth-storage.com') || (!user.avatar.startsWith('data:') && !user.avatar.startsWith('http')))) {
+      console.log('🧹 Cleaning up old invalid avatar URL:', user.avatar);
+      user.avatar = '';
+    }
     if (email && email !== user.email) {
       // Check if new email is already taken by another user
       const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
@@ -966,6 +972,60 @@ app.post('/files/upload-avatar', upload.single('avatar'), (req, res) => {
     res.status(500).json({
       error: 'Upload Error',
       message: 'Failed to upload avatar',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Cleanup endpoint to remove old invalid avatar URLs
+app.post('/cleanup-avatars', async (req, res) => {
+  try {
+    console.log('🧹 Starting avatar cleanup...');
+    
+    if (!isConnected) {
+      await connectToDatabase();
+      if (!isConnected) {
+        return res.status(500).json({
+          error: 'Database Error',
+          message: 'Database connection failed',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+    
+    // Find all users with old invalid avatar URLs
+    const usersWithInvalidAvatars = await User.find({
+      $or: [
+        { avatar: { $regex: /securehealth-storage\.com/ } },
+        { avatar: { $exists: true, $ne: null, $not: { $regex: /^data:/ } } }
+      ]
+    });
+    
+    console.log(`🧹 Found ${usersWithInvalidAvatars.length} users with invalid avatars`);
+    
+    // Clean up invalid avatars
+    let cleanedCount = 0;
+    for (const user of usersWithInvalidAvatars) {
+      if (user.avatar && (user.avatar.includes('securehealth-storage.com') || !user.avatar.startsWith('data:'))) {
+        console.log(`🧹 Cleaning avatar for user ${user.email}: ${user.avatar}`);
+        user.avatar = '';
+        await user.save();
+        cleanedCount++;
+      }
+    }
+    
+    console.log(`✅ Avatar cleanup completed. Cleaned ${cleanedCount} users.`);
+    
+    res.status(200).json({
+      message: 'Avatar cleanup completed',
+      cleanedCount: cleanedCount,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Avatar cleanup error:', error);
+    res.status(500).json({
+      error: 'Cleanup Error',
+      message: 'Failed to cleanup avatars',
       timestamp: new Date().toISOString()
     });
   }

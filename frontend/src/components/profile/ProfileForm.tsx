@@ -32,7 +32,18 @@ export default function ProfileForm({ user, onUpdate }: ProfileFormProps) {
 
   // Sync avatar state with user prop changes
   useEffect(() => {
-    setAvatar(user.avatar || '');
+    // Check if avatar is a valid base64 data URL or a valid URL
+    const userAvatar = user.avatar || '';
+    if (userAvatar && userAvatar.startsWith('data:')) {
+      // Valid base64 data URL
+      setAvatar(userAvatar);
+    } else if (userAvatar && userAvatar.startsWith('http') && !userAvatar.includes('securehealth-storage.com')) {
+      // Valid HTTP URL but not the old broken one
+      setAvatar(userAvatar);
+    } else {
+      // Clear invalid avatar URLs (including old securehealth-storage.com URLs)
+      setAvatar('');
+    }
   }, [user.avatar]);
 
   // Image compression function
