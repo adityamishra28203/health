@@ -283,6 +283,14 @@ export default function LandingPage() {
     
     checkAuthStatus();
     
+    // Listen for auth state changes
+    const handleAuthStateChange = () => {
+      console.log('Landing page: Auth state changed, re-checking authentication...');
+      checkAuthStatus();
+    };
+
+    window.addEventListener('auth-state-changed', handleAuthStateChange);
+    
     let ticking = false;
     
     const handleScroll = () => {
@@ -319,6 +327,7 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
   }, []);
 
