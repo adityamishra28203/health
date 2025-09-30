@@ -56,6 +56,50 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+// Features data array - defined outside component to avoid recreation
+const featuresData = [
+  {
+    icon: Lock,
+    title: "End-to-End Encryption",
+    description: "Your health data is protected with military-grade encryption, ensuring complete privacy and security.",
+    fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.",
+    color: "from-blue-600 to-cyan-600",
+    delay: 0
+  },
+  {
+    icon: Zap,
+    title: "Blockchain Technology",
+    description: "Immutable blockchain records ensure data integrity and provide a complete audit trail.",
+    fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.",
+    color: "from-cyan-600 to-emerald-600",
+    delay: 200
+  },
+  {
+    icon: Award,
+    title: "HIPAA Compliant",
+    description: "Fully compliant with healthcare regulations and industry standards for data protection.",
+    fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.",
+    color: "from-emerald-600 to-blue-600",
+    delay: 400
+  },
+  {
+    icon: Smartphone,
+    title: "Mobile Access",
+    description: "Access your health records anywhere, anytime with our secure mobile application.",
+    fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.",
+    color: "from-purple-600 to-pink-600",
+    delay: 600
+  },
+  {
+    icon: Globe,
+    title: "Global Standards",
+    description: "Built with international healthcare data standards for seamless interoperability.",
+    fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.",
+    color: "from-orange-600 to-red-600",
+    delay: 400
+  }
+];
+
 export default function LandingPage() {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
@@ -70,6 +114,14 @@ export default function LandingPage() {
   const [isResizing, setIsResizing] = useState(false);
   const [expandedTextIndex, setExpandedTextIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to safely get feature data
+  const getCurrentFeature = () => {
+    if (expandedTextIndex === null || expandedTextIndex < 0 || expandedTextIndex >= featuresData.length) {
+      return null;
+    }
+    return featuresData[expandedTextIndex];
+  };
   
   // Use device optimization hook
   const { deviceInfo, animationConfig } = useDeviceOptimization();
@@ -812,7 +864,7 @@ export default function LandingPage() {
       <section 
         ref={heroRef}
         id="hero"
-        className="relative pt-24 sm:pt-32 md:pt-40 pb-16 sm:pb-24 px-4 sm:px-6 overflow-hidden"
+        className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 overflow-hidden"
         style={{
           background: `linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(59, 130, 246, 0.05) 100%)`,
           minHeight: '100vh',
@@ -829,7 +881,7 @@ export default function LandingPage() {
             <div className="space-y-4 sm:space-y-6">
               
               <h1 
-                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight tracking-tight"
+                className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight tracking-tight"
                 style={{
                   background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #059669 100%)',
                   WebkitBackgroundClip: 'text',
@@ -848,9 +900,9 @@ export default function LandingPage() {
                 <span className="block text-cyan-600 animate-bounce-in delay-200">
                   Data Management
                 </span>
-              </h1>
-                      </div>
-            
+                </h1>
+              </div>
+              
             <p 
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
               style={getOptimizedStyle({
@@ -886,10 +938,10 @@ export default function LandingPage() {
               >
                 {isAuthenticated ? 'View Plans' : 'Sign In'}
                 </Button>
-                    </div>
+              </div>
 
             <div 
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 pt-6 px-4"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 pt-4 px-4"
               style={{
                 transform: `translateY(${scrollY * 0.02}px)`,
                 transition: 'transform 0.1s ease-out',
@@ -906,7 +958,7 @@ export default function LandingPage() {
                     </div>
 
             {/* Floating Feature Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16 max-w-5xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12 max-w-5xl mx-auto px-4">
               {[
                 {
                   icon: Shield,
@@ -930,7 +982,7 @@ export default function LandingPage() {
                   delay: 700
                 }
               ].map((feature, index) => (
-                <motion.div
+                  <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 80, scale: 0.8 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -948,7 +1000,7 @@ export default function LandingPage() {
                   className="group"
                 >
                   <Card 
-                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl"
+                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl h-[320px] flex flex-col justify-center"
                     style={{
                       transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
                       boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
@@ -991,8 +1043,8 @@ export default function LandingPage() {
                       </motion.p>
                   </CardContent>
                 </Card>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))}
               </div>
           </div>
               </div>
@@ -1005,7 +1057,7 @@ export default function LandingPage() {
         className="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-white/50 to-blue-50/30 relative z-10"
       >
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {[
               { number: "10,000+", label: "Active Users", icon: Users },
               { number: "99.9%", label: "Uptime", icon: Zap },
@@ -1030,18 +1082,14 @@ export default function LandingPage() {
                 className="group"
               >
                 <Card 
-                  className="text-center bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl p-8"
+                  className="text-center bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl p-6 sm:p-8 h-[300px] sm:h-[320px] md:h-[340px] flex flex-col justify-center"
                   style={{
                     transform: `translateY(${scrollY * (0.01 + index * 0.005)}px)`,
                     boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
-                    minHeight: '280px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
                   }}
                 >
                   <motion.div 
-                    className="w-20 h-20 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+                    className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg"
                     whileHover={{ 
                       rotate: 360,
                       scale: 1.1,
@@ -1052,12 +1100,12 @@ export default function LandingPage() {
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <stat.icon className="w-10 h-10 text-white" />
+                      <stat.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                     </motion.div>
-              </motion.div>
-              
-              <motion.div
-                    className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
+            </motion.div>
+
+            <motion.div
+                    className="text-3xl sm:text-4xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4"
                     initial={{ opacity: 0, scale: 0.5 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 + index * 0.1 }}
@@ -1080,7 +1128,7 @@ export default function LandingPage() {
               </motion.div>
                   
                   <motion.div 
-                    className="text-base md:text-lg text-gray-600 font-medium leading-relaxed"
+                    className="text-sm sm:text-base md:text-lg text-gray-600 font-medium leading-relaxed"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 + index * 0.1 }}
@@ -1090,15 +1138,15 @@ export default function LandingPage() {
                 </Card>
               </motion.div>
             ))}
-          </div>
-        </div>
+                    </div>
+                      </div>
       </section>
 
       {/* Features Section */}
       <section 
         ref={featuresRef}
         id="features" 
-        className="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-blue-50/30 to-white/50 relative overflow-hidden z-10"
+        className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-blue-50/30 to-white/50 relative overflow-hidden z-10"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -1106,7 +1154,7 @@ export default function LandingPage() {
             backgroundImage: `radial-gradient(circle at 2px 2px, #3b82f6 1px, transparent 0)`,
             backgroundSize: '40px 40px',
           }}></div>
-        </div>
+                      </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div 
@@ -1115,7 +1163,7 @@ export default function LandingPage() {
               transform: `translateY(${scrollY * 0.05}px)`,
             }}
           >
-            <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
+            <h2 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
                 style={{
                   background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #059669 100%)',
@@ -1126,81 +1174,40 @@ export default function LandingPage() {
               Why Choose SecureHealth?
               </span>
             </h2>
-            <p className="text-2xl text-gray-600 max-w-5xl mx-auto font-light">
+            <p className="text-xl sm:text-2xl md:text-2xl text-gray-600 max-w-5xl mx-auto font-light">
               Experience the future of healthcare data management with cutting-edge technology and uncompromising security.
             </p>
-          </div>
+                    </div>
 
           {/* Horizontal Scrolling Container */}
-          <div className="relative pt-8 sm:pt-12 md:pt-16">
+          <div className="relative pt-12 sm:pt-16 md:pt-20">
             {/* Left Arrow */}
             <button
               onClick={scrollLeft}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 transition-all duration-300 hover:scale-110 hidden sm:block"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 shadow-lg rounded-full p-2 transition-all duration-300 hover:scale-110"
               aria-label="Scroll left"
             >
-              <ArrowRight className="w-5 h-5 text-gray-600 rotate-180" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-white rotate-180" />
             </button>
             
             {/* Right Arrow */}
             <button
               onClick={scrollRight}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 transition-all duration-300 hover:scale-110 hidden sm:block"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 shadow-lg rounded-full p-2 transition-all duration-300 hover:scale-110"
               aria-label="Scroll right"
             >
-              <ArrowRight className="w-5 h-5 text-gray-600" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </button>
 
             <div 
               ref={scrollContainerRef}
-              className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory px-4 sm:px-12" 
+              className="flex overflow-x-auto gap-6 sm:gap-8 pb-8 pt-8 py-4 snap-x snap-mandatory px-8 sm:px-16" 
               style={{ 
                 scrollbarWidth: 'none', 
                 msOverflowStyle: 'none',
                 WebkitScrollbar: 'none'
               } as React.CSSProperties & { WebkitScrollbar?: string }}>
-              {[
-                {
-                  icon: Lock,
-                  title: "End-to-End Encryption",
-                  description: "Your health data is protected with military-grade encryption, ensuring complete privacy and security.",
-                  fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.",
-                  color: "from-blue-600 to-cyan-600",
-                  delay: 0
-                },
-                {
-                  icon: Zap,
-                  title: "Blockchain Technology",
-                  description: "Immutable blockchain records ensure data integrity and provide a complete audit trail.",
-                  fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.",
-                  color: "from-cyan-600 to-emerald-600",
-                  delay: 200
-                },
-                {
-                  icon: Award,
-                  title: "HIPAA Compliant",
-                  description: "Fully compliant with healthcare regulations and industry standards for data protection.",
-                  fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.",
-                  color: "from-emerald-600 to-blue-600",
-                  delay: 400
-                },
-                {
-                  icon: Smartphone,
-                  title: "Mobile Access",
-                  description: "Access your health records anywhere, anytime with our secure mobile application.",
-                  fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.",
-                  color: "from-purple-600 to-pink-600",
-                  delay: 600
-                },
-                {
-                  icon: Globe,
-                  title: "Global Standards",
-                  description: "Built with international healthcare data standards for seamless interoperability.",
-                  fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.",
-                  color: "from-orange-600 to-red-600",
-                  delay: 800
-                }
-              ].map((feature, index) => (
+                {featuresData.map((feature, index) => (
               <motion.div
                   key={index}
                   initial={{ opacity: 0, x: 100, scale: 0.8 }}
@@ -1213,18 +1220,17 @@ export default function LandingPage() {
                   }}
                   whileHover={{ 
                     scale: 1.05,
-                    y: -10,
+                    y: -5,
                     transition: { duration: 0.3 }
                   }}
                   className="group flex-shrink-0 w-64 sm:w-72 md:w-80 snap-center"
                 >
-                  <Card 
-                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-[320px] sm:h-[360px] md:h-[380px]"
-                    style={{
-                      boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
-                    }}
-                    onClick={() => setExpandedTextIndex(index)}
-                  >
+                    <Card 
+                      className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl h-[350px] sm:h-[380px] md:h-[400px] overflow-hidden"
+                      style={{
+                        boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                      }}
+                    >
                   <CardContent className="p-4 sm:p-6 text-center h-full flex flex-col justify-between">
                     <div>
                       <motion.div 
@@ -1266,9 +1272,9 @@ export default function LandingPage() {
                         whileHover={{ opacity: 1 }}
                         transition={{ duration: 0.2 }}
                       >
-                        {feature.description}
+                      {feature.description}
                       </motion.p>
-                    </div>
+                      </div>
                     
                     <motion.div
                       className="flex justify-center"
@@ -1280,6 +1286,7 @@ export default function LandingPage() {
                         className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors duration-200 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => setExpandedTextIndex(index)}
                       >
                         Learn More
                         <ArrowRight className="w-4 h-4" />
@@ -1289,8 +1296,8 @@ export default function LandingPage() {
                 </Card>
               </motion.div>
             ))}
-            </div>
-            
+              </div>
+              
             {/* Scroll Indicators */}
             <div className="flex justify-center mt-6 space-x-2">
               {[0, 1, 2, 3, 4].map((index) => (
@@ -1317,8 +1324,11 @@ export default function LandingPage() {
       {/* Feature Card Expansion Dialog */}
       <Dialog open={expandedTextIndex !== null} onOpenChange={() => setExpandedTextIndex(null)}>
         <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[700px] max-w-3xl bg-white rounded-3xl shadow-2xl border-0 overflow-hidden p-0">
-          {expandedTextIndex !== null && (
-            <motion.div
+          <DialogTitle className="sr-only">
+            {getCurrentFeature()?.title || 'Feature Details'}
+          </DialogTitle>
+          {getCurrentFeature() && (
+              <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
@@ -1330,15 +1340,7 @@ export default function LandingPage() {
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
-                className={`p-8 sm:p-10 text-white relative overflow-hidden bg-gradient-to-r ${
-                  [
-                    { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
-                    { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
-                    { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
-                    { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
-                    { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
-                  ][expandedTextIndex].color
-                }`}
+                className={`p-8 sm:p-10 text-white relative overflow-hidden bg-gradient-to-r ${getCurrentFeature()?.color || 'from-blue-600 to-cyan-600'}`}
               >
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative flex items-center gap-6">
@@ -1348,28 +1350,21 @@ export default function LandingPage() {
                     animate={{ rotate: 0 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                   >
-                    {[
-                      { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
-                      { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
-                      { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
-                      { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
-                      { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
-                    ][expandedTextIndex].icon({ className: "w-10 h-10 text-white" })}
+                    {(() => {
+                      const feature = getCurrentFeature();
+                      if (!feature || !feature.icon) return null;
+                      const IconComponent = feature.icon;
+                      return <IconComponent className="w-10 h-10 text-white" />;
+                    })()}
                   </motion.div>
                   <div>
                     <motion.h2 
-                      className="text-3xl sm:text-4xl font-bold mb-3"
+                      className="text-3xl sm:text-3xl font-bold mb-3"
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ duration: 0.4, delay: 0.3 }}
                     >
-                      {[
-                        { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
-                        { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
-                        { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
-                        { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
-                        { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
-                      ][expandedTextIndex].title}
+                      {getCurrentFeature()?.title || ''}
                     </motion.h2>
                     <motion.p 
                       className="text-blue-100 text-lg"
@@ -1382,7 +1377,7 @@ export default function LandingPage() {
                   </div>
                 </div>
               </motion.div>
-
+              
               {/* Content */}
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
@@ -1397,15 +1392,9 @@ export default function LandingPage() {
                   transition={{ duration: 0.6, delay: 0.5 }}
                 >
                   <p>
-                    {[
-                      { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
-                      { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
-                      { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
-                      { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
-                      { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
-                    ][expandedTextIndex].fullDescription}
+                        {getCurrentFeature()?.fullDescription || ''}
                   </p>
-                </motion.div>
+              </motion.div>
 
                 {/* Features List */}
                 <motion.div
@@ -1417,11 +1406,11 @@ export default function LandingPage() {
                   <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
                     <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                     <span className="text-gray-700 font-medium">Enterprise-grade security</span>
-                  </div>
+          </div>
                   <div className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg">
                     <div className="w-3 h-3 bg-cyan-600 rounded-full"></div>
                     <span className="text-gray-700 font-medium">Real-time monitoring</span>
-                  </div>
+        </div>
                   <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
                     <div className="w-3 h-3 bg-emerald-600 rounded-full"></div>
                     <span className="text-gray-700 font-medium">24/7 availability</span>
@@ -1433,7 +1422,7 @@ export default function LandingPage() {
                 </motion.div>
 
                 {/* Close Button */}
-                <motion.div
+          <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.7 }}
@@ -1456,17 +1445,17 @@ export default function LandingPage() {
       <section 
         ref={technologyRef}
         id="technology"
-        className="py-28 px-6 bg-gradient-to-b from-white/50 to-blue-50/30 relative z-10"
+        className="py-16 sm:py-20 md:py-24 px-6 bg-gradient-to-b from-white/50 to-blue-50/30 relative z-10"
       >
         <div className="max-w-7xl mx-auto">
           <div 
-            className="text-center space-y-6 mb-20"
+            className="text-center space-y-6 mb-12 sm:mb-16 md:mb-20"
             style={getOptimizedStyle({
               transform: getOptimizedTransform(scrollY * 0.03, deviceInfo, animationConfig),
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
-            <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
+            <h2 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
                 style={{
                   background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #059669 100%)',
@@ -1507,28 +1496,30 @@ export default function LandingPage() {
                 className="group"
               >
                 <Card 
-                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-4 sm:p-6 md:p-8 text-center cursor-pointer h-auto min-h-[200px] sm:min-h-[220px] md:min-h-[240px]"
+                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-4 sm:p-6 md:p-8 text-center cursor-pointer h-[240px] sm:h-[260px] md:h-[280px] flex flex-col justify-between"
                   style={getOptimizedStyle({
-                    transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
+                    transform: getOptimizedTransform(scrollY * 0.01, deviceInfo, animationConfig),
                     willChange: 'transform',
                   }, deviceInfo, animationConfig)}
                 >
-                  <motion.div 
-                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg"
-                    whileHover={{ 
-                      rotate: 360,
-                      scale: 1.1,
-                      transition: { duration: 0.5 }
-                    }}
-                  >
-                    <tech.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white group-hover:scale-110 transition-transform duration-300" />
-          </motion.div>
-                  <motion.h3 
-                    className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3"
-                    transition={{ duration: 0.2 }}
-                  >
-                    {tech.title}
-                  </motion.h3>
+                  <div className="flex-1 flex flex-col items-center justify-center">
+                    <motion.div 
+                      className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg"
+                      whileHover={{ 
+                        rotate: 360,
+                        scale: 1.1,
+                        transition: { duration: 0.5 }
+                      }}
+                    >
+                      <tech.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white group-hover:scale-110 transition-transform duration-300" />
+                    </motion.div>
+                    <motion.h3 
+                      className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3"
+                      transition={{ duration: 0.2 }}
+                    >
+                      {tech.title}
+                    </motion.h3>
+                      </div>
                   <motion.p 
                     className="text-sm sm:text-base text-gray-600 leading-relaxed"
                     initial={{ opacity: 0.8 }}
@@ -1548,17 +1539,17 @@ export default function LandingPage() {
       <section 
         ref={testimonialsRef}
         id="testimonials"
-        className="py-28 px-6 bg-gradient-to-b from-blue-50/30 to-white/50 relative z-10"
+        className="py-16 sm:py-20 md:py-24 px-6 bg-gradient-to-b from-blue-50/30 to-white/50 relative z-10"
       >
         <div className="max-w-7xl mx-auto">
           <div 
-            className="text-center space-y-6 mb-20"
+            className="text-center space-y-6 mb-12 sm:mb-16 md:mb-20"
             style={getOptimizedStyle({
               transform: getOptimizedTransform(scrollY * 0.02, deviceInfo, animationConfig),
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
-            <h2 className="text-6xl md:text-7xl font-bold text-gray-800 tracking-tight">
+            <h2 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-bold text-gray-800 tracking-tight">
               <span 
                 style={{
                   background: 'linear-gradient(135deg, #1e40af 0%, #0891b2 50%, #059669 100%)',
@@ -1617,48 +1608,50 @@ export default function LandingPage() {
                 className="group perspective-1000"
               >
                 <Card 
-                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-8 cursor-pointer h-full"
+                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-6 sm:p-8 cursor-pointer h-[400px] sm:h-[420px] md:h-[440px] flex flex-col justify-between"
                   style={getOptimizedStyle({
-                    transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
+                    transform: getOptimizedTransform(scrollY * 0.01, deviceInfo, animationConfig),
                     willChange: 'transform',
                   }, deviceInfo, animationConfig)}
                 >
-                  <motion.div 
-                    className="flex items-center space-x-1 mb-4"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                  >
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, scale: 0 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 + index * 0.1 + i * 0.1 }}
-                      >
-                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  <div className="flex-1 flex flex-col">
+                    <motion.div 
+                      className="flex items-center space-x-1 mb-4"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3 + index * 0.1 }}
+                    >
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.5 + index * 0.1 + i * 0.1 }}
+                        >
+                          <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                    
+                    <motion.p 
+                      className="text-gray-700 text-lg leading-relaxed flex-1"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                    >
+                      &ldquo;{testimonial.content}&rdquo;
+                    </motion.p>
+                  </div>
                   
-                  <motion.p 
-                    className="text-gray-700 text-lg leading-relaxed mb-6"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                  >
-                    &ldquo;{testimonial.content}&rdquo;
-                  </motion.p>
-                  
                   <motion.div 
-                    className="border-t border-blue-100 pt-4"
+                    className="border-t border-blue-100 pt-4 mt-4"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 + index * 0.1 }}
               >
                     <div className="font-semibold text-gray-800">
                       {testimonial.name}
-                    </div>
+                  </div>
                     <div className="text-gray-600">{testimonial.role}</div>
                     <div className="text-gray-700 font-medium">{testimonial.company}</div>
                   </motion.div>
@@ -1687,7 +1680,7 @@ export default function LandingPage() {
 
         <div className="max-w-4xl mx-auto text-center text-white relative z-10">
           <motion.h2 
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
+            className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 sm:mb-8 tracking-tight leading-tight px-4"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -1774,7 +1767,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-20 px-6 bg-gradient-to-br from-gray-900 via-blue-900 to-slate-900 relative z-10">
+      <footer className="py-16 sm:py-20 md:py-24 px-6 bg-gradient-to-br from-gray-900 via-blue-900 to-slate-900 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="space-y-6">
@@ -1860,7 +1853,7 @@ export default function LandingPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                <DialogTitle className="text-3xl font-bold mb-2">Welcome Back</DialogTitle>
+                <DialogTitle className="text-3xl sm:text-3xl font-bold mb-2">Welcome Back</DialogTitle>
                 <DialogDescription className="text-gray-600 text-lg">
                   Sign in to your SecureHealth account
                 </DialogDescription>
@@ -2040,7 +2033,7 @@ export default function LandingPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
-                <DialogTitle className="text-3xl font-bold mb-2">Join SecureHealth</DialogTitle>
+                <DialogTitle className="text-3xl sm:text-3xl font-bold mb-2">Join SecureHealth</DialogTitle>
                 <DialogDescription className="text-emerald-100 text-lg">
                   Create your secure health records account
                 </DialogDescription>
@@ -2357,7 +2350,7 @@ export default function LandingPage() {
       <Dialog open={isPricingOpen} onOpenChange={setIsPricingOpen}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="text-center pb-6">
-            <DialogTitle className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-4xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               Choose Your Plan
             </DialogTitle>
             <DialogDescription className="text-xl text-gray-600 mt-4">
@@ -2372,7 +2365,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative bg-white rounded-2xl shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
+                className={`relative bg-white rounded-2xl shadow-lg border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 h-[500px] flex flex-col ${
                   plan.popular ? 'border-blue-500 shadow-blue-500/20' : 'border-gray-200'
                 }`}
               >
@@ -2384,19 +2377,19 @@ export default function LandingPage() {
                   </div>
                 )}
                 
-                <div className="p-8">
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                <div className="p-8 flex flex-col h-full">
+                  <div className="text-center mb-6 flex-shrink-0">
+                    <h3 className="text-2xl sm:text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                     <p className="text-gray-600 mb-4">{plan.description}</p>
                     <div className="flex items-baseline justify-center">
-                      <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
+                      <span className="text-4xl sm:text-4xl font-bold text-gray-900">{plan.price}</span>
                       {plan.period && (
                         <span className="text-gray-600 ml-1">{plan.period}</span>
                       )}
                     </div>
                   </div>
                   
-                  <ul className="space-y-4 mb-8">
+                  <ul className="space-y-4 mb-8 flex-1">
                     {plan.features.map((feature, featureIndex) => (
                       <motion.li
                         key={featureIndex}
@@ -2412,7 +2405,7 @@ export default function LandingPage() {
                   </ul>
                   
                   <Button
-                    className={`w-full py-3 text-lg font-semibold rounded-xl transition-all duration-300 ${
+                    className={`w-full py-3 text-lg font-semibold rounded-xl transition-all duration-300 flex-shrink-0 ${
                       plan.popular
                         ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/25'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
