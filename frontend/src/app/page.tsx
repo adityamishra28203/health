@@ -1055,8 +1055,8 @@ export default function LandingPage() {
                  style={{ 
                    scrollbarWidth: 'none', 
                    msOverflowStyle: 'none',
-                   ['WebkitScrollbar' as any]: 'none'
-                 }}>
+                   WebkitScrollbar: 'none'
+                 } as React.CSSProperties & { WebkitScrollbar?: string }}>
               {[
                 {
                   icon: Lock,
