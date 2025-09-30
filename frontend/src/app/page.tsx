@@ -520,10 +520,8 @@ export default function LandingPage() {
         setIsLoginOpen(false);
         setLoginData({ email: '', password: '' });
         
-        // Use window.location.href for immediate navigation without race conditions
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 100);
+        // Use router.push for consistent client-side navigation
+        router.push('/dashboard');
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';

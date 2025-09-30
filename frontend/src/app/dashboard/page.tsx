@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,7 @@ const features = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +68,7 @@ export default function DashboardPage() {
       if (!isAuth) {
         console.log('Dashboard: Not authenticated, redirecting to home');
         if (isMounted) {
-          window.location.href = '/';
+          router.push('/');
         }
         return;
       }
@@ -86,7 +88,7 @@ export default function DashboardPage() {
         console.error('Dashboard: Failed to get profile:', error);
         if (isMounted) {
           console.log('Dashboard: Profile fetch failed, redirecting to home');
-          window.location.href = '/';
+          router.push('/');
         }
       }
     };
@@ -102,7 +104,7 @@ export default function DashboardPage() {
       const isAuth = authService.isAuthenticated();
       if (!isAuth) {
         console.log('Dashboard: No longer authenticated, redirecting to home');
-        window.location.href = '/';
+        router.push('/');
       } else {
         // Re-fetch profile if still authenticated
         authService.getProfile()
@@ -112,7 +114,7 @@ export default function DashboardPage() {
           })
           .catch(error => {
             console.error('Dashboard: Failed to refresh profile:', error);
-            window.location.href = '/';
+            router.push('/');
           });
       }
     };
@@ -141,7 +143,7 @@ export default function DashboardPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to load dashboard</h2>
           <p className="text-muted-foreground mb-4">There was an issue loading your profile data.</p>
           <Button
-            onClick={() => window.location.href = '/'}
+            onClick={() => router.push('/')}
             variant="outline"
             className="mt-4"
           >
