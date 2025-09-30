@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -51,10 +50,12 @@ const features = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
+      setLoading(true);
+      
       // Check if user is authenticated
       const isAuth = authService.isAuthenticated();
       console.log('Dashboard: isAuthenticated =', isAuth);
@@ -82,17 +83,23 @@ export default function DashboardPage() {
       }
     };
 
-    // Reset state when component mounts or route changes
-    setLoading(true);
-    setUser(null);
-    
-    // Add a small delay to ensure proper initialization
-    const timer = setTimeout(() => {
+    // Initialize auth when component mounts
+    initializeAuth();
+
+    // Listen for auth state changes
+    const handleAuthStateChange = () => {
+      console.log('Dashboard: Auth state changed, re-initializing...');
+      setInitialized(false);
       initializeAuth();
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [pathname]);
+    };
+
+    // Add event listener for auth state changes
+    window.addEventListener('auth-state-changed', handleAuthStateChange);
+
+    return () => {
+      window.removeEventListener('auth-state-changed', handleAuthStateChange);
+    };
+  }, [initialized]);
 
 
   // Debug current state
@@ -124,7 +131,7 @@ export default function DashboardPage() {
   console.log('Dashboard: Rendering main content with user:', user);
   
   return (
-    <div key={`dashboard-${Date.now()}`} className="min-h-screen" style={{ opacity: 1, visibility: 'visible' }}>
+    <div className="min-h-screen">
       {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
         <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
