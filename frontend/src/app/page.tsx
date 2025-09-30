@@ -645,10 +645,10 @@ export default function LandingPage() {
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
-                        <Badge variant="secondary" className="w-fit">
+                <Badge variant="secondary" className="w-fit">
                           {user.role}
-                        </Badge>
-                      </div>
+                </Badge>
+              </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => router.push('/dashboard')}>
@@ -707,7 +707,7 @@ export default function LandingPage() {
                 </button>
               </>
             )}
-          </div>
+              </div>
         </div>
         
         {/* Mobile Menu */}
@@ -719,8 +719,8 @@ export default function LandingPage() {
               <Link href="#technology" className="block text-gray-700 hover:text-cyan-600 transition-colors">Technology</Link>
               <Link href="#testimonials" className="block text-gray-700 hover:text-cyan-600 transition-colors">Testimonials</Link>
               <button onClick={() => setIsPricingOpen(true)} className="block text-gray-700 hover:text-cyan-600 transition-colors text-left">Plans</button>
-            </div>
-          </div>
+                    </div>
+                      </div>
         )}
       </nav>
 
@@ -765,7 +765,7 @@ export default function LandingPage() {
                   Data Management
                 </span>
               </h1>
-            </div>
+                      </div>
             
             <p 
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
@@ -802,7 +802,7 @@ export default function LandingPage() {
               >
                 {isAuthenticated ? 'View Plans' : 'Sign In'}
                 </Button>
-              </div>
+                    </div>
 
             <div 
               className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 pt-6 px-4"
@@ -814,7 +814,7 @@ export default function LandingPage() {
               <div className="flex items-center space-x-3 group cursor-pointer transition-all duration-300 hover:scale-105">
                 <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
                 <span className="text-sm sm:text-lg text-gray-600 font-medium transition-colors duration-300 group-hover:text-cyan-700">256-bit Encryption</span>
-              </div>
+                      </div>
               <div className="flex items-center space-x-3 group cursor-pointer transition-all duration-300 hover:scale-105">
                 <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
                 <span className="text-sm sm:text-lg text-gray-600 font-medium transition-colors duration-300 group-hover:text-cyan-700">Blockchain Verified</span>
@@ -906,11 +906,11 @@ export default function LandingPage() {
                       >
                         {feature.description}
                       </motion.p>
-                    </CardContent>
-                  </Card>
+                  </CardContent>
+                </Card>
                 </motion.div>
               ))}
-            </div>
+              </div>
           </div>
               </div>
       </section>
@@ -971,9 +971,9 @@ export default function LandingPage() {
                     >
                       <stat.icon className="w-10 h-10 text-white" />
                     </motion.div>
-                  </motion.div>
-                  
-                  <motion.div 
+              </motion.div>
+              
+              <motion.div
                     className="text-3xl md:text-4xl font-bold text-gray-800 mb-4"
                     initial={{ opacity: 0, scale: 0.5 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -994,7 +994,7 @@ export default function LandingPage() {
                     }}
                   >
                     {stat.number}
-                  </motion.div>
+              </motion.div>
                   
                   <motion.div 
                     className="text-base md:text-lg text-gray-600 font-medium leading-relaxed"
@@ -1004,7 +1004,7 @@ export default function LandingPage() {
                     whileHover={{ color: "#1e40af" }}
                   >
                     {stat.label}
-                  </motion.div>
+            </motion.div>
                 </Card>
               </motion.div>
             ))}
@@ -1055,7 +1055,7 @@ export default function LandingPage() {
                  style={{ 
                    scrollbarWidth: 'none', 
                    msOverflowStyle: 'none',
-                   WebkitScrollbar: 'none'
+                   ['WebkitScrollbar' as any]: 'none'
                  }}>
               {[
                 {
@@ -1094,7 +1094,7 @@ export default function LandingPage() {
                   delay: 800
                 }
               ].map((feature, index) => (
-                <motion.div
+              <motion.div
                   key={index}
                   initial={{ opacity: 0, x: 100, scale: 0.8 }}
                   whileInView={{ opacity: 1, x: 0, scale: 1 }}
@@ -1154,9 +1154,9 @@ export default function LandingPage() {
                       {feature.description}
                     </motion.p>
                   </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                </Card>
+              </motion.div>
+            ))}
             </div>
             
             {/* Scroll Indicators */}
@@ -1253,7 +1253,7 @@ export default function LandingPage() {
                     }}
                   >
                     <tech.icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform duration-300" />
-                  </motion.div>
+          </motion.div>
                   <motion.h3 
                     className="text-xl font-semibold text-gray-800 mb-3"
                     whileHover={{ color: "#0891b2" }}
@@ -1385,13 +1385,13 @@ export default function LandingPage() {
                   
                   <motion.div 
                     className="border-t border-blue-100 pt-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 + index * 0.1 }}
-                  >
+              >
                     <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
                       {testimonial.name}
-                    </div>
+                  </div>
                     <div className="text-gray-600">{testimonial.role}</div>
                     <div className="text-blue-600 font-medium">{testimonial.company}</div>
                   </motion.div>
@@ -1461,7 +1461,7 @@ export default function LandingPage() {
             Join thousands of users who trust SecureHealth with their most sensitive health information.
           </motion.p>
           
-          <motion.div 
+          <motion.div
             className="flex flex-col sm:flex-row gap-6 justify-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1493,9 +1493,9 @@ export default function LandingPage() {
                   <ArrowRight className="w-6 h-6 ml-3" />
                 </motion.div>
               </Button>
-            </motion.div>
-            
-            <motion.div
+          </motion.div>
+
+              <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -1524,12 +1524,12 @@ export default function LandingPage() {
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-600 via-cyan-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Heart className="w-7 h-7 text-white" />
-                </div>
-                <div>
+                      </div>
+                      <div>
                   <span className="text-3xl font-bold text-white">SecureHealth</span>
                   <div className="text-cyan-400 font-medium">Medical Excellence</div>
-                </div>
-              </div>
+                      </div>
+                    </div>
               <p className="text-gray-300 text-lg leading-relaxed">
                 Secure, blockchain-powered health data management for the modern world.
               </p>
@@ -1614,7 +1614,7 @@ export default function LandingPage() {
           {loginError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 mx-6 sm:mx-8">
               {loginError}
-            </div>
+          </div>
           )}
 
           <motion.form 
@@ -1685,10 +1685,10 @@ export default function LandingPage() {
                     <Eye className="w-5 h-5" />
                   )}
                 </button>
-              </div>
+        </div>
             </motion.div>
-            
-              <motion.div
+
+          <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.6 }}
@@ -2173,11 +2173,11 @@ export default function LandingPage() {
                     }}
                   >
                     {plan.buttonText}
-                  </Button>
-                </div>
-              </motion.div>
+              </Button>
+            </div>
+          </motion.div>
             ))}
-          </div>
+        </div>
           
           <div className="text-center mt-8 p-6 bg-gray-50 rounded-xl">
             <p className="text-gray-600 mb-4">
