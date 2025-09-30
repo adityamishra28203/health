@@ -532,7 +532,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-white/95 backdrop-blur-2xl'
+          scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-white/98 backdrop-blur-3xl'
         }`}
         style={{
           transform: `translateY(${scrollY > 50 ? '0' : '0'})`,
@@ -1049,7 +1049,7 @@ export default function LandingPage() {
 
           {/* Horizontal Scrolling Container */}
           <div className="relative">
-            <div className="flex overflow-x-auto gap-8 pb-4 snap-x snap-mandatory" 
+            <div className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory px-4 sm:px-0" 
                  style={{ 
                    scrollbarWidth: 'none', 
                    msOverflowStyle: 'none',
@@ -1107,7 +1107,7 @@ export default function LandingPage() {
                     y: -10,
                     transition: { duration: 0.3 }
                   }}
-                  className="group flex-shrink-0 w-72 sm:w-80 snap-center"
+                  className="group flex-shrink-0 w-64 sm:w-72 md:w-80 snap-center"
                 >
                   <Card 
                     className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-full"
@@ -1302,7 +1302,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
             {[
               {
                 name: "Dr. Sarah Johnson",
@@ -1384,11 +1384,11 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 + index * 0.1 }}
               >
-                    <div className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
+                    <div className="font-semibold text-gray-800">
                       {testimonial.name}
-                  </div>
+                    </div>
                     <div className="text-gray-600">{testimonial.role}</div>
-                    <div className="text-blue-600 font-medium">{testimonial.company}</div>
+                    <div className="text-gray-700 font-medium">{testimonial.company}</div>
                   </motion.div>
                 </Card>
               </motion.div>
@@ -1599,7 +1599,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
                 <DialogTitle className="text-3xl font-bold mb-2">Welcome Back</DialogTitle>
-                <DialogDescription className="text-blue-100 text-lg">
+                <DialogDescription className="text-gray-600 text-lg">
                   Sign in to your SecureHealth account
                 </DialogDescription>
               </motion.div>
@@ -1730,7 +1730,7 @@ export default function LandingPage() {
                     setIsLoginOpen(false);
                     setIsSignupOpen(true);
                   }}
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200 relative group"
+                  className="text-gray-700 hover:text-gray-900 font-semibold transition-colors duration-200 relative group"
                 >
                   Sign up here
                   <motion.div
