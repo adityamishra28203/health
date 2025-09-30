@@ -50,16 +50,6 @@ const features = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
-
-  useEffect(() => {
-    // Force a hard reload on dashboard mount to ensure clean state
-    if (!hasInitialized) {
-      console.log('Dashboard: First load - performing hard reload for clean state');
-      window.location.reload();
-      return;
-    }
-  }, [hasInitialized]);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,8 +57,7 @@ export default function DashboardPage() {
     const initializeAuth = async () => {
       if (!isMounted) return;
       
-      setHasInitialized(true);
-      console.log('Dashboard: Starting authentication check after reload...');
+      console.log('Dashboard: Starting authentication check...');
       
       // Check if user is authenticated
       const isAuth = authService.isAuthenticated();
@@ -102,10 +91,8 @@ export default function DashboardPage() {
       }
     };
 
-    // Only initialize after reload
-    if (hasInitialized) {
-      initializeAuth();
-    }
+    // Initialize authentication
+    initializeAuth();
 
     // Listen for auth state changes
     const handleAuthStateChange = () => {
@@ -136,7 +123,7 @@ export default function DashboardPage() {
       isMounted = false;
       window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
-  }, [hasInitialized]);
+  }, []); // Empty dependency array - runs only once on mount
 
 
   // Debug current state
