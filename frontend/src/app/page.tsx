@@ -828,17 +828,17 @@ export default function LandingPage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
+                  onClick={() => handleLogin()}
                   className="border-blue-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg bg-white text-xs sm:text-sm px-2 sm:px-4 shadow-sm"
                 >
-                  {isAuthenticated ? 'View Plans' : 'Login'}
+                  Login
                 </Button>
                 <Button 
                   size="sm"
-                  onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
+                  onClick={() => handleGetStarted()}
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/25 text-xs sm:text-sm px-2 sm:px-4"
                 >
-                  {isAuthenticated ? 'Dashboard' : 'Get Started'}
+                  Get Started
                   <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                 </Button>
                 
@@ -932,19 +932,19 @@ export default function LandingPage() {
             >
               <Button 
                 size="lg"
-                onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
+                onClick={() => handleGetStarted()}
                 className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-16 py-4 sm:py-6 text-lg sm:text-xl font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25 animate-bounce-in delay-300 w-full sm:w-auto"
               >
-                {isAuthenticated ? 'Go to Dashboard' : 'Start Your Journey'}
+                Start Your Journey
                 <ArrowRight className="w-6 h-6 ml-3 transition-transform duration-300 group-hover:translateX-1" />
                 </Button>
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
+                onClick={() => handleLogin()}
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-16 py-4 sm:py-6 text-lg sm:text-xl font-semibold rounded-2xl transition-all duration-300 hover:scale-105 animate-bounce-in delay-400 bg-white shadow-lg hover:shadow-xl w-full sm:w-auto"
               >
-                {isAuthenticated ? 'View Plans' : 'Sign In'}
+                Sign In
                 </Button>
               </div>
 
@@ -1740,10 +1740,10 @@ export default function LandingPage() {
             >
               <Button 
                 size="lg"
-                onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
+                onClick={() => handleGetStarted()}
                 className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-blue-500/25"
               >
-                {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
+                Get Started Free
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1764,10 +1764,10 @@ export default function LandingPage() {
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
+                onClick={() => handleLogin()}
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 bg-white"
               >
-                {isAuthenticated ? 'View Plans' : 'Sign In'}
+                Sign In
               </Button>
             </motion.div>
           </motion.div>

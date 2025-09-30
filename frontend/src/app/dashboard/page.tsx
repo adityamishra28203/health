@@ -95,10 +95,8 @@ export default function DashboardPage() {
       }
     };
 
-    // Only initialize if not already initialized
-    if (!isInitialized) {
-      initializeAuth();
-    }
+    // Initialize authentication
+    initializeAuth();
 
     return () => {
       isMounted = false;
@@ -186,7 +184,7 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <Badge variant="secondary" className="w-fit">
                   <ShieldCheck className="h-3 w-3 mr-1" />
-                  Welcome back, {user.firstName}!
+                  Welcome back, {user?.firstName}!
                 </Badge>
                 <h1 className="text-4xl lg:text-6xl font-bold tracking-tight">
                   Your Health Data,
