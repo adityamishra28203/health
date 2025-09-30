@@ -1099,7 +1099,7 @@ export default function LandingPage() {
           </div>
 
           {/* Horizontal Scrolling Container */}
-          <div className="relative pt-4 sm:pt-6">
+          <div className="relative pt-8 sm:pt-12 md:pt-16">
             <div className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory px-4 sm:px-0" 
                  style={{ 
                    scrollbarWidth: 'none', 
@@ -1166,88 +1166,64 @@ export default function LandingPage() {
                   className="group flex-shrink-0 w-64 sm:w-72 md:w-80 snap-center"
                 >
                   <Card 
-                    className={`bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-auto ${
-                      expandedTextIndex === index ? 'min-h-[400px]' : 'h-[280px] sm:h-[320px]'
-                    }`}
+                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-[280px] sm:h-[320px]"
                     style={{
                       boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                     }}
+                    onClick={() => setExpandedTextIndex(index)}
                   >
-                  <CardContent className={`p-6 sm:p-8 text-center ${expandedTextIndex === index ? 'pb-12' : ''}`}>
-                    <motion.div 
-                      className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg`}
-                      style={{
-                        transform: `rotate(${scrollY * 0.02}deg)`,
-                      }}
-                      whileHover={{ 
-                        rotate: 360,
-                        scale: 1.1,
-                        transition: { duration: 0.6 }
-                      }}
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
+                  <CardContent className="p-6 sm:p-8 text-center h-full flex flex-col justify-between">
+                    <div>
+                      <motion.div 
+                        className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg`}
+                        style={{
+                          transform: `rotate(${scrollY * 0.02}deg)`,
+                        }}
+                        whileHover={{ 
+                          rotate: 360,
+                          scale: 1.1,
+                          transition: { duration: 0.6 }
+                        }}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                        </motion.div>
+                      </motion.div>
+                      
+                      <motion.h3 
+                        className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4"
                         transition={{ duration: 0.2 }}
                       >
-                        <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                      </motion.div>
-                    </motion.div>
-                    
-                    <motion.h3 
-                      className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4"
-                      transition={{ duration: 0.2 }}
-                    >
-                      {feature.title}
-                    </motion.h3>
-                    
-                    <motion.div 
-                      className="relative"
-                      onClick={() => setExpandedTextIndex(expandedTextIndex === index ? null : index)}
-                    >
+                        {feature.title}
+                      </motion.h3>
+                      
                       <motion.p 
-                        className={`text-sm sm:text-base text-gray-600 leading-relaxed cursor-pointer relative ${
-                          expandedTextIndex === index ? '' : 'overflow-hidden'
-                        }`}
+                        className="text-sm sm:text-base text-gray-600 leading-relaxed mb-4"
                         initial={{ opacity: 0.8 }}
                         whileHover={{ opacity: 1 }}
                         transition={{ duration: 0.2 }}
-                        animate={{
-                          maxHeight: expandedTextIndex === index ? 'none' : '3.6rem', // ~2 lines
-                          filter: expandedTextIndex === index ? 'blur(0px)' : expandedTextIndex === null ? 'blur(0px)' : 'blur(2px)',
-                        }}
                       >
-                        {expandedTextIndex === index ? feature.fullDescription : feature.description}
+                        {feature.description}
                       </motion.p>
-                      
-                      {expandedTextIndex !== index && (
-                        <motion.div
-                          className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      )}
-                      
-                      <motion.div
-                        className="mt-3 flex justify-center"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3, delay: 0.2 }}
+                    </div>
+                    
+                    <motion.div
+                      className="flex justify-center"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
+                      <motion.button
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors duration-200 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <motion.button
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors duration-200"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {expandedTextIndex === index ? 'Show Less' : 'Read More'}
-                          <motion.div
-                            animate={{ rotate: expandedTextIndex === index ? 180 : 0 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <ArrowRight className="w-4 h-4" />
-                          </motion.div>
-                        </motion.button>
-                      </motion.div>
+                        Learn More
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
                     </motion.div>
                   </CardContent>
                 </Card>
@@ -1278,6 +1254,144 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Feature Card Expansion Dialog */}
+      <Dialog open={expandedTextIndex !== null} onOpenChange={() => setExpandedTextIndex(null)}>
+        <DialogContent className="w-[95vw] sm:w-[90vw] md:w-[700px] max-w-3xl bg-white rounded-3xl shadow-2xl border-0 overflow-hidden p-0">
+          {expandedTextIndex !== null && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative"
+            >
+              {/* Header */}
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className={`p-8 sm:p-10 text-white relative overflow-hidden bg-gradient-to-r ${
+                  [
+                    { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
+                    { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
+                    { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
+                    { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
+                    { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
+                  ][expandedTextIndex].color
+                }`}
+              >
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative flex items-center gap-6">
+                  <motion.div 
+                    className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center"
+                    initial={{ rotate: -180 }}
+                    animate={{ rotate: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                  >
+                    {[
+                      { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
+                      { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
+                      { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
+                      { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
+                      { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
+                    ][expandedTextIndex].icon({ className: "w-10 h-10 text-white" })}
+                  </motion.div>
+                  <div>
+                    <motion.h2 
+                      className="text-3xl sm:text-4xl font-bold mb-3"
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.3 }}
+                    >
+                      {[
+                        { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
+                        { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
+                        { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
+                        { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
+                        { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
+                      ][expandedTextIndex].title}
+                    </motion.h2>
+                    <motion.p 
+                      className="text-blue-100 text-lg"
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.4 }}
+                    >
+                      Advanced Healthcare Technology
+                    </motion.p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Content */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                className="p-8 sm:p-10"
+              >
+                <motion.div 
+                  className="text-gray-700 leading-relaxed text-lg space-y-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  <p>
+                    {[
+                      { icon: Lock, title: "End-to-End Encryption", fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.", color: "from-blue-600 to-cyan-600" },
+                      { icon: Zap, title: "Blockchain Technology", fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.", color: "from-cyan-600 to-emerald-600" },
+                      { icon: Award, title: "HIPAA Compliant", fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.", color: "from-emerald-600 to-blue-600" },
+                      { icon: Smartphone, title: "Mobile Access", fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.", color: "from-purple-600 to-pink-600" },
+                      { icon: Globe, title: "Global Standards", fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.", color: "from-orange-600 to-red-600" }
+                    ][expandedTextIndex].fullDescription}
+                  </p>
+                </motion.div>
+
+                {/* Features List */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.6 }}
+                  className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4"
+                >
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                    <span className="text-gray-700 font-medium">Enterprise-grade security</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg">
+                    <div className="w-3 h-3 bg-cyan-600 rounded-full"></div>
+                    <span className="text-gray-700 font-medium">Real-time monitoring</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg">
+                    <div className="w-3 h-3 bg-emerald-600 rounded-full"></div>
+                    <span className="text-gray-700 font-medium">24/7 availability</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                    <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                    <span className="text-gray-700 font-medium">Global compliance</span>
+                  </div>
+                </motion.div>
+
+                {/* Close Button */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.7 }}
+                  className="mt-10 flex justify-end"
+                >
+                  <Button
+                    onClick={() => setExpandedTextIndex(null)}
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-3 rounded-xl transition-all duration-300 hover:scale-105 text-lg font-semibold"
+                  >
+                    Close
+                  </Button>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Technology Section */}
       <section 
