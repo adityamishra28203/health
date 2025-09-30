@@ -1049,54 +1049,74 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-10">
-            {[
-              {
-                icon: Lock,
-                title: "End-to-End Encryption",
-                description: "Your health data is protected with military-grade encryption, ensuring complete privacy and security.",
-                color: "from-blue-600 to-cyan-600",
-                delay: 0
-              },
-              {
-                icon: Zap,
-                title: "Blockchain Technology",
-                description: "Immutable blockchain records ensure data integrity and provide a complete audit trail.",
-                color: "from-cyan-600 to-emerald-600",
-                delay: 200
-              },
-              {
-                icon: Award,
-                title: "HIPAA Compliant",
-                description: "Fully compliant with healthcare regulations and industry standards for data protection.",
-                color: "from-emerald-600 to-blue-600",
-                delay: 400
-              }
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 80, scale: 0.8 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ 
-                  duration: 0.8, 
-                  delay: index * 0.2,
-                  ease: [0.25, 0.46, 0.45, 0.94]
-                }}
-                whileHover={{ 
-                  scale: 1.05,
-                  y: -15,
-                  transition: { duration: 0.3 }
-                }}
-                className="group"
-              >
-                <Card 
-                  className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer"
-                  style={{
-                    transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
-                    boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+          {/* Horizontal Scrolling Container */}
+          <div className="relative">
+            <div className="flex overflow-x-auto gap-8 pb-4 snap-x snap-mandatory" 
+                 style={{ 
+                   scrollbarWidth: 'none', 
+                   msOverflowStyle: 'none',
+                   WebkitScrollbar: 'none'
+                 }}>
+              {[
+                {
+                  icon: Lock,
+                  title: "End-to-End Encryption",
+                  description: "Your health data is protected with military-grade encryption, ensuring complete privacy and security.",
+                  color: "from-blue-600 to-cyan-600",
+                  delay: 0
+                },
+                {
+                  icon: Zap,
+                  title: "Blockchain Technology",
+                  description: "Immutable blockchain records ensure data integrity and provide a complete audit trail.",
+                  color: "from-cyan-600 to-emerald-600",
+                  delay: 200
+                },
+                {
+                  icon: Award,
+                  title: "HIPAA Compliant",
+                  description: "Fully compliant with healthcare regulations and industry standards for data protection.",
+                  color: "from-emerald-600 to-blue-600",
+                  delay: 400
+                },
+                {
+                  icon: Smartphone,
+                  title: "Mobile Access",
+                  description: "Access your health records anywhere, anytime with our secure mobile application.",
+                  color: "from-purple-600 to-pink-600",
+                  delay: 600
+                },
+                {
+                  icon: Globe,
+                  title: "Global Standards",
+                  description: "Built with international healthcare data standards for seamless interoperability.",
+                  color: "from-orange-600 to-red-600",
+                  delay: 800
+                }
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: 100, scale: 0.8 }}
+                  whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ 
+                    duration: 0.8, 
+                    delay: index * 0.15,
+                    ease: [0.25, 0.46, 0.45, 0.94]
                   }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    y: -10,
+                    transition: { duration: 0.3 }
+                  }}
+                  className="group flex-shrink-0 w-72 sm:w-80 snap-center"
                 >
+                  <Card 
+                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-full"
+                    style={{
+                      boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                    }}
+                  >
                   <CardContent className="p-12 text-center">
                     <motion.div 
                       className={`w-24 h-24 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg`}
@@ -1134,9 +1154,31 @@ export default function LandingPage() {
                       {feature.description}
                     </motion.p>
                   </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+            
+            {/* Scroll Indicators */}
+            <div className="flex justify-center mt-6 space-x-2">
+              {[0, 1, 2, 3, 4].map((index) => (
+                <div
+                  key={index}
+                  className="w-2 h-2 bg-gray-300 rounded-full transition-all duration-300 hover:bg-blue-500 cursor-pointer"
+                  onClick={() => {
+                    const container = document.querySelector('.overflow-x-auto');
+                    if (container) {
+                      const cardWidth = window.innerWidth < 640 ? 288 : 320; // w-72 = 288px, w-80 = 320px
+                      const gap = 32; // gap-8 = 32px
+                      container.scrollTo({
+                        left: index * (cardWidth + gap),
+                        behavior: 'smooth'
+                      });
+                    }
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
