@@ -360,7 +360,7 @@ export default function LandingPage() {
     return () => {
       window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll handler for section detection
   useEffect(() => {

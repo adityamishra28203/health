@@ -60,6 +60,7 @@ export default function DashboardPage() {
       if (!isMounted) return;
       
       console.log('Dashboard: Starting authentication check...');
+      setLoading(true); // Ensure loader is active during initialization
       
       // Check if user is authenticated
       const isAuth = authService.isAuthenticated();
@@ -81,7 +82,6 @@ export default function DashboardPage() {
         if (isMounted) {
           console.log('Dashboard: Setting user state...');
           setUser(userData);
-          setLoading(false);
           console.log('Dashboard: Authentication initialization complete');
         }
       } catch (error) {
@@ -89,6 +89,10 @@ export default function DashboardPage() {
         if (isMounted) {
           console.log('Dashboard: Profile fetch failed, redirecting to home');
           router.push('/');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false); // Always set loading to false after auth check
         }
       }
     };
@@ -109,12 +113,16 @@ export default function DashboardPage() {
         // Re-fetch profile if still authenticated
         authService.getProfile()
           .then(userData => {
-            console.log('Dashboard: Profile refreshed after auth state change');
-            setUser(userData);
+            if (isMounted) {
+              console.log('Dashboard: Profile refreshed after auth state change');
+              setUser(userData);
+            }
           })
           .catch(error => {
             console.error('Dashboard: Failed to refresh profile:', error);
-            router.push('/');
+            if (isMounted) {
+              router.push('/');
+            }
           });
       }
     };
@@ -125,16 +133,18 @@ export default function DashboardPage() {
       isMounted = false;
       window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
-  }, []); // Empty dependency array - runs only once on mount
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // Debug current state
   console.log('Dashboard render - loading:', loading, 'user:', user);
 
+  // Always show loader while authentication is being checked
   if (loading) {
     return <PageLoader />;
   }
 
+  // Only show error screen if loading is complete but no user data
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">

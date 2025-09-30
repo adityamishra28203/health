@@ -149,68 +149,61 @@ class HealthRecordsService {
             id: '1',
             title: 'Blood Test Results',
             type: 'Lab Results',
-            status: 'Verified',
+            status: 'verified',
             fileSize: 2.3,
-            uploadedAt: new Date(Date.now() - 86400000).toISOString(),
-            verifiedAt: new Date(Date.now() - 3600000).toISOString(),
-            hash: 'mock-hash-1',
+            createdAt: new Date(Date.now() - 86400000).toISOString(),
+            updatedAt: new Date(Date.now() - 3600000).toISOString(),
+            fileHash: 'mock-hash-1',
             ipfsHash: 'mock-ipfs-hash-1',
             fileUrl: '/mock-file-1.pdf',
             patientId: 'mock-patient-1',
             doctorId: 'mock-doctor-1',
             hospitalId: 'mock-hospital-1',
-            metadata: {
-              patientName: 'John Doe',
-              doctorName: 'Dr. Smith',
-              hospitalName: 'General Hospital'
-            }
+            recordDate: new Date(Date.now() - 86400000).toISOString(),
+            consentGiven: true,
+            isEncrypted: true
           },
           {
             id: '2',
             title: 'Prescription - Antibiotics',
             type: 'Prescription',
-            status: 'Pending',
+            status: 'pending',
             fileSize: 1.8,
-            uploadedAt: new Date(Date.now() - 172800000).toISOString(),
-            verifiedAt: null,
-            hash: 'mock-hash-2',
+            createdAt: new Date(Date.now() - 172800000).toISOString(),
+            updatedAt: new Date(Date.now() - 172800000).toISOString(),
+            fileHash: 'mock-hash-2',
             ipfsHash: 'mock-ipfs-hash-2',
             fileUrl: '/mock-file-2.pdf',
             patientId: 'mock-patient-1',
             doctorId: 'mock-doctor-2',
             hospitalId: 'mock-hospital-1',
-            metadata: {
-              patientName: 'John Doe',
-              doctorName: 'Dr. Johnson',
-              hospitalName: 'General Hospital'
-            }
+            recordDate: new Date(Date.now() - 172800000).toISOString(),
+            consentGiven: true,
+            isEncrypted: true
           },
           {
             id: '3',
             title: 'MRI Scan Report',
             type: 'Medical Report',
-            status: 'Verified',
+            status: 'verified',
             fileSize: 15.2,
-            uploadedAt: new Date(Date.now() - 259200000).toISOString(),
-            verifiedAt: new Date(Date.now() - 7200000).toISOString(),
-            hash: 'mock-hash-3',
+            createdAt: new Date(Date.now() - 259200000).toISOString(),
+            updatedAt: new Date(Date.now() - 7200000).toISOString(),
+            fileHash: 'mock-hash-3',
             ipfsHash: 'mock-ipfs-hash-3',
             fileUrl: '/mock-file-3.pdf',
             patientId: 'mock-patient-1',
             doctorId: 'mock-doctor-3',
             hospitalId: 'mock-hospital-2',
-            metadata: {
-              patientName: 'John Doe',
-              doctorName: 'Dr. Williams',
-              hospitalName: 'Medical Center'
-            }
+            recordDate: new Date(Date.now() - 259200000).toISOString(),
+            consentGiven: true,
+            isEncrypted: true
           }
         ],
-        totalRecords: 3,
-        totalPages: 1,
-        currentPage: page,
-        hasNextPage: false,
-        hasPrevPage: false
+        total: 3,
+        page: page,
+        limit: 10,
+        totalPages: 1
       };
     }
   }
@@ -299,21 +292,12 @@ class HealthRecordsService {
         totalRecords: 12,
         verifiedRecords: 8,
         pendingRecords: 3,
-        rejectedRecords: 1,
-        totalSize: 156.7,
-        averageFileSize: 13.1,
         recordsByType: {
           'Lab Results': 5,
           'Prescription': 4,
           'Medical Report': 2,
           'Insurance': 1
-        },
-        recordsByStatus: {
-          'Verified': 8,
-          'Pending': 3,
-          'Rejected': 1
-        },
-        lastUpdated: new Date().toISOString()
+        }
       };
     }
   }
