@@ -69,9 +69,33 @@ export default function LandingPage() {
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [expandedTextIndex, setExpandedTextIndex] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // Use device optimization hook
   const { deviceInfo, animationConfig } = useDeviceOptimization();
+
+  // Scroll functions for horizontal scrolling
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = window.innerWidth < 640 ? 288 : window.innerWidth < 768 ? 320 : 384; // w-72, w-80, w-96
+      const gap = 32; // gap-8
+      scrollContainerRef.current.scrollBy({
+        left: -(cardWidth + gap),
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = window.innerWidth < 640 ? 288 : window.innerWidth < 768 ? 320 : 384; // w-72, w-80, w-96
+      const gap = 32; // gap-8
+      scrollContainerRef.current.scrollBy({
+        left: cardWidth + gap,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   // Scroll detection for navigation highlighting
   useEffect(() => {
@@ -1100,12 +1124,32 @@ export default function LandingPage() {
 
           {/* Horizontal Scrolling Container */}
           <div className="relative pt-8 sm:pt-12 md:pt-16">
-            <div className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory px-4 sm:px-0" 
-                 style={{ 
-                   scrollbarWidth: 'none', 
-                   msOverflowStyle: 'none',
-                   WebkitScrollbar: 'none'
-                 } as React.CSSProperties & { WebkitScrollbar?: string }}>
+            {/* Left Arrow */}
+            <button
+              onClick={scrollLeft}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 transition-all duration-300 hover:scale-110 hidden sm:block"
+              aria-label="Scroll left"
+            >
+              <ArrowRight className="w-5 h-5 text-gray-600 rotate-180" />
+            </button>
+            
+            {/* Right Arrow */}
+            <button
+              onClick={scrollRight}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 transition-all duration-300 hover:scale-110 hidden sm:block"
+              aria-label="Scroll right"
+            >
+              <ArrowRight className="w-5 h-5 text-gray-600" />
+            </button>
+
+            <div 
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory px-4 sm:px-12" 
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                WebkitScrollbar: 'none'
+              } as React.CSSProperties & { WebkitScrollbar?: string }}>
               {[
                 {
                   icon: Lock,
@@ -1166,13 +1210,13 @@ export default function LandingPage() {
                   className="group flex-shrink-0 w-64 sm:w-72 md:w-80 snap-center"
                 >
                   <Card 
-                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-[280px] sm:h-[320px]"
+                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-[320px] sm:h-[360px] md:h-[380px]"
                     style={{
                       boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                     }}
                     onClick={() => setExpandedTextIndex(index)}
                   >
-                  <CardContent className="p-6 sm:p-8 text-center h-full flex flex-col justify-between">
+                  <CardContent className="p-4 sm:p-6 text-center h-full flex flex-col justify-between">
                     <div>
                       <motion.div 
                         className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg`}
@@ -1201,7 +1245,14 @@ export default function LandingPage() {
                       </motion.h3>
                       
                       <motion.p 
-                        className="text-sm sm:text-base text-gray-600 leading-relaxed mb-4"
+                        className="text-sm sm:text-base text-gray-600 leading-relaxed mb-4 overflow-hidden"
+                        style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 4,
+                          WebkitBoxOrient: 'vertical',
+                          lineHeight: '1.4',
+                          maxHeight: '5.6rem' // ~4 lines
+                        }}
                         initial={{ opacity: 0.8 }}
                         whileHover={{ opacity: 1 }}
                         transition={{ duration: 0.2 }}
@@ -1238,11 +1289,10 @@ export default function LandingPage() {
                   key={index}
                   className="w-2 h-2 bg-gray-300 rounded-full transition-all duration-300 hover:bg-blue-500 cursor-pointer"
                   onClick={() => {
-                    const container = document.querySelector('.overflow-x-auto');
-                    if (container) {
-                      const cardWidth = window.innerWidth < 640 ? 288 : 320; // w-72 = 288px, w-80 = 320px
-                      const gap = 32; // gap-8 = 32px
-                      container.scrollTo({
+                    if (scrollContainerRef.current) {
+                      const cardWidth = window.innerWidth < 640 ? 288 : window.innerWidth < 768 ? 320 : 384;
+                      const gap = 32;
+                      scrollContainerRef.current.scrollTo({
                         left: index * (cardWidth + gap),
                         behavior: 'smooth'
                       });
