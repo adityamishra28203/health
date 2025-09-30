@@ -67,36 +67,78 @@ export default function LandingPage() {
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   
   // Use device optimization hook
   const { deviceInfo, animationConfig } = useDeviceOptimization();
 
   // Scroll detection for navigation highlighting
   useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setScrollY(scrollPosition);
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        const scrollPosition = window.scrollY;
+        setScrollY(scrollPosition);
 
-      // Section detection for navigation highlighting
-      const sections = ['hero', 'stats', 'features', 'technology', 'testimonials'];
-      const currentSection = sections.find(section => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 100 && rect.bottom >= 100;
+        // Section detection for navigation highlighting
+        const sections = ['hero', 'stats', 'features', 'technology', 'testimonials'];
+        const currentSection = sections.find(section => {
+          const element = document.getElementById(section);
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            return rect.top <= 100 && rect.bottom >= 100;
+          }
+          return false;
+        });
+        
+        if (currentSection) {
+          setActiveSection(currentSection);
         }
-        return false;
-      });
-      
-      if (currentSection) {
-        setActiveSection(currentSection);
-      }
+      }, 16); // ~60fps throttling
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Initial call
     
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      clearTimeout(scrollTimeout);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  // Handle window resize to prevent blank page
+  useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+    
+    const handleResize = () => {
+      setIsResizing(true);
+      // Set global flag to disable animations during resize
+      if (typeof window !== 'undefined') {
+        (window as any).__isResizing = true;
+      }
+      
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        setIsResizing(false);
+        // Clear global flag after resize completes
+        if (typeof window !== 'undefined') {
+          (window as any).__isResizing = false;
+        }
+      }, 300); // Wait for resize to complete
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', handleResize);
+      // Clean up global flag
+      if (typeof window !== 'undefined') {
+        (window as any).__isResizing = false;
+      }
+    };
   }, []);
 
   // Handle logo click - redirect to dashboard if logged in, otherwise stay on landing page
@@ -486,7 +528,15 @@ export default function LandingPage() {
   };
   
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 text-gray-900 overflow-hidden ${deviceInfo.isMobile ? 'scroll-smooth' : ''} loading`}>
+    <div 
+      className={`min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 text-gray-900 overflow-hidden ${deviceInfo.isMobile ? 'scroll-smooth' : ''} loading`}
+      style={{
+        opacity: isResizing ? 0.95 : 1,
+        transition: 'opacity 0.2s ease-in-out',
+        minHeight: '100vh',
+        position: 'relative'
+      }}
+    >
       {/* Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         {animationConfig.enableParallax && (
@@ -988,7 +1038,7 @@ export default function LandingPage() {
                       overflowWrap: 'break-word',
                     }}
                     whileHover={{ 
-                      background: 'linear-gradient(135deg, #0891b2 0%, #1e40af 100%)',
+                      scale: 1.05,
                       transition: { duration: 0.3 }
                     }}
                   >
@@ -1026,7 +1076,7 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div 
-            className="text-center space-y-6 mb-24"
+            className="text-center space-y-6 mb-16 sm:mb-20 md:mb-24"
             style={{
               transform: `translateY(${scrollY * 0.05}px)`,
             }}
@@ -1048,7 +1098,7 @@ export default function LandingPage() {
           </div>
 
           {/* Horizontal Scrolling Container */}
-          <div className="relative">
+          <div className="relative pt-4 sm:pt-6">
             <div className="flex overflow-x-auto gap-6 sm:gap-8 pb-4 snap-x snap-mandatory px-4 sm:px-0" 
                  style={{ 
                    scrollbarWidth: 'none', 
@@ -1426,19 +1476,9 @@ export default function LandingPage() {
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
-            <motion.span 
-              style={{
-                background: 'linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-              whileHover={{ 
-                background: 'linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%)',
-                transition: { duration: 0.3 }
-              }}
-            >
+            <span className="text-white">
               Ready to Secure Your Health Data?
-            </motion.span>
+            </span>
             </motion.h2>
             
           <motion.p 

@@ -116,8 +116,15 @@ export function useDeviceOptimization(): { deviceInfo: DeviceInfo; performanceLe
       setAnimationConfig(newAnimationConfig);
     };
 
+    // Debounced resize handler to prevent excessive re-renders
+    let resizeTimeout: NodeJS.Timeout;
+    const debouncedDetectDevice = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(detectDevice, 150);
+    };
+
     detectDevice();
-    window.addEventListener('resize', detectDevice);
+    window.addEventListener('resize', debouncedDetectDevice);
     
     // Listen for reduced motion preference changes
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -127,7 +134,8 @@ export function useDeviceOptimization(): { deviceInfo: DeviceInfo; performanceLe
     mediaQuery.addEventListener('change', handleReducedMotionChange);
 
     return () => {
-      window.removeEventListener('resize', detectDevice);
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', debouncedDetectDevice);
       mediaQuery.removeEventListener('change', handleReducedMotionChange);
     };
   }, []);
@@ -143,6 +151,11 @@ export function getOptimizedTransform(
   customMultiplier?: number
 ): string {
   if (animationConfig.reducedMotion) {
+    return 'translate3d(0,0,0)';
+  }
+
+  // Disable animations during resize to prevent layout shifts
+  if (typeof window !== 'undefined' && (window as any).__isResizing) {
     return 'translate3d(0,0,0)';
   }
 
