@@ -50,11 +50,17 @@ const features = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Main authentication initialization effect - runs only once on mount
   useEffect(() => {
+    let isMounted = true;
+
     const initializeAuth = async () => {
+      if (!isMounted) return;
+      
       setLoading(true);
+      console.log('Dashboard: Starting authentication check...');
       
       // Check if user is authenticated
       const isAuth = authService.isAuthenticated();
@@ -62,7 +68,9 @@ export default function DashboardPage() {
       
       if (!isAuth) {
         console.log('Dashboard: Not authenticated, redirecting to home');
-        window.location.href = '/';
+        if (isMounted) {
+          window.location.href = '/';
+        }
         return;
       }
 
@@ -70,52 +78,80 @@ export default function DashboardPage() {
         console.log('Dashboard: Fetching user profile...');
         const userData = await authService.getProfile();
         console.log('Dashboard: User data received:', userData);
-        console.log('Dashboard: Setting user state...');
-        setUser(userData);
-        console.log('Dashboard: User state set, setting loading to false');
-        setLoading(false);
-        console.log('Dashboard: Loading set to false, component should re-render');
+        
+        if (isMounted) {
+          console.log('Dashboard: Setting user state...');
+          setUser(userData);
+          setLoading(false);
+          setIsInitialized(true);
+          console.log('Dashboard: Authentication initialization complete');
+        }
       } catch (error) {
         console.error('Dashboard: Failed to get profile:', error);
-        console.log('Dashboard: Profile fetch failed, redirecting to home');
-        window.location.href = '/';
-        return;
+        if (isMounted) {
+          console.log('Dashboard: Profile fetch failed, redirecting to home');
+          window.location.href = '/';
+        }
       }
     };
 
-    // Initialize auth when component mounts
-    initializeAuth();
-
-    // Listen for auth state changes
-    const handleAuthStateChange = () => {
-      console.log('Dashboard: Auth state changed, re-initializing...');
-      setInitialized(false);
+    // Only initialize if not already initialized
+    if (!isInitialized) {
       initializeAuth();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - runs only once on mount
+
+  // Separate effect for auth state changes - only runs when auth state actually changes
+  useEffect(() => {
+    if (!isInitialized) return; // Don't handle auth changes until initial load is complete
+
+    const handleAuthStateChange = () => {
+      console.log('Dashboard: Auth state changed, re-checking authentication...');
+      
+      // Check if still authenticated
+      const isAuth = authService.isAuthenticated();
+      if (!isAuth) {
+        console.log('Dashboard: No longer authenticated, redirecting to home');
+        window.location.href = '/';
+      } else {
+        // Re-fetch profile if still authenticated
+        authService.getProfile()
+          .then(userData => {
+            console.log('Dashboard: Profile refreshed after auth state change');
+            setUser(userData);
+          })
+          .catch(error => {
+            console.error('Dashboard: Failed to refresh profile:', error);
+            window.location.href = '/';
+          });
+      }
     };
 
-    // Add event listener for auth state changes
     window.addEventListener('auth-state-changed', handleAuthStateChange);
-
     return () => {
       window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
-  }, [initialized]);
+  }, [isInitialized]); // Only run when isInitialized changes
 
 
   // Debug current state
-  console.log('Dashboard render - loading:', loading, 'user:', user);
+  console.log('Dashboard render - loading:', loading, 'user:', user, 'isInitialized:', isInitialized);
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!user) {
+  if (!user && isInitialized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading your dashboard...</h2>
-          <p className="text-muted-foreground mb-4">Please wait while we load your health data.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to load dashboard</h2>
+          <p className="text-muted-foreground mb-4">There was an issue loading your profile data.</p>
           <Button
             onClick={() => window.location.href = '/'}
             variant="outline"
@@ -126,6 +162,11 @@ export default function DashboardPage() {
         </div>
       </div>
     );
+  }
+
+  // Show loading while not initialized
+  if (!isInitialized) {
+    return <PageLoader />;
   }
 
   console.log('Dashboard: Rendering main content with user:', user);
