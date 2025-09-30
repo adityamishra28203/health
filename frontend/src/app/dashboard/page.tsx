@@ -51,7 +51,6 @@ const features = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [forceRender, setForceRender] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -74,7 +73,6 @@ export default function DashboardPage() {
         setUser(userData);
         console.log('Dashboard: User state set, setting loading to false');
         setLoading(false);
-        setForceRender(prev => prev + 1);
         console.log('Dashboard: Loading set to false, component should re-render');
       } catch (error) {
         console.error('Dashboard: Failed to get profile:', error);
@@ -90,26 +88,9 @@ export default function DashboardPage() {
     initializeAuth();
   }, [pathname]);
 
-  // Add loaded class after initial render
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const mainContainer = document.querySelector('.loading');
-      if (mainContainer) {
-        mainContainer.classList.remove('loading');
-        mainContainer.classList.add('loaded');
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   // Debug current state
-  console.log('Dashboard render - loading:', loading, 'user:', user, 'forceRender:', forceRender);
-
-  // Monitor state changes
-  useEffect(() => {
-    console.log('Dashboard: State changed - loading:', loading, 'user:', user);
-  }, [loading, user]);
+  console.log('Dashboard render - loading:', loading, 'user:', user);
 
   if (loading) {
     return <PageLoader />;
@@ -134,8 +115,10 @@ export default function DashboardPage() {
     );
   }
 
+  console.log('Dashboard: Rendering main content with user:', user);
+  
   return (
-    <div className="min-h-screen loading">
+    <div className="min-h-screen" style={{ opacity: 1, visibility: 'visible' }}>
       {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
         <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">
