@@ -944,19 +944,19 @@ export default function LandingPage() {
             >
               <Button 
                 size="lg"
-                onClick={() => handleGetStarted()}
+                onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
                 className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-16 py-4 sm:py-6 text-lg sm:text-xl font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25 animate-bounce-in delay-300 w-full sm:w-auto"
               >
-                Start Your Journey
+                {isAuthenticated ? 'Go to Dashboard' : 'Start Your Journey'}
                 <ArrowRight className="w-6 h-6 ml-3 transition-transform duration-300 group-hover:translateX-1" />
                 </Button>
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => handleLogin()}
+                onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-16 py-4 sm:py-6 text-lg sm:text-xl font-semibold rounded-2xl transition-all duration-300 hover:scale-105 animate-bounce-in delay-400 bg-white shadow-lg hover:shadow-xl w-full sm:w-auto"
               >
-                Sign In
+                {isAuthenticated ? 'View Plans' : 'Sign In'}
                 </Button>
               </div>
 
@@ -1752,10 +1752,10 @@ export default function LandingPage() {
             >
               <Button 
                 size="lg"
-                onClick={() => handleGetStarted()}
+                onClick={() => isAuthenticated ? router.push('/dashboard') : handleGetStarted()}
                 className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-blue-500/25"
               >
-                Get Started Free
+                {isAuthenticated ? 'Go to Dashboard' : 'Get Started Free'}
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -1776,10 +1776,10 @@ export default function LandingPage() {
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => handleLogin()}
+                onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 sm:px-12 md:px-16 py-4 sm:py-5 md:py-6 text-lg sm:text-xl font-bold rounded-2xl transition-all duration-300 bg-white"
               >
-                Sign In
+                {isAuthenticated ? 'View Plans' : 'Sign In'}
               </Button>
             </motion.div>
           </motion.div>
