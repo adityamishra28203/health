@@ -71,6 +71,34 @@ export default function LandingPage() {
   // Use device optimization hook
   const { deviceInfo, animationConfig } = useDeviceOptimization();
 
+  // Scroll detection for navigation highlighting
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      setScrollY(scrollPosition);
+
+      // Section detection for navigation highlighting
+      const sections = ['hero', 'stats', 'features', 'technology', 'testimonials'];
+      const currentSection = sections.find(section => {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          return rect.top <= 100 && rect.bottom >= 100;
+        }
+        return false;
+      });
+      
+      if (currentSection) {
+        setActiveSection(currentSection);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial call
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Handle logo click - redirect to dashboard if logged in, otherwise stay on landing page
   const handleLogoClick = (e: React.MouseEvent) => {
     if (authService.isAuthenticated()) {
@@ -504,7 +532,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-transparent'
+          scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-white/95 backdrop-blur-2xl'
         }`}
         style={{
           transform: `translateY(${scrollY > 50 ? '0' : '0'})`,
@@ -699,6 +727,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section 
         ref={heroRef}
+        id="hero"
         className="relative pt-24 sm:pt-32 md:pt-40 pb-16 sm:pb-24 px-4 sm:px-6 overflow-hidden"
         style={{
           background: `linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(59, 130, 246, 0.05) 100%)`,
@@ -889,6 +918,7 @@ export default function LandingPage() {
       {/* Stats Section */}
       <section 
         ref={statsRef}
+        id="stats"
         className="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-white/50 to-blue-50/30 relative z-10"
       >
         <div className="max-w-7xl mx-auto">
@@ -1043,30 +1073,69 @@ export default function LandingPage() {
                 delay: 400
               }
             ].map((feature, index) => (
-              <Card 
+              <motion.div
                 key={index}
-                className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 hover:scale-105 rounded-3xl group"
-                style={{
-                  transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
-                  transitionDelay: `${feature.delay}ms`,
-                  boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                initial={{ opacity: 0, y: 80, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ 
+                  duration: 0.8, 
+                  delay: index * 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94]
                 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -15,
+                  transition: { duration: 0.3 }
+                }}
+                className="group"
               >
-                <CardContent className="p-12 text-center">
-                  <div 
-                    className={`w-24 h-24 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-8 transition-all duration-300 group-hover:scale-110 shadow-lg`}
-                    style={{
-                      transform: `rotate(${scrollY * 0.02}deg)`,
-                    }}
-                  >
-                    <feature.icon className="w-12 h-12 text-white" />
-                      </div>
-                  <h3 className="text-3xl font-semibold text-gray-800 mb-6">{feature.title}</h3>
-                  <p className="text-lg text-gray-600 leading-relaxed">
+                <Card 
+                  className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer"
+                  style={{
+                    transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
+                    boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
+                  }}
+                >
+                  <CardContent className="p-12 text-center">
+                    <motion.div 
+                      className={`w-24 h-24 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg`}
+                      style={{
+                        transform: `rotate(${scrollY * 0.02}deg)`,
+                      }}
+                      whileHover={{ 
+                        rotate: 360,
+                        scale: 1.2,
+                        transition: { duration: 0.6 }
+                      }}
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <feature.icon className="w-12 h-12 text-white" />
+                      </motion.div>
+                    </motion.div>
+                    
+                    <motion.h3 
+                      className="text-3xl font-semibold text-gray-800 mb-6"
+                      whileHover={{ color: "#0891b2" }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {feature.title}
+                    </motion.h3>
+                    
+                    <motion.p 
+                      className="text-lg text-gray-600 leading-relaxed"
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
                       {feature.description}
-                  </p>
+                    </motion.p>
                   </CardContent>
                 </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -1075,6 +1144,7 @@ export default function LandingPage() {
       {/* Technology Section */}
       <section 
         ref={technologyRef}
+        id="technology"
         className="py-28 px-6 bg-gradient-to-b from-white/50 to-blue-50/30 relative z-10"
       >
         <div className="max-w-7xl mx-auto">
@@ -1167,6 +1237,7 @@ export default function LandingPage() {
       {/* Testimonials Section */}
       <section 
         ref={testimonialsRef}
+        id="testimonials"
         className="py-28 px-6 bg-gradient-to-b from-blue-50/30 to-white/50 relative z-10"
       >
         <div className="max-w-7xl mx-auto">

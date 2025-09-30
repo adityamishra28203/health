@@ -258,16 +258,17 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="h-full"
               >
-                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer group">
-                  <CardHeader className="pb-4">
+                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer group flex flex-col">
+                  <CardHeader className="pb-4 flex-grow">
                     <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl mb-4 group-hover:bg-blue-200 transition-colors">
                       {feature.icon}
                     </div>
                     <CardTitle className="text-lg">{feature.title}</CardTitle>
-                    <CardDescription>{feature.description}</CardDescription>
+                    <CardDescription className="flex-grow">{feature.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="mt-auto">
                     <Button variant="ghost" size="sm" asChild className="w-full">
                       <Link href={feature.href}>
                         Access
@@ -302,9 +303,10 @@ export default function DashboardPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
+              className="h-full"
             >
-              <Card className="h-full">
-                <CardHeader>
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-grow">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
                       <FileText className="h-5 w-5 text-blue-600" />
@@ -315,7 +317,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4" />
                     2 hours ago
@@ -328,9 +330,10 @@ export default function DashboardPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
+              className="h-full"
             >
-              <Card className="h-full">
-                <CardHeader>
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-grow">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
                       <Shield className="h-5 w-5 text-green-600" />
@@ -341,7 +344,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4" />
                     1 day ago
@@ -354,9 +357,10 @@ export default function DashboardPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
+              className="h-full"
             >
-              <Card className="h-full">
-                <CardHeader>
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-grow">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full">
                       <UserIcon className="h-5 w-5 text-purple-600" />
@@ -367,7 +371,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4" />
                     3 days ago
