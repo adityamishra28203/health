@@ -116,7 +116,7 @@ export default function LandingPage() {
       setIsResizing(true);
       // Set global flag to disable animations during resize
       if (typeof window !== 'undefined') {
-        (window as any).__isResizing = true;
+        (window as typeof window & { __isResizing?: boolean }).__isResizing = true;
       }
       
       clearTimeout(resizeTimeout);
@@ -124,7 +124,7 @@ export default function LandingPage() {
         setIsResizing(false);
         // Clear global flag after resize completes
         if (typeof window !== 'undefined') {
-          (window as any).__isResizing = false;
+          (window as typeof window & { __isResizing?: boolean }).__isResizing = false;
         }
       }, 300); // Wait for resize to complete
     };
@@ -136,7 +136,7 @@ export default function LandingPage() {
       window.removeEventListener('resize', handleResize);
       // Clean up global flag
       if (typeof window !== 'undefined') {
-        (window as any).__isResizing = false;
+        (window as typeof window & { __isResizing?: boolean }).__isResizing = false;
       }
     };
   }, []);

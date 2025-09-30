@@ -155,7 +155,7 @@ export function getOptimizedTransform(
   }
 
   // Disable animations during resize to prevent layout shifts
-  if (typeof window !== 'undefined' && (window as any).__isResizing) {
+  if (typeof window !== 'undefined' && (window as typeof window & { __isResizing?: boolean }).__isResizing) {
     return 'translate3d(0,0,0)';
   }
 
