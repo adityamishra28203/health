@@ -51,6 +51,7 @@ const features = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [forceRender, setForceRender] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -73,6 +74,8 @@ export default function DashboardPage() {
         setUser(userData);
         console.log('Dashboard: User state set, setting loading to false');
         setLoading(false);
+        setForceRender(prev => prev + 1);
+        console.log('Dashboard: Loading set to false, component should re-render');
       } catch (error) {
         console.error('Dashboard: Failed to get profile:', error);
         console.log('Dashboard: Profile fetch failed, redirecting to home');
@@ -99,6 +102,14 @@ export default function DashboardPage() {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Debug current state
+  console.log('Dashboard render - loading:', loading, 'user:', user, 'forceRender:', forceRender);
+
+  // Monitor state changes
+  useEffect(() => {
+    console.log('Dashboard: State changed - loading:', loading, 'user:', user);
+  }, [loading, user]);
 
   if (loading) {
     return <PageLoader />;
