@@ -315,8 +315,10 @@ export default function LandingPage() {
     }, 100);
     
     return () => clearTimeout(timer);
-    
-    // Check authentication status
+  }, []);
+
+  // Authentication status check
+  useEffect(() => {
     const checkAuthStatus = async () => {
       const authenticated = authService.isAuthenticated();
       setIsAuthenticated(authenticated);
@@ -343,6 +345,13 @@ export default function LandingPage() {
 
     window.addEventListener('auth-state-changed', handleAuthStateChange);
     
+    return () => {
+      window.removeEventListener('auth-state-changed', handleAuthStateChange);
+    };
+  }, []);
+
+  // Scroll handler for section detection
+  useEffect(() => {
     let ticking = false;
     
     const handleScroll = () => {
@@ -379,7 +388,6 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
   }, []);
 
