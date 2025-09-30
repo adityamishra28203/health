@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -10,20 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { authService, User } from '@/lib/auth';
 import { PageLoader } from '@/components/LoadingSpinner';
 import { 
-  Heart, 
   Shield, 
   FileText, 
-  Lock, 
-  Smartphone, 
-  Globe, 
-  CheckCircle, 
   ArrowRight,
-  Users,
   ShieldCheck,
   User as UserIcon,
   Activity,
   TrendingUp,
-  Calendar,
   Clock,
   Plus
 } from 'lucide-react';
@@ -59,6 +52,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -92,7 +86,7 @@ export default function DashboardPage() {
     setLoading(true);
     setUser(null);
     initializeAuth();
-  }, [router.pathname]);
+  }, [pathname]);
 
   // Add loaded class after initial render
   useEffect(() => {
