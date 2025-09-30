@@ -317,25 +317,37 @@ export default function LandingPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Authentication status check
+  // Authentication status check - initialize synchronously to prevent flickering
   useEffect(() => {
+    // Initialize authentication state synchronously on client side
+    const initialAuth = authService.isAuthenticated();
+    const initialUser = authService.getCurrentUser();
+    
+    setIsAuthenticated(initialAuth);
+    setUser(initialUser);
+    
     const checkAuthStatus = async () => {
       const authenticated = authService.isAuthenticated();
-      setIsAuthenticated(authenticated);
       
-      if (authenticated) {
-        try {
-          const userData = await authService.getProfile();
-          setUser(userData);
-        } catch (error) {
-          console.error('Failed to get user profile:', error);
-          setIsAuthenticated(false);
+      // Only update state if authentication status has changed
+      if (authenticated !== isAuthenticated) {
+        setIsAuthenticated(authenticated);
+        
+        if (authenticated && !user) {
+          // Only fetch user data if we don't already have it
+          try {
+            const userData = await authService.getProfile();
+            setUser(userData);
+          } catch (error) {
+            console.error('Failed to get user profile:', error);
+            setIsAuthenticated(false);
+            setUser(null);
+          }
+        } else if (!authenticated) {
           setUser(null);
         }
       }
     };
-    
-    checkAuthStatus();
     
     // Listen for auth state changes
     const handleAuthStateChange = () => {

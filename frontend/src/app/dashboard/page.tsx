@@ -50,16 +50,13 @@ const features = [
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Main authentication initialization effect - runs only once on mount
   useEffect(() => {
     let isMounted = true;
 
     const initializeAuth = async () => {
       if (!isMounted) return;
       
-      setLoading(true);
       console.log('Dashboard: Starting authentication check...');
       
       // Check if user is authenticated
@@ -83,7 +80,6 @@ export default function DashboardPage() {
           console.log('Dashboard: Setting user state...');
           setUser(userData);
           setLoading(false);
-          setIsInitialized(true);
           console.log('Dashboard: Authentication initialization complete');
         }
       } catch (error) {
@@ -98,15 +94,7 @@ export default function DashboardPage() {
     // Initialize authentication
     initializeAuth();
 
-    return () => {
-      isMounted = false;
-    };
-  }, []); // Empty dependency array - runs only once on mount
-
-  // Separate effect for auth state changes - only runs when auth state actually changes
-  useEffect(() => {
-    if (!isInitialized) return; // Don't handle auth changes until initial load is complete
-
+    // Listen for auth state changes
     const handleAuthStateChange = () => {
       console.log('Dashboard: Auth state changed, re-checking authentication...');
       
@@ -130,20 +118,22 @@ export default function DashboardPage() {
     };
 
     window.addEventListener('auth-state-changed', handleAuthStateChange);
+
     return () => {
+      isMounted = false;
       window.removeEventListener('auth-state-changed', handleAuthStateChange);
     };
-  }, [isInitialized]); // Only run when isInitialized changes
+  }, []); // Empty dependency array - runs only once on mount
 
 
   // Debug current state
-  console.log('Dashboard render - loading:', loading, 'user:', user, 'isInitialized:', isInitialized);
+  console.log('Dashboard render - loading:', loading, 'user:', user);
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!user && isInitialized) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
@@ -160,11 +150,6 @@ export default function DashboardPage() {
         </div>
       </div>
     );
-  }
-
-  // Show loading while not initialized
-  if (!isInitialized) {
-    return <PageLoader />;
   }
 
   console.log('Dashboard: Rendering main content with user:', user);
