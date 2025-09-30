@@ -85,7 +85,13 @@ export default function DashboardPage() {
     // Reset state when component mounts or route changes
     setLoading(true);
     setUser(null);
-    initializeAuth();
+    
+    // Add a small delay to ensure proper initialization
+    const timer = setTimeout(() => {
+      initializeAuth();
+    }, 50);
+    
+    return () => clearTimeout(timer);
   }, [pathname]);
 
 
@@ -118,7 +124,7 @@ export default function DashboardPage() {
   console.log('Dashboard: Rendering main content with user:', user);
   
   return (
-    <div className="min-h-screen" style={{ opacity: 1, visibility: 'visible' }}>
+    <div key={`dashboard-${Date.now()}`} className="min-h-screen" style={{ opacity: 1, visibility: 'visible' }}>
       {/* Welcome Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
         <div className="container mx-auto px-4 sm:px-6 py-16 sm:py-20">

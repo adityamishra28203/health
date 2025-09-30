@@ -735,7 +735,7 @@ export default function LandingPage() {
                   variant="outline" 
                   size="sm"
                   onClick={() => isAuthenticated ? setIsPricingOpen(true) : handleLogin()}
-                  className="border-blue-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg bg-transparent text-xs sm:text-sm px-2 sm:px-4"
+                  className="border-blue-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg bg-white text-xs sm:text-sm px-2 sm:px-4 shadow-sm"
                 >
                   {isAuthenticated ? 'View Plans' : 'Login'}
                 </Button>
@@ -1285,30 +1285,30 @@ export default function LandingPage() {
                 className="group"
               >
                 <Card 
-                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-8 text-center cursor-pointer"
+                  className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-4 sm:p-6 md:p-8 text-center cursor-pointer h-auto min-h-[200px] sm:min-h-[220px] md:min-h-[240px]"
                   style={getOptimizedStyle({
                     transform: getOptimizedTransform(scrollY * (0.01 + index * 0.005), deviceInfo, animationConfig),
                     willChange: 'transform',
                   }, deviceInfo, animationConfig)}
                 >
                   <motion.div 
-                    className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+                    className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg"
                     whileHover={{ 
                       rotate: 360,
                       scale: 1.1,
                       transition: { duration: 0.5 }
                     }}
                   >
-                    <tech.icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform duration-300" />
+                    <tech.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white group-hover:scale-110 transition-transform duration-300" />
           </motion.div>
                   <motion.h3 
-                    className="text-xl font-semibold text-gray-800 mb-3"
+                    className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3"
                     transition={{ duration: 0.2 }}
                   >
                     {tech.title}
                   </motion.h3>
                   <motion.p 
-                    className="text-gray-600"
+                    className="text-sm sm:text-base text-gray-600 leading-relaxed"
                     initial={{ opacity: 0.8 }}
                     whileHover={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
