@@ -68,6 +68,7 @@ export default function LandingPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [expandedTextIndex, setExpandedTextIndex] = useState<number | null>(null);
   
   // Use device optimization hook
   const { deviceInfo, animationConfig } = useDeviceOptimization();
@@ -1110,6 +1111,7 @@ export default function LandingPage() {
                   icon: Lock,
                   title: "End-to-End Encryption",
                   description: "Your health data is protected with military-grade encryption, ensuring complete privacy and security.",
+                  fullDescription: "Our advanced encryption technology uses AES-256 encryption combined with end-to-end encryption protocols to ensure that your sensitive health information remains completely secure. Every piece of data is encrypted before transmission and stored with multiple layers of security, making it virtually impossible for unauthorized parties to access your personal health records.",
                   color: "from-blue-600 to-cyan-600",
                   delay: 0
                 },
@@ -1117,6 +1119,7 @@ export default function LandingPage() {
                   icon: Zap,
                   title: "Blockchain Technology",
                   description: "Immutable blockchain records ensure data integrity and provide a complete audit trail.",
+                  fullDescription: "Built on enterprise-grade blockchain infrastructure, our platform ensures that every health record is permanently stored in an immutable ledger. This creates an unbreakable chain of custody for your medical data, providing complete transparency and traceability while maintaining the highest standards of data integrity and authenticity.",
                   color: "from-cyan-600 to-emerald-600",
                   delay: 200
                 },
@@ -1124,6 +1127,7 @@ export default function LandingPage() {
                   icon: Award,
                   title: "HIPAA Compliant",
                   description: "Fully compliant with healthcare regulations and industry standards for data protection.",
+                  fullDescription: "We maintain strict compliance with HIPAA regulations, GDPR standards, and other international healthcare data protection laws. Our platform undergoes regular security audits and compliance assessments to ensure that your health data meets the highest regulatory standards and industry best practices for healthcare information management.",
                   color: "from-emerald-600 to-blue-600",
                   delay: 400
                 },
@@ -1131,6 +1135,7 @@ export default function LandingPage() {
                   icon: Smartphone,
                   title: "Mobile Access",
                   description: "Access your health records anywhere, anytime with our secure mobile application.",
+                  fullDescription: "Our mobile-first approach ensures that you can securely access your health records from any device, anywhere in the world. With biometric authentication, offline access capabilities, and seamless synchronization across all your devices, your critical health information is always at your fingertips when you need it most.",
                   color: "from-purple-600 to-pink-600",
                   delay: 600
                 },
@@ -1138,6 +1143,7 @@ export default function LandingPage() {
                   icon: Globe,
                   title: "Global Standards",
                   description: "Built with international healthcare data standards for seamless interoperability.",
+                  fullDescription: "Our platform is designed with international healthcare interoperability standards including HL7 FHIR, DICOM, and other global protocols. This ensures seamless data exchange between healthcare providers, laboratories, and medical facilities worldwide, making your health records universally accessible and compatible with any healthcare system.",
                   color: "from-orange-600 to-red-600",
                   delay: 800
                 }
@@ -1160,20 +1166,22 @@ export default function LandingPage() {
                   className="group flex-shrink-0 w-64 sm:w-72 md:w-80 snap-center"
                 >
                   <Card 
-                    className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-full"
+                    className={`bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl cursor-pointer h-auto ${
+                      expandedTextIndex === index ? 'min-h-[400px]' : 'h-[280px] sm:h-[320px]'
+                    }`}
                     style={{
                       boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                     }}
                   >
-                  <CardContent className="p-12 text-center">
+                  <CardContent className={`p-6 sm:p-8 text-center ${expandedTextIndex === index ? 'pb-12' : ''}`}>
                     <motion.div 
-                      className={`w-24 h-24 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-lg`}
+                      className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg`}
                       style={{
                         transform: `rotate(${scrollY * 0.02}deg)`,
                       }}
                       whileHover={{ 
                         rotate: 360,
-                        scale: 1.2,
+                        scale: 1.1,
                         transition: { duration: 0.6 }
                       }}
                     >
@@ -1181,25 +1189,66 @@ export default function LandingPage() {
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <feature.icon className="w-12 h-12 text-white" />
+                        <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                       </motion.div>
                     </motion.div>
                     
                     <motion.h3 
-                      className="text-3xl font-semibold text-gray-800 mb-6"
+                      className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4"
                       transition={{ duration: 0.2 }}
                     >
                       {feature.title}
                     </motion.h3>
                     
-                    <motion.p 
-                      className="text-lg text-gray-600 leading-relaxed"
-                      initial={{ opacity: 0.8 }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0.2 }}
+                    <motion.div 
+                      className="relative"
+                      onClick={() => setExpandedTextIndex(expandedTextIndex === index ? null : index)}
                     >
-                      {feature.description}
-                    </motion.p>
+                      <motion.p 
+                        className={`text-sm sm:text-base text-gray-600 leading-relaxed cursor-pointer relative ${
+                          expandedTextIndex === index ? '' : 'overflow-hidden'
+                        }`}
+                        initial={{ opacity: 0.8 }}
+                        whileHover={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        animate={{
+                          maxHeight: expandedTextIndex === index ? 'none' : '3.6rem', // ~2 lines
+                          filter: expandedTextIndex === index ? 'blur(0px)' : expandedTextIndex === null ? 'blur(0px)' : 'blur(2px)',
+                        }}
+                      >
+                        {expandedTextIndex === index ? feature.fullDescription : feature.description}
+                      </motion.p>
+                      
+                      {expandedTextIndex !== index && (
+                        <motion.div
+                          className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      )}
+                      
+                      <motion.div
+                        className="mt-3 flex justify-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
+                      >
+                        <motion.button
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors duration-200"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {expandedTextIndex === index ? 'Show Less' : 'Read More'}
+                          <motion.div
+                            animate={{ rotate: expandedTextIndex === index ? 180 : 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </motion.div>
+                        </motion.button>
+                      </motion.div>
+                    </motion.div>
                   </CardContent>
                 </Card>
               </motion.div>
