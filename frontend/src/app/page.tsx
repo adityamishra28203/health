@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/lib/auth';
 import { 
@@ -107,7 +107,13 @@ export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [smoothScrollY, setSmoothScrollY] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Helper function to apply transforms with reduced motion support
+  const getAccessibleTransform = (transform: string) => {
+    return shouldReduceMotion ? 'translate3d(0, 0, 0)' : transform;
+  };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -150,38 +156,22 @@ export default function LandingPage() {
     }
   };
 
-  // Smooth scroll handler with RAF throttling for animations
+  // Unified scroll handler with RAF throttling - prevents jitter on all devices
   useEffect(() => {
     let animationFrame: number;
+    let lastScrollY = 0;
     
     const handleScroll = () => {
       const newScrollY = window.scrollY;
-      setScrollY(newScrollY);
       
       // Cancel previous frame & schedule new one for smooth transforms
       cancelAnimationFrame(animationFrame);
       animationFrame = requestAnimationFrame(() => {
+        setScrollY(newScrollY);
         setSmoothScrollY(newScrollY);
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initial call
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      cancelAnimationFrame(animationFrame);
-    };
-  }, []);
-
-  // Section detection for navigation highlighting (separate effect)
-  useEffect(() => {
-    let ticking = false;
-    
-    const handleSectionDetection = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          // Section detection for navigation highlighting
+        
+        // Section detection for navigation highlighting (throttled)
+        if (Math.abs(newScrollY - lastScrollY) > 50) { // Only check every 50px
           const sections = ['hero', 'stats', 'features', 'technology', 'testimonials'];
           const currentSection = sections.find(section => {
             const element = document.getElementById(section);
@@ -195,17 +185,17 @@ export default function LandingPage() {
           if (currentSection) {
             setActiveSection(currentSection);
           }
-          ticking = false;
-        });
-        ticking = true;
-      }
+          lastScrollY = newScrollY;
+        }
+      });
     };
 
-    window.addEventListener('scroll', handleSectionDetection, { passive: true });
-    handleSectionDetection(); // Initial call
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial call
     
     return () => {
-      window.removeEventListener('scroll', handleSectionDetection);
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationFrame);
     };
   }, []);
 
@@ -619,7 +609,7 @@ export default function LandingPage() {
           scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-white/98 backdrop-blur-3xl'
         }`}
         style={{
-          transform: `translateY(${smoothScrollY > 50 ? '0' : '0'})`,
+          transform: `translate3d(0, ${smoothScrollY > 50 ? '0' : '0'}, 0)`,
           willChange: 'transform, background-color'
         }}
       >
@@ -740,7 +730,7 @@ export default function LandingPage() {
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/profile')}>
-                      <UserIcon className="mr-2 h-4 w-4" />
+                      <UserIcon className="mr-2 h-4 w-4" aria-hidden="true" />
                       <span>Profile</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/settings')}>
@@ -760,7 +750,7 @@ export default function LandingPage() {
                   className="md:hidden p-2 ml-2 flex-shrink-0"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  {isMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
                 </button>
               </>
             ) : (
@@ -779,7 +769,7 @@ export default function LandingPage() {
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-blue-500/25 text-xs sm:text-sm px-2 sm:px-4"
                 >
                   Get Started
-                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" aria-hidden="true" />
                 </Button>
                 
                 {/* Mobile Menu Button */}
@@ -787,7 +777,7 @@ export default function LandingPage() {
                   className="md:hidden p-2 ml-2 flex-shrink-0"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                  {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  {isMenuOpen ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
                 </button>
               </>
             )}
@@ -835,7 +825,7 @@ export default function LandingPage() {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   textShadow: '0 4px 8px rgba(30, 64, 175, 0.1)',
-                  transform: `translateY(${smoothScrollY * 0.05}px)`,
+                  transform: getAccessibleTransform(`translate3d(0, ${smoothScrollY * 0.05}px, 0)`),
                   transition: 'none',
                   lineHeight: '1.2',
                   paddingBottom: '1rem',
@@ -866,7 +856,7 @@ export default function LandingPage() {
             <div 
               className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4"
               style={{
-                transform: `translateY(${smoothScrollY * 0.05}px)`,
+                transform: `translate3d(0, ${smoothScrollY * 0.05}px, 0)`,
                 transition: 'none',
               }}
             >
@@ -876,7 +866,7 @@ export default function LandingPage() {
                 className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-700 hover:via-cyan-700 hover:to-emerald-700 text-white px-8 sm:px-16 py-4 sm:py-6 text-lg sm:text-xl font-semibold rounded-2xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-blue-500/25 animate-bounce-in delay-300 w-full sm:w-auto"
               >
                 {isAuthenticated ? 'Go to Dashboard' : 'Start Your Journey'}
-                <ArrowRight className="w-6 h-6 ml-3 transition-transform duration-300 group-hover:translateX-1" />
+                <ArrowRight className="w-6 h-6 ml-3 transition-transform duration-300 group-hover:translateX-1" aria-hidden="true" />
                 </Button>
               <Button 
                 variant="outline" 
@@ -891,7 +881,7 @@ export default function LandingPage() {
             <div 
               className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 pt-4 px-4"
               style={{
-                transform: `translateY(${smoothScrollY * 0.02}px)`,
+                transform: `translate3d(0, ${smoothScrollY * 0.02}px, 0)`,
                 transition: 'none',
               }}
             >
@@ -950,7 +940,7 @@ export default function LandingPage() {
                   <Card 
                     className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl h-[320px] flex flex-col justify-center"
                     style={{
-                      transform: `translateY(${smoothScrollY * (0.02 + index * 0.01)}px)`,
+                      transform: `translate3d(0, ${smoothScrollY * (0.02 + index * 0.01)}px, 0)`,
                       boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                     }}
                   >
@@ -958,7 +948,7 @@ export default function LandingPage() {
                       <motion.div 
                         className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg`}
                         style={{
-                          transform: `rotate(${smoothScrollY * 0.02}deg)`,
+                          transform: `translate3d(0, 0, 0) rotate(${smoothScrollY * 0.02}deg)`,
                         }}
                         whileHover={{ 
                           rotate: 360,
@@ -1032,7 +1022,7 @@ export default function LandingPage() {
                 <Card 
                   className="text-center bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl p-6 sm:p-8 h-[300px] sm:h-[320px] md:h-[340px] flex flex-col justify-center"
                   style={{
-                    transform: `translateY(${smoothScrollY * (0.01 + index * 0.005)}px)`,
+                    transform: `translate3d(0, ${smoothScrollY * (0.01 + index * 0.005)}px, 0)`,
                     boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                   }}
                 >
@@ -1108,7 +1098,7 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-16 sm:mb-20 md:mb-24"
             style={{
-              transform: `translateY(${smoothScrollY * 0.05}px)`,
+              transform: `translate3d(0, ${smoothScrollY * 0.05}px, 0)`,
             }}
           >
             <h2 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-bold text-gray-800 tracking-tight">
@@ -1184,7 +1174,7 @@ export default function LandingPage() {
                       <motion.div 
                         className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg`}
                         style={{
-                          transform: `rotate(${smoothScrollY * 0.02}deg)`,
+                          transform: `translate3d(0, 0, 0) rotate(${smoothScrollY * 0.02}deg)`,
                         }}
                         whileHover={{ 
                           rotate: 360,

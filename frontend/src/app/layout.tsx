@@ -17,31 +17,54 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://securehealth.app'),
   title: "SecureHealth - Blockchain Health Records & Insurance Platform",
-  description: "Secure, blockchain-powered health records and insurance platform. Manage your medical data with complete privacy and control.",
-  keywords: ["health", "blockchain", "medical records", "insurance", "privacy", "HIPAA", "DISHA"],
+  description: "Transform your healthcare experience with blockchain-powered, HIPAA-compliant health record management. Secure, accessible, and completely under your control. 256-bit encryption, decentralized storage, and seamless insurance integration.",
+  keywords: ["health", "blockchain", "medical records", "insurance", "privacy", "HIPAA", "DISHA", "healthcare", "secure", "encrypted", "decentralized"],
   authors: [{ name: "SecureHealth Team" }],
+  creator: "SecureHealth",
+  publisher: "SecureHealth",
   openGraph: {
     title: "SecureHealth - Blockchain Health Records & Insurance Platform",
-    description: "Secure, blockchain-powered health records and insurance platform.",
+    description: "Transform your healthcare experience with blockchain-powered, HIPAA-compliant health record management. Secure, accessible, and completely under your control.",
     type: "website",
     locale: "en_US",
+    url: "https://securehealth.app",
+    siteName: "SecureHealth",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SecureHealth - Blockchain Health Records Platform",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "SecureHealth - Blockchain Health Records & Insurance Platform",
-    description: "Secure, blockchain-powered health records and insurance platform.",
+    description: "Transform your healthcare experience with blockchain-powered, HIPAA-compliant health record management.",
+    images: ["/og-image.png"],
+    creator: "@securehealth",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
-  // Performance optimizations
+  // Performance and security optimizations
   other: {
     'X-DNS-Prefetch-Control': 'on',
     'X-Frame-Options': 'SAMEORIGIN',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'origin-when-cross-origin',
+    'X-XSS-Protection': '1; mode=block',
   },
 };
 

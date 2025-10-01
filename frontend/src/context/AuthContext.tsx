@@ -18,44 +18,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth state
+  // Initialize auth state with async safety
   useEffect(() => {
+    let isMounted = true;
+    
     const initAuth = async () => {
       try {
-        setLoading(true);
+        if (isMounted) setLoading(true);
         
         if (authService.isAuthenticated()) {
           const profile = await authService.getProfile();
-          setUser(profile);
+          if (isMounted) setUser(profile);
         } else {
-          setUser(null);
+          if (isMounted) setUser(null);
         }
       } catch (err) {
         console.error("Auth initialization failed:", err);
-        setUser(null);
+        if (isMounted) setUser(null);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    // Listen for auth changes
+    // Listen for auth changes with async safety
     const handleAuthStateChange = async () => {
       if (authService.isAuthenticated()) {
         try {
           const profile = await authService.getProfile();
-          setUser(profile);
+          if (isMounted) setUser(profile);
         } catch {
-          setUser(null);
+          if (isMounted) setUser(null);
         }
       } else {
-        setUser(null);
+        if (isMounted) setUser(null);
       }
     };
 
     window.addEventListener("auth-state-changed", handleAuthStateChange);
-    return () => window.removeEventListener("auth-state-changed", handleAuthStateChange);
+    
+    return () => {
+      isMounted = false;
+      window.removeEventListener("auth-state-changed", handleAuthStateChange);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
