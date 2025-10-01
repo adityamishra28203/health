@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { authService, User } from '@/lib/auth';
+import { useAuth } from '@/context/AuthContext';
+import { authService } from '@/lib/auth';
 import { 
   useDeviceOptimization, 
   getOptimizedTransform, 
@@ -102,12 +103,11 @@ const featuresData = [
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user, isAuthenticated, logout, login } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeSection, setActiveSection] = useState('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -220,7 +220,7 @@ export default function LandingPage() {
 
   // Handle logo click - redirect to dashboard if logged in, otherwise stay on landing page
   const handleLogoClick = (e: React.MouseEvent) => {
-    if (authService.isAuthenticated()) {
+    if (isAuthenticated) {
       e.preventDefault();
       router.push('/dashboard');
     }
@@ -230,16 +230,12 @@ export default function LandingPage() {
   // Handle logout
   const handleLogout = async () => {
     try {
-      await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
+      await logout();
       // Force a clean reload to ensure proper state reset
       window.location.reload();
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if logout fails, clear the state and reload
-      setUser(null);
-      setIsAuthenticated(false);
+      // Even if logout fails, force reload to clear state
       window.location.reload();
     }
   };
@@ -317,50 +313,6 @@ export default function LandingPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Authentication status check - initialize synchronously to prevent flickering
-  useEffect(() => {
-    // Initialize authentication state synchronously on client side
-    const initialAuth = authService.isAuthenticated();
-    const initialUser = authService.getCurrentUser();
-    
-    setIsAuthenticated(initialAuth);
-    setUser(initialUser);
-    
-    const checkAuthStatus = async () => {
-      const authenticated = authService.isAuthenticated();
-      
-      // Only update state if authentication status has changed
-      if (authenticated !== isAuthenticated) {
-        setIsAuthenticated(authenticated);
-        
-        if (authenticated && !user) {
-          // Only fetch user data if we don't already have it
-          try {
-            const userData = await authService.getProfile();
-            setUser(userData);
-          } catch (error) {
-            console.error('Failed to get user profile:', error);
-            setIsAuthenticated(false);
-            setUser(null);
-          }
-        } else if (!authenticated) {
-          setUser(null);
-        }
-      }
-    };
-    
-    // Listen for auth state changes
-    const handleAuthStateChange = () => {
-      console.log('Landing page: Auth state changed, re-checking authentication...');
-      checkAuthStatus();
-    };
-
-    window.addEventListener('auth-state-changed', handleAuthStateChange);
-    
-    return () => {
-      window.removeEventListener('auth-state-changed', handleAuthStateChange);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll handler for section detection
   useEffect(() => {
@@ -510,19 +462,14 @@ export default function LandingPage() {
 
     try {
       const encryptedPassword = await encryptPassword(loginData.password);
-      const response = await authService.login({
-        email: loginData.email,
-        password: encryptedPassword
-      });
-      if (response) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-        setIsLoginOpen(false);
-        setLoginData({ email: '', password: '' });
-        
-        // Use router.push for consistent client-side navigation
-        router.push('/dashboard');
-      }
+      await login(loginData.email, encryptedPassword);
+      
+      // Clear form and close dialog
+      setLoginData({ email: '', password: '' });
+      setIsLoginOpen(false);
+      
+      // Navigate to dashboard
+      router.push('/dashboard');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
       setLoginError(errorMessage);
@@ -609,8 +556,7 @@ export default function LandingPage() {
         role: signupData.role || 'patient'
       });
       if (response) {
-        setUser(response.user);
-        setIsAuthenticated(true);
+        // AuthContext will automatically update the user state
         setIsSignupOpen(false);
         setSignupData({
           firstName: '',

@@ -5,6 +5,7 @@ import Layout from "@/components/layout/Layout";
 import { OfflineWarning } from "@/components/offline-warning";
 import { Toaster } from "sonner";
 import { ChunkLoadErrorBoundary } from "@/components/ChunkLoadErrorBoundary";
+import { AuthProvider } from "@/context/AuthContext";
 import "@/lib/chunkLoader"; // Import chunk loader utility
 // import { preloadCriticalResources } from "@/lib/animations"; // Not needed for font optimization
 
@@ -92,11 +93,13 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ChunkLoadErrorBoundary>
-          <Layout>
-            {children}
-          </Layout>
-          <OfflineWarning />
-          <Toaster />
+          <AuthProvider>
+            <Layout>
+              {children}
+            </Layout>
+            <OfflineWarning />
+            <Toaster />
+          </AuthProvider>
         </ChunkLoadErrorBoundary>
       </body>
     </html>

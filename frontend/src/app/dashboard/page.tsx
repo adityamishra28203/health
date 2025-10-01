@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { authService, User } from '@/lib/auth';
 import { PageLoader } from '@/components/LoadingSpinner';
+import { useAuth } from '@/context/AuthContext';
 import { 
   Shield, 
   FileText, 
@@ -50,101 +49,20 @@ const features = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const initializeAuth = async () => {
-      if (!isMounted) return;
-      
-      console.log('Dashboard: Starting authentication check...');
-      setLoading(true); // Ensure loader is active during initialization
-      
-      // Check if user is authenticated
-      const isAuth = authService.isAuthenticated();
-      console.log('Dashboard: isAuthenticated =', isAuth);
-      
-      if (!isAuth) {
-        console.log('Dashboard: Not authenticated, redirecting to home');
-        if (isMounted) {
-          router.push('/');
-        }
-        return;
-      }
-
-      try {
-        console.log('Dashboard: Fetching user profile...');
-        const userData = await authService.getProfile();
-        console.log('Dashboard: User data received:', userData);
-        
-        if (isMounted) {
-          console.log('Dashboard: Setting user state...');
-          setUser(userData);
-          console.log('Dashboard: Authentication initialization complete');
-        }
-      } catch (error) {
-        console.error('Dashboard: Failed to get profile:', error);
-        if (isMounted) {
-          console.log('Dashboard: Profile fetch failed, redirecting to home');
-          router.push('/');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false); // Always set loading to false after auth check
-        }
-      }
-    };
-
-    // Initialize authentication
-    initializeAuth();
-
-    // Listen for auth state changes
-    const handleAuthStateChange = () => {
-      console.log('Dashboard: Auth state changed, re-checking authentication...');
-      
-      // Check if still authenticated
-      const isAuth = authService.isAuthenticated();
-      if (!isAuth) {
-        console.log('Dashboard: No longer authenticated, redirecting to home');
-        router.push('/');
-      } else {
-        // Re-fetch profile if still authenticated
-        authService.getProfile()
-          .then(userData => {
-            if (isMounted) {
-              console.log('Dashboard: Profile refreshed after auth state change');
-              setUser(userData);
-            }
-          })
-          .catch(error => {
-            console.error('Dashboard: Failed to refresh profile:', error);
-            if (isMounted) {
-              router.push('/');
-            }
-          });
-      }
-    };
-
-    window.addEventListener('auth-state-changed', handleAuthStateChange);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener('auth-state-changed', handleAuthStateChange);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-
-  // Debug current state
-  console.log('Dashboard render - loading:', loading, 'user:', user);
-
-  // Always show loader while authentication is being checked
+  // Show loader while auth is being initialized
   if (loading) {
     return <PageLoader />;
   }
 
-  // Only show error screen if loading is complete but no user data
+  // Redirect to home if not authenticated
+  if (!isAuthenticated) {
+    router.push('/');
+    return null;
+  }
+
+  // Show error screen if no user data (shouldn't happen with proper auth flow)
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
@@ -163,8 +81,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  console.log('Dashboard: Rendering main content with user:', user);
   
   return (
     <div className="min-h-screen">
