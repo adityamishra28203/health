@@ -106,6 +106,7 @@ export default function LandingPage() {
   const { user, isAuthenticated, logout, login } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [smoothScrollY, setSmoothScrollY] = useState(0);
   const [activeSection, setActiveSection] = useState('hero');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
@@ -149,39 +150,62 @@ export default function LandingPage() {
     }
   };
 
-  // Scroll detection for navigation highlighting
+  // Smooth scroll handler with RAF throttling for animations
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
+    let animationFrame: number;
     
     const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const scrollPosition = window.scrollY;
-        setScrollY(scrollPosition);
-
-        // Section detection for navigation highlighting
-        const sections = ['hero', 'stats', 'features', 'technology', 'testimonials'];
-        const currentSection = sections.find(section => {
-          const element = document.getElementById(section);
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            return rect.top <= 100 && rect.bottom >= 100;
-          }
-          return false;
-        });
-        
-        if (currentSection) {
-          setActiveSection(currentSection);
-        }
-      }, 16); // ~60fps throttling
+      const newScrollY = window.scrollY;
+      setScrollY(newScrollY);
+      
+      // Cancel previous frame & schedule new one for smooth transforms
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => {
+        setSmoothScrollY(newScrollY);
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Initial call
     
     return () => {
-      clearTimeout(scrollTimeout);
       window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationFrame);
+    };
+  }, []);
+
+  // Section detection for navigation highlighting (separate effect)
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleSectionDetection = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          // Section detection for navigation highlighting
+          const sections = ['hero', 'stats', 'features', 'technology', 'testimonials'];
+          const currentSection = sections.find(section => {
+            const element = document.getElementById(section);
+            if (element) {
+              const rect = element.getBoundingClientRect();
+              return rect.top <= 100 && rect.bottom >= 100;
+            }
+            return false;
+          });
+          
+          if (currentSection) {
+            setActiveSection(currentSection);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleSectionDetection, { passive: true });
+    handleSectionDetection(); // Initial call
+    
+    return () => {
+      window.removeEventListener('scroll', handleSectionDetection);
     };
   }, []);
 
@@ -314,46 +338,6 @@ export default function LandingPage() {
   }, []);
 
 
-  // Scroll handler for section detection
-  useEffect(() => {
-    let ticking = false;
-    
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const scroll = window.scrollY;
-          setScrollY(scroll);
-          
-          // Determine active section
-          const sections = [
-            { ref: heroRef, id: 'hero' },
-            { ref: statsRef, id: 'stats' },
-            { ref: featuresRef, id: 'features' },
-            { ref: technologyRef, id: 'technology' },
-            { ref: testimonialsRef, id: 'testimonials' },
-            { ref: ctaRef, id: 'cta' }
-          ];
-          
-          for (const section of sections) {
-            if (section.ref.current) {
-              const rect = section.ref.current.getBoundingClientRect();
-              if (rect.top <= 100 && rect.bottom >= 100) {
-                setActiveSection(section.id);
-                break;
-              }
-            }
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   // Get optimized animation variants (for future use)
   // const optimizedVariants = getOptimizedVariants(deviceInfo, animationConfig);
@@ -594,21 +578,21 @@ export default function LandingPage() {
             <div 
               className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full animate-pulse"
               style={getOptimizedStyle({
-                transform: getOptimizedTransform(scrollY * 0.1, deviceInfo, animationConfig),
+                transform: getOptimizedTransform(smoothScrollY * 0.1, deviceInfo, animationConfig),
                 willChange: 'transform',
               }, deviceInfo, animationConfig)}
             ></div>
             <div 
               className="absolute top-40 right-20 w-24 h-24 bg-cyan-500/10 rounded-full animate-pulse delay-1000"
               style={getOptimizedStyle({
-                transform: getOptimizedTransform(scrollY * -0.05, deviceInfo, animationConfig),
+                transform: getOptimizedTransform(smoothScrollY * -0.05, deviceInfo, animationConfig),
                 willChange: 'transform',
               }, deviceInfo, animationConfig)}
             ></div>
             <div 
               className="absolute bottom-20 left-1/3 w-40 h-40 bg-emerald-500/10 rounded-full animate-pulse delay-2000"
               style={getOptimizedStyle({
-                transform: getOptimizedTransform(scrollY * 0.08, deviceInfo, animationConfig),
+                transform: getOptimizedTransform(smoothScrollY * 0.08, deviceInfo, animationConfig),
                 willChange: 'transform',
               }, deviceInfo, animationConfig)}
             ></div>
@@ -635,7 +619,7 @@ export default function LandingPage() {
           scrollY > 50 ? 'bg-white/98 backdrop-blur-3xl shadow-lg border-b border-blue-100/50' : 'bg-white/98 backdrop-blur-3xl'
         }`}
         style={{
-          transform: `translateY(${scrollY > 50 ? '0' : '0'})`,
+          transform: `translateY(${smoothScrollY > 50 ? '0' : '0'})`,
           willChange: 'transform, background-color'
         }}
       >
@@ -851,8 +835,8 @@ export default function LandingPage() {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   textShadow: '0 4px 8px rgba(30, 64, 175, 0.1)',
-                  transform: `translateY(${scrollY * 0.05}px)`,
-                  transition: 'transform 0.1s ease-out',
+                  transform: `translateY(${smoothScrollY * 0.05}px)`,
+                  transition: 'none',
                   lineHeight: '1.2',
                   paddingBottom: '1rem',
                   marginBottom: '1rem',
@@ -870,8 +854,8 @@ export default function LandingPage() {
             <p 
               className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-5xl mx-auto font-light px-4"
               style={getOptimizedStyle({
-                transform: getOptimizedTransform(scrollY * 0.1, deviceInfo, animationConfig),
-                transition: 'transform 0.1s ease-out',
+                transform: getOptimizedTransform(smoothScrollY * 0.1, deviceInfo, animationConfig),
+                transition: 'none',
                 willChange: 'transform',
               }, deviceInfo, animationConfig)}
             >
@@ -882,8 +866,8 @@ export default function LandingPage() {
             <div 
               className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4"
               style={{
-                transform: `translateY(${scrollY * 0.05}px)`,
-                transition: 'transform 0.1s ease-out',
+                transform: `translateY(${smoothScrollY * 0.05}px)`,
+                transition: 'none',
               }}
             >
               <Button 
@@ -907,8 +891,8 @@ export default function LandingPage() {
             <div 
               className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 pt-4 px-4"
               style={{
-                transform: `translateY(${scrollY * 0.02}px)`,
-                transition: 'transform 0.1s ease-out',
+                transform: `translateY(${smoothScrollY * 0.02}px)`,
+                transition: 'none',
               }}
             >
               <div className="flex items-center space-x-3 group cursor-pointer transition-all duration-300 hover:scale-105">
@@ -966,7 +950,7 @@ export default function LandingPage() {
                   <Card 
                     className="bg-white/80 backdrop-blur-sm border-2 border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl h-[320px] flex flex-col justify-center"
                     style={{
-                      transform: `translateY(${scrollY * (0.02 + index * 0.01)}px)`,
+                      transform: `translateY(${smoothScrollY * (0.02 + index * 0.01)}px)`,
                       boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                     }}
                   >
@@ -974,7 +958,7 @@ export default function LandingPage() {
                       <motion.div 
                         className={`w-20 h-20 bg-gradient-to-br ${feature.color} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg`}
                         style={{
-                          transform: `rotate(${scrollY * 0.02}deg)`,
+                          transform: `rotate(${smoothScrollY * 0.02}deg)`,
                         }}
                         whileHover={{ 
                           rotate: 360,
@@ -1048,7 +1032,7 @@ export default function LandingPage() {
                 <Card 
                   className="text-center bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-2xl transition-all duration-500 rounded-3xl p-6 sm:p-8 h-[300px] sm:h-[320px] md:h-[340px] flex flex-col justify-center"
                   style={{
-                    transform: `translateY(${scrollY * (0.01 + index * 0.005)}px)`,
+                    transform: `translateY(${smoothScrollY * (0.01 + index * 0.005)}px)`,
                     boxShadow: `0 10px 30px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1)`,
                   }}
                 >
@@ -1124,7 +1108,7 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-16 sm:mb-20 md:mb-24"
             style={{
-              transform: `translateY(${scrollY * 0.05}px)`,
+              transform: `translateY(${smoothScrollY * 0.05}px)`,
             }}
           >
             <h2 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-bold text-gray-800 tracking-tight">
@@ -1200,7 +1184,7 @@ export default function LandingPage() {
                       <motion.div 
                         className={`w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg`}
                         style={{
-                          transform: `rotate(${scrollY * 0.02}deg)`,
+                          transform: `rotate(${smoothScrollY * 0.02}deg)`,
                         }}
                         whileHover={{ 
                           rotate: 360,
@@ -1415,7 +1399,7 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-12 sm:mb-16 md:mb-20"
             style={getOptimizedStyle({
-              transform: getOptimizedTransform(scrollY * 0.03, deviceInfo, animationConfig),
+              transform: getOptimizedTransform(smoothScrollY * 0.03, deviceInfo, animationConfig),
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
@@ -1462,7 +1446,7 @@ export default function LandingPage() {
                 <Card 
                   className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-4 sm:p-6 md:p-8 text-center cursor-pointer h-[240px] sm:h-[260px] md:h-[280px] flex flex-col justify-between"
                   style={getOptimizedStyle({
-                    transform: getOptimizedTransform(scrollY * 0.01, deviceInfo, animationConfig),
+                    transform: getOptimizedTransform(smoothScrollY * 0.01, deviceInfo, animationConfig),
                     willChange: 'transform',
                   }, deviceInfo, animationConfig)}
                 >
@@ -1509,7 +1493,7 @@ export default function LandingPage() {
           <div 
             className="text-center space-y-6 mb-12 sm:mb-16 md:mb-20"
             style={getOptimizedStyle({
-              transform: getOptimizedTransform(scrollY * 0.02, deviceInfo, animationConfig),
+              transform: getOptimizedTransform(smoothScrollY * 0.02, deviceInfo, animationConfig),
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
@@ -1574,7 +1558,7 @@ export default function LandingPage() {
                 <Card 
                   className="bg-white/80 backdrop-blur-sm border-blue-100/50 hover:shadow-xl transition-all duration-500 rounded-3xl p-6 sm:p-8 cursor-pointer h-[400px] sm:h-[420px] md:h-[440px] flex flex-col justify-between"
                   style={getOptimizedStyle({
-                    transform: getOptimizedTransform(scrollY * 0.01, deviceInfo, animationConfig),
+                    transform: getOptimizedTransform(smoothScrollY * 0.01, deviceInfo, animationConfig),
                     willChange: 'transform',
                   }, deviceInfo, animationConfig)}
                 >
@@ -1650,7 +1634,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={getOptimizedStyle({
-              transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
+              transform: getOptimizedTransform(smoothScrollY * 0.005, deviceInfo, animationConfig),
               paddingBottom: '0.5rem',
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
@@ -1667,7 +1651,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={getOptimizedStyle({
-              transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
+              transform: getOptimizedTransform(smoothScrollY * 0.005, deviceInfo, animationConfig),
               paddingBottom: '0.25rem',
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
@@ -1682,7 +1666,7 @@ export default function LandingPage() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={getOptimizedStyle({
-              transform: getOptimizedTransform(scrollY * 0.005, deviceInfo, animationConfig),
+              transform: getOptimizedTransform(smoothScrollY * 0.005, deviceInfo, animationConfig),
               willChange: 'transform',
             }, deviceInfo, animationConfig)}
           >
