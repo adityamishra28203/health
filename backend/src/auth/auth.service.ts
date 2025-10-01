@@ -20,6 +20,7 @@ export interface LoginResponse {
     avatar?: string;
   };
   accessToken: string;
+  refreshToken: string;
 }
 
 @Injectable()
@@ -30,6 +31,67 @@ export class AuthService {
     @InjectModel('User') private userModel: Model<IUser>,
     private jwtService: JwtService,
   ) {}
+
+  /**
+   * Generate access and refresh token pair
+   */
+  private generateTokenPair(userId: string, email: string, role: string) {
+    const payload = { userId, email, role };
+    
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '15m', // Short-lived access token
+      issuer: 'healthwallet-api',
+      audience: 'healthwallet-client'
+    });
+
+    const refreshToken = this.jwtService.sign(
+      { ...payload, type: 'refresh' },
+      {
+        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d', // Long-lived refresh token
+        issuer: 'healthwallet-api',
+        audience: 'healthwallet-client'
+      }
+    );
+
+    return { accessToken, refreshToken };
+  }
+
+  /**
+   * Refresh access token using refresh token
+   */
+  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    try {
+      // Verify refresh token
+      const decoded = this.jwtService.verify(refreshToken, {
+        issuer: 'healthwallet-api',
+        audience: 'healthwallet-client'
+      }) as any;
+
+      if (decoded.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token type');
+      }
+
+      // Get user from database
+      const user = await this.userModel.findById(decoded.userId);
+      if (!user || user.status !== 'active') {
+        throw new UnauthorizedException('User not found or inactive');
+      }
+
+      // Generate new token pair (JWT rotation)
+      const { accessToken, refreshToken: newRefreshToken } = this.generateTokenPair(
+        user._id.toString(),
+        user.email,
+        user.role
+      );
+
+      this.logger.log(`Tokens refreshed for user: ${user.email}`);
+
+      return { accessToken, refreshToken: newRefreshToken };
+    } catch (error) {
+      this.logger.error('Token refresh failed:', error);
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
 
   async register(registerDto: RegisterDto): Promise<LoginResponse> {
     const { email, password, firstName, lastName, phone, role = 'patient' } = registerDto;
@@ -83,16 +145,11 @@ export class AuthService {
       throw new BadRequestException('Failed to create user: ' + error.message);
     }
 
-    // Generate JWT token
-    const accessToken = this.jwtService.sign(
-      { 
-        userId: user._id, 
-        email: user.email, 
-        role: user.role 
-      },
-      { 
-        expiresIn: process.env.JWT_EXPIRES_IN || '24h' 
-      }
+    // Generate JWT token pair
+    const { accessToken, refreshToken } = this.generateTokenPair(
+      user._id.toString(),
+      user.email,
+      user.role
     );
 
     this.logger.log(`New user registered: ${email}`);
@@ -110,6 +167,7 @@ export class AuthService {
         avatar: user.avatar,
       },
       accessToken,
+      refreshToken,
     };
   }
 
@@ -157,16 +215,11 @@ export class AuthService {
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token
-    const accessToken = this.jwtService.sign(
-      { 
-        userId: user._id, 
-        email: user.email, 
-        role: user.role 
-      },
-      { 
-        expiresIn: process.env.JWT_EXPIRES_IN || '24h' 
-      }
+    // Generate JWT token pair
+    const { accessToken, refreshToken } = this.generateTokenPair(
+      user._id.toString(),
+      user.email,
+      user.role
     );
 
     this.logger.log(`User logged in: ${email}`);
@@ -184,6 +237,7 @@ export class AuthService {
         avatar: user.avatar,
       },
       accessToken,
+      refreshToken,
     };
   }
 

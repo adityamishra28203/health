@@ -26,14 +26,51 @@ export class FileStorageController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
     limits: {
-      fileSize: 1024 * 1024, // 1MB limit
+      fileSize: 5 * 1024 * 1024, // 5MB limit for health records
+      files: 1, // Only one file at a time
+      fieldSize: 1024, // 1KB for field names
     },
     fileFilter: (req, file, cb) => {
-      // Only allow image files
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
+      // Define allowed MIME types for health records
+      const allowedMimeTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/jpg', 
+        'image/png',
+        'image/gif',
+        'text/plain',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ];
+
+      // Check MIME type
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        // Additional security: Check file extension matches MIME type
+        const allowedExtensions = {
+          'application/pdf': ['.pdf'],
+          'image/jpeg': ['.jpg', '.jpeg'],
+          'image/jpg': ['.jpg', '.jpeg'],
+          'image/png': ['.png'],
+          'image/gif': ['.gif'],
+          'text/plain': ['.txt'],
+          'application/msword': ['.doc'],
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+          'application/vnd.ms-excel': ['.xls'],
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+        };
+
+        const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+        const validExtensions = allowedExtensions[file.mimetype] || [];
+        
+        if (validExtensions.includes(fileExtension)) {
+          cb(null, true);
+        } else {
+          cb(new Error(`File extension ${fileExtension} does not match MIME type ${file.mimetype}`), false);
+        }
       } else {
-        cb(new Error('Only image files are allowed'), false);
+        cb(new Error(`File type ${file.mimetype} is not allowed. Allowed types: PDF, JPEG, PNG, GIF, TXT, DOC, DOCX, XLS, XLSX`), false);
       }
     },
   }))
