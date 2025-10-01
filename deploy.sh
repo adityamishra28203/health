@@ -85,9 +85,3 @@ echo "4. Update environment variables with production values"
 
 
 
-
-
-
-
-
-
