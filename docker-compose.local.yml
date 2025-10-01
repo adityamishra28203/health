@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # MongoDB for Hospital Service
+  mongodb:
+    image: mongo:7.0
+    container_name: securehealth-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: hospital-service
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - securehealth-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: securehealth-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - securehealth-network
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: securehealth-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - securehealth-network
+
+  # Kafka
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: securehealth-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - securehealth-network
+
+  # Hospital Service
+  hospital-service:
+    build:
+      context: ./services/hospital-service
+      dockerfile: Dockerfile
+    container_name: securehealth-hospital-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/hospital-service?authSource=admin
+      - KAFKA_BROKERS=kafka:29092
+      - JWT_SECRET=your-jwt-secret-key-for-development
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+    depends_on:
+      - mongodb
+      - kafka
+    volumes:
+      - ./services/hospital-service:/app
+      - /app/node_modules
+    networks:
+      - securehealth-network
+    command: npm run start:dev
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  securehealth-network:
+    driver: bridge

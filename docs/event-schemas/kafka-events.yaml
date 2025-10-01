@@ -1,0 +1,672 @@
+# Kafka Event Schemas for SecureHealth Platform
+# Event-driven architecture for scalable healthcare operations
+
+version: 1.0.0
+description: |
+  Event schemas for microservices communication in the SecureHealth platform.
+  
+  ## Event Topics:
+  - document.events - Document lifecycle events
+  - patient.events - Patient-related events  
+  - hospital.events - Hospital operations events
+  - blockchain.events - Blockchain operations events
+  - claims.events - Insurance claims events
+  - notification.events - Notification events
+
+events:
+  # Document Events
+  document.uploaded:
+    topic: document.events
+    key: documentId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: document.uploaded
+        timestamp:
+          type: string
+          format: date-time
+        documentId:
+          type: string
+        hospitalId:
+          type: string
+        patientId:
+          type: string
+        fileHash:
+          type: string
+        ipfsHash:
+          type: string
+        originalName:
+          type: string
+        mimeType:
+          type: string
+        size:
+          type: integer
+        documentType:
+          type: string
+          enum: [discharge_summary, lab_report, prescription, imaging, pathology, other]
+        metadata:
+          type: object
+      required: [eventId, eventType, timestamp, documentId, hospitalId, patientId, fileHash, ipfsHash]
+
+  document.signed:
+    topic: document.events
+    key: documentId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: document.signed
+        timestamp:
+          type: string
+          format: date-time
+        documentId:
+          type: string
+        hospitalId:
+          type: string
+        signedBy:
+          type: string
+        signature:
+          type: string
+        certificateId:
+          type: string
+        signatureValid:
+          type: boolean
+      required: [eventId, eventType, timestamp, documentId, hospitalId, signedBy, signature]
+
+  document.verified:
+    topic: document.events
+    key: documentId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: document.verified
+        timestamp:
+          type: string
+          format: date-time
+        documentId:
+          type: string
+        blockchainTx:
+          type: string
+        verifiedBy:
+          type: string
+        verificationMethod:
+          type: string
+          enum: [blockchain_hash, digital_signature, manual_review]
+      required: [eventId, eventType, timestamp, documentId, blockchainTx, verifiedBy]
+
+  # Patient Events
+  patient.consent.granted:
+    topic: patient.events
+    key: patientId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: patient.consent.granted
+        timestamp:
+          type: string
+          format: date-time
+        patientId:
+          type: string
+        consentId:
+          type: string
+        documentIds:
+          type: array
+          items:
+            type: string
+        purpose:
+          type: string
+          enum: [insurance_claim, medical_consultation, research, emergency]
+        validUntil:
+          type: string
+          format: date-time
+        shareWith:
+          type: array
+          items:
+            type: string
+        blockchainTx:
+          type: string
+      required: [eventId, eventType, timestamp, patientId, consentId, documentIds, purpose]
+
+  patient.consent.revoked:
+    topic: patient.events
+    key: patientId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: patient.consent.revoked
+        timestamp:
+          type: string
+          format: date-time
+        patientId:
+          type: string
+        consentId:
+          type: string
+        reason:
+          type: string
+        blockchainTx:
+          type: string
+      required: [eventId, eventType, timestamp, patientId, consentId]
+
+  patient.linked:
+    topic: patient.events
+    key: patientId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: patient.linked
+        timestamp:
+          type: string
+          format: date-time
+        patientId:
+          type: string
+        hospitalId:
+          type: string
+        linkedBy:
+          type: string
+        abhaId:
+          type: string
+      required: [eventId, eventType, timestamp, patientId, hospitalId, linkedBy]
+
+  # Hospital Events
+  hospital.registered:
+    topic: hospital.events
+    key: hospitalId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: hospital.registered
+        timestamp:
+          type: string
+          format: date-time
+        hospitalId:
+          type: string
+        name:
+          type: string
+        registrationNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, verified, suspended]
+        adminUserId:
+          type: string
+        kycDocuments:
+          type: array
+          items:
+            type: string
+      required: [eventId, eventType, timestamp, hospitalId, name, registrationNumber, status]
+
+  hospital.verified:
+    topic: hospital.events
+    key: hospitalId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: hospital.verified
+        timestamp:
+          type: string
+          format: date-time
+        hospitalId:
+          type: string
+        verifiedBy:
+          type: string
+        certificateIssued:
+          type: boolean
+        certificateId:
+          type: string
+      required: [eventId, eventType, timestamp, hospitalId, verifiedBy]
+
+  hospital.user.created:
+    topic: hospital.events
+    key: hospitalId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: hospital.user.created
+        timestamp:
+          type: string
+          format: date-time
+        hospitalId:
+          type: string
+        userId:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, doctor, nurse, billing_clerk]
+        createdBy:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+      required: [eventId, eventType, timestamp, hospitalId, userId, email, role]
+
+  # Blockchain Events
+  blockchain.hash.stored:
+    topic: blockchain.events
+    key: documentId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: blockchain.hash.stored
+        timestamp:
+          type: string
+          format: date-time
+        documentId:
+          type: string
+        fileHash:
+          type: string
+        blockchainTx:
+          type: string
+        network:
+          type: string
+          enum: [mainnet, testnet, polygon, fabric]
+        blockNumber:
+          type: integer
+        gasUsed:
+          type: integer
+      required: [eventId, eventType, timestamp, documentId, fileHash, blockchainTx, network]
+
+  blockchain.anchor.initiated:
+    topic: blockchain.events
+    key: batchId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: blockchain.anchor.initiated
+        timestamp:
+          type: string
+          format: date-time
+        batchId:
+          type: string
+        documentHashes:
+          type: array
+          items:
+            type: string
+        merkleRoot:
+          type: string
+        targetNetwork:
+          type: string
+          enum: [polygon, ethereum, bsc]
+        estimatedGas:
+          type: integer
+      required: [eventId, eventType, timestamp, batchId, documentHashes, merkleRoot, targetNetwork]
+
+  blockchain.anchor.completed:
+    topic: blockchain.events
+    key: batchId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: blockchain.anchor.completed
+        timestamp:
+          type: string
+          format: date-time
+        batchId:
+          type: string
+        transactionHash:
+          type: string
+        blockNumber:
+          type: integer
+        network:
+          type: string
+        gasUsed:
+          type: integer
+        confirmationTime:
+          type: integer
+      required: [eventId, eventType, timestamp, batchId, transactionHash, blockNumber, network]
+
+  # Claims Events
+  claim.submitted:
+    topic: claims.events
+    key: claimId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: claim.submitted
+        timestamp:
+          type: string
+          format: date-time
+        claimId:
+          type: string
+        patientId:
+          type: string
+        hospitalId:
+          type: string
+        insurerId:
+          type: string
+        claimAmount:
+          type: number
+        claimType:
+          type: string
+          enum: [inpatient, outpatient, emergency, diagnostic]
+        documentIds:
+          type: array
+          items:
+            type: string
+        submittedBy:
+          type: string
+      required: [eventId, eventType, timestamp, claimId, patientId, hospitalId, claimAmount, claimType]
+
+  claim.under_review:
+    topic: claims.events
+    key: claimId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: claim.under_review
+        timestamp:
+          type: string
+          format: date-time
+        claimId:
+          type: string
+        assignedTo:
+          type: string
+        reviewDeadline:
+          type: string
+          format: date-time
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+      required: [eventId, eventType, timestamp, claimId, assignedTo]
+
+  claim.approved:
+    topic: claims.events
+    key: claimId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: claim.approved
+        timestamp:
+          type: string
+          format: date-time
+        claimId:
+          type: string
+        approvedAmount:
+          type: number
+        approvedBy:
+          type: string
+        approvalNotes:
+          type: string
+        paymentDeadline:
+          type: string
+          format: date-time
+      required: [eventId, eventType, timestamp, claimId, approvedAmount, approvedBy]
+
+  claim.rejected:
+    topic: claims.events
+    key: claimId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: claim.rejected
+        timestamp:
+          type: string
+          format: date-time
+        claimId:
+          type: string
+        rejectedBy:
+          type: string
+        rejectionReason:
+          type: string
+        fraudDetected:
+          type: boolean
+        canAppeal:
+          type: boolean
+      required: [eventId, eventType, timestamp, claimId, rejectedBy, rejectionReason]
+
+  # Notification Events
+  notification.sms.queued:
+    topic: notification.events
+    key: notificationId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: notification.sms.queued
+        timestamp:
+          type: string
+          format: date-time
+        notificationId:
+          type: string
+        recipient:
+          type: string
+        message:
+          type: string
+        template:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        scheduledFor:
+          type: string
+          format: date-time
+      required: [eventId, eventType, timestamp, notificationId, recipient, message]
+
+  notification.push.queued:
+    topic: notification.events
+    key: notificationId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: notification.push.queued
+        timestamp:
+          type: string
+          format: date-time
+        notificationId:
+          type: string
+        recipient:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+        deviceTokens:
+          type: array
+          items:
+            type: string
+      required: [eventId, eventType, timestamp, notificationId, recipient, title, body]
+
+  notification.email.queued:
+    topic: notification.events
+    key: notificationId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: notification.email.queued
+        timestamp:
+          type: string
+          format: date-time
+        notificationId:
+          type: string
+        recipient:
+          type: string
+        subject:
+          type: string
+        template:
+          type: string
+        variables:
+          type: object
+        priority:
+          type: string
+          enum: [low, medium, high]
+      required: [eventId, eventType, timestamp, notificationId, recipient, subject, template]
+
+  # System Events
+  system.health.check:
+    topic: system.events
+    key: serviceId
+    schema:
+      type: object
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          const: system.health.check
+        timestamp:
+          type: string
+          format: date-time
+        serviceId:
+          type: string
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        metrics:
+          type: object
+          properties:
+            cpuUsage:
+              type: number
+            memoryUsage:
+              type: number
+            diskUsage:
+              type: number
+            responseTime:
+              type: number
+        version:
+          type: string
+        environment:
+          type: string
+          enum: [development, staging, production]
+      required: [eventId, eventType, timestamp, serviceId, status, version, environment]
+
+# Event Processing Patterns
+patterns:
+  saga:
+    description: "Long-running transactions across services"
+    example:
+      - claim.submitted
+      - document.verified
+      - patient.consent.granted
+      - claim.under_review
+      - claim.approved
+
+  cqrs:
+    description: "Command Query Responsibility Segregation"
+    commands:
+      - document.uploaded
+      - patient.consent.granted
+      - claim.submitted
+    queries:
+      - document.verified
+      - blockchain.hash.stored
+      - claim.approved
+
+  event_sourcing:
+    description: "Event sourcing for audit trails"
+    events:
+      - All events are stored for audit
+      - Replay capability for system recovery
+      - Immutable event log
+
+# Event Retention and Cleanup
+retention:
+  default: "30 days"
+  audit_events: "7 years"
+  system_events: "90 days"
+  notification_events: "7 days"
+
+# Dead Letter Queue Configuration
+dlq:
+  enabled: true
+  max_retries: 3
+  retry_delay: "5 minutes"
+  dlq_topic_suffix: ".dlq"
+

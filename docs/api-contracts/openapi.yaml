@@ -1,0 +1,910 @@
+openapi: 3.0.3
+info:
+  title: SecureHealth Enterprise Platform API
+  description: |
+    Enterprise-grade healthcare platform with microservices architecture.
+    
+    ## Architecture Overview
+    - **Patient Service**: User profiles, wallet metadata, consent records
+    - **Hospital Service**: Hospital admin, document signing, EHR adapters  
+    - **Document Service**: File ingestion, encryption, storage, hash calculation
+    - **Blockchain Adapter**: Signs/writes hashes, manages anchor transactions
+    - **Claims Service**: Insurer integrations, adjudication workflows
+    - **Auth Service**: ABHA/Aadhaar integrations, OAuth2, RBAC
+    
+    ## Key Design Principles
+    - Never store PHI on-chain (only cryptographic hashes)
+    - Multi-tenant isolation per hospital/insurer
+    - Event-driven architecture with Kafka
+    - Hybrid blockchain (permissioned + public anchor)
+  version: 1.0.0
+  contact:
+    name: SecureHealth API Team
+    email: api@securehealth.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.securehealth.app/v1
+    description: Production API Gateway
+  - url: https://staging-api.securehealth.app/v1
+    description: Staging Environment
+  - url: http://localhost:3000/v1
+    description: Local Development
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # Auth Service Endpoints
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user/hospital
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PatientLoginRequest'
+                - $ref: '#/components/schemas/HospitalLoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  # Hospital Service Endpoints
+  /hospitals:
+    get:
+      tags: [Hospitals]
+      summary: List hospitals (admin only)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of hospitals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HospitalListResponse'
+
+    post:
+      tags: [Hospitals]
+      summary: Register new hospital
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HospitalRegistrationRequest'
+      responses:
+        '201':
+          description: Hospital registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HospitalResponse'
+
+  /hospitals/{hospitalId}:
+    get:
+      tags: [Hospitals]
+      summary: Get hospital details
+      parameters:
+        - name: hospitalId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hospital details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HospitalResponse'
+
+  /hospitals/{hospitalId}/patients/search:
+    post:
+      tags: [Hospitals]
+      summary: Search patients by ABHA/phone/name
+      parameters:
+        - name: hospitalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientSearchRequest'
+      responses:
+        '200':
+          description: Patient search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientSearchResponse'
+
+  /hospitals/{hospitalId}/documents:
+    post:
+      tags: [Hospitals]
+      summary: Upload and sign document
+      parameters:
+        - name: hospitalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file (PDF, image, etc.)
+                patientId:
+                  type: string
+                  description: ABHA ID or patient identifier
+                documentType:
+                  type: string
+                  enum: [discharge_summary, lab_report, prescription, imaging, pathology, other]
+                metadata:
+                  type: string
+                  description: JSON metadata for the document
+              required: [file, patientId, documentType]
+      responses:
+        '201':
+          description: Document uploaded and signed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUploadResponse'
+
+  # Document Service Endpoints
+  /documents/{documentId}:
+    get:
+      tags: [Documents]
+      summary: Get document metadata
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentMetadata'
+
+    delete:
+      tags: [Documents]
+      summary: Delete document (admin only)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Document deleted successfully
+
+  /documents/{documentId}/download:
+    get:
+      tags: [Documents]
+      summary: Download document (decrypted)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [original, pdf, image]
+            default: original
+      responses:
+        '200':
+          description: Document file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  # Patient Service Endpoints
+  /patients/{patientId}/documents:
+    get:
+      tags: [Patients]
+      summary: Get patient's documents
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentType
+          in: query
+          schema:
+            type: string
+        - name: verified
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Patient's documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDocumentsResponse'
+
+  /patients/{patientId}/consent:
+    post:
+      tags: [Patients]
+      summary: Grant consent for document access
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentRequest'
+      responses:
+        '201':
+          description: Consent granted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentResponse'
+
+  # Blockchain Adapter Endpoints
+  /blockchain/verify/{hash}:
+    get:
+      tags: [Blockchain]
+      summary: Verify document hash on blockchain
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Blockchain verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockchainVerificationResponse'
+
+  /blockchain/anchor:
+    post:
+      tags: [Blockchain]
+      summary: Anchor document hashes to public chain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnchorRequest'
+      responses:
+        '202':
+          description: Anchoring initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnchorResponse'
+
+  # Claims Service Endpoints
+  /claims:
+    post:
+      tags: [Claims]
+      summary: Submit insurance claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimSubmissionRequest'
+      responses:
+        '201':
+          description: Claim submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+
+  /claims/{claimId}/status:
+    get:
+      tags: [Claims]
+      summary: Get claim status
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Claim status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimStatusResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    # Auth Schemas
+    PatientLoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        abhaId:
+          type: string
+          description: ABHA Health ID
+      required: [email, password]
+
+    HospitalLoginRequest:
+      type: object
+      properties:
+        hospitalId:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [hospitalId, email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          oneOf:
+            - $ref: '#/components/schemas/PatientUser'
+            - $ref: '#/components/schemas/HospitalUser'
+
+    PatientUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        abhaId:
+          type: string
+        role:
+          type: string
+          enum: [patient]
+        profile:
+          $ref: '#/components/schemas/PatientProfile'
+
+    HospitalUser:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        hospitalId:
+          type: string
+        role:
+          type: string
+          enum: [admin, doctor, nurse, billing_clerk]
+        permissions:
+          type: array
+          items:
+            type: string
+
+    # Hospital Schemas
+    HospitalRegistrationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        registrationNumber:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+        specialties:
+          type: array
+          items:
+            type: string
+        kycDocuments:
+          type: array
+          items:
+            $ref: '#/components/schemas/KYCDocument'
+      required: [name, registrationNumber, address, contactInfo]
+
+    HospitalResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        registrationNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, verified, suspended]
+        address:
+          $ref: '#/components/schemas/Address'
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfo'
+        specialties:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        verifiedAt:
+          type: string
+          format: date-time
+
+    HospitalListResponse:
+      type: object
+      properties:
+        hospitals:
+          type: array
+          items:
+            $ref: '#/components/schemas/HospitalResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Patient Schemas
+    PatientSearchRequest:
+      type: object
+      properties:
+        abhaId:
+          type: string
+        phone:
+          type: string
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+      oneOf:
+        - required: [abhaId]
+        - required: [phone]
+        - required: [name, dateOfBirth]
+
+    PatientSearchResponse:
+      type: object
+      properties:
+        patients:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientProfile'
+        total:
+          type: integer
+
+    PatientProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        abhaId:
+          type: string
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [male, female, other]
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: '#/components/schemas/Address'
+        emergencyContact:
+          $ref: '#/components/schemas/EmergencyContact'
+
+    PatientDocumentsResponse:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentMetadata'
+        total:
+          type: integer
+
+    # Document Schemas
+    DocumentUploadResponse:
+      type: object
+      properties:
+        documentId:
+          type: string
+        fileHash:
+          type: string
+        ipfsHash:
+          type: string
+        blockchainTx:
+          type: string
+        url:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/DocumentMetadata'
+
+    DocumentMetadata:
+      type: object
+      properties:
+        documentId:
+          type: string
+        patientId:
+          type: string
+        hospitalId:
+          type: string
+        type:
+          type: string
+          enum: [discharge_summary, lab_report, prescription, imaging, pathology, other]
+        fileHash:
+          type: string
+        ipfsHash:
+          type: string
+        blockchainTx:
+          type: string
+        signedBy:
+          type: string
+        signature:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+        verifiedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, verified, rejected, expired]
+        size:
+          type: integer
+        mimeType:
+          type: string
+        originalName:
+          type: string
+
+    # Consent Schemas
+    ConsentRequest:
+      type: object
+      properties:
+        documentIds:
+          type: array
+          items:
+            type: string
+        purpose:
+          type: string
+          enum: [insurance_claim, medical_consultation, research, emergency]
+        validUntil:
+          type: string
+          format: date-time
+        shareWith:
+          type: array
+          items:
+            type: string
+      required: [documentIds, purpose]
+
+    ConsentResponse:
+      type: object
+      properties:
+        consentId:
+          type: string
+        status:
+          type: string
+          enum: [granted, denied, expired]
+        blockchainTx:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # Blockchain Schemas
+    BlockchainVerificationResponse:
+      type: object
+      properties:
+        hash:
+          type: string
+        verified:
+          type: boolean
+        blockNumber:
+          type: integer
+        transactionHash:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        network:
+          type: string
+          enum: [mainnet, testnet, polygon, fabric]
+
+    AnchorRequest:
+      type: object
+      properties:
+        hashes:
+          type: array
+          items:
+            type: string
+        batchId:
+          type: string
+      required: [hashes, batchId]
+
+    AnchorResponse:
+      type: object
+      properties:
+        batchId:
+          type: string
+        transactionHash:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, failed]
+        estimatedConfirmationTime:
+          type: integer
+
+    # Claims Schemas
+    ClaimSubmissionRequest:
+      type: object
+      properties:
+        patientId:
+          type: string
+        hospitalId:
+          type: string
+        documentIds:
+          type: array
+          items:
+            type: string
+        claimAmount:
+          type: number
+        claimType:
+          type: string
+          enum: [inpatient, outpatient, emergency, diagnostic]
+        description:
+          type: string
+      required: [patientId, hospitalId, documentIds, claimAmount, claimType]
+
+    ClaimResponse:
+      type: object
+      properties:
+        claimId:
+          type: string
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, paid]
+        claimAmount:
+          type: number
+        approvedAmount:
+          type: number
+        submittedAt:
+          type: string
+          format: date-time
+
+    ClaimStatusResponse:
+      type: object
+      properties:
+        claimId:
+          type: string
+        status:
+          type: string
+        progress:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimProgress'
+
+    ClaimProgress:
+      type: object
+      properties:
+        step:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        timestamp:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    # Common Schemas
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+          default: India
+
+    ContactInfo:
+      type: object
+      properties:
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        website:
+          type: string
+
+    EmergencyContact:
+      type: object
+      properties:
+        name:
+          type: string
+        relationship:
+          type: string
+        phone:
+          type: string
+
+    KYCDocument:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [registration_certificate, license, pan_card, gst_certificate]
+        url:
+          type: string
+        verified:
+          type: boolean
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: Invalid or expired token
+            timestamp: "2024-01-01T00:00:00Z"
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: Resource not found
+            timestamp: "2024-01-01T00:00:00Z"
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: VALIDATION_ERROR
+            message: Invalid input data
+            details:
+              field: email
+              reason: Invalid email format
+            timestamp: "2024-01-01T00:00:00Z"
+
+tags:
+  - name: Auth
+    description: Authentication and authorization
+  - name: Hospitals
+    description: Hospital management and operations
+  - name: Patients
+    description: Patient data and consent management
+  - name: Documents
+    description: Document upload, storage, and retrieval
+  - name: Blockchain
+    description: Blockchain verification and anchoring
+  - name: Claims
+    description: Insurance claims processing
+
