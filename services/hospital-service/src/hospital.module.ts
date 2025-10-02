@@ -6,6 +6,8 @@ import { HospitalController } from './hospital.controller';
 import { HospitalService } from './hospital.service';
 import { PatientService } from './patient/patient.service';
 import { DocumentService } from './document/document.service';
+import { ConsentService } from './consent/consent.service';
+import { TimelineService } from './timeline/timeline.service';
 import { RBACService } from './rbac/rbac.service';
 import { TenantService } from './tenant/tenant.service';
 import { KafkaService } from './kafka/kafka.service';
@@ -16,6 +18,11 @@ import { HospitalSchema } from './schemas/hospital.schema';
 import { HospitalUserSchema } from './schemas/hospital-user.schema';
 import { PatientLinkSchema } from './schemas/patient-link.schema';
 import { TenantSchema } from './schemas/tenant.schema';
+import { Consent, ConsentSchema } from './schemas/consent.schema';
+import { ConsentHistory, ConsentHistorySchema } from './schemas/consent.schema';
+import { DocumentEntity, DocumentSchema } from './schemas/document.schema';
+import { DocumentAccessLog, DocumentAccessLogSchema } from './schemas/document.schema';
+import { TimelineEvent, TimelineEventSchema } from './schemas/timeline.schema';
 
 @Module({
   imports: [
@@ -44,6 +51,11 @@ import { TenantSchema } from './schemas/tenant.schema';
       { name: 'HospitalUser', schema: HospitalUserSchema },
       { name: 'PatientLink', schema: PatientLinkSchema },
       { name: 'Tenant', schema: TenantSchema },
+      { name: Consent.name, schema: ConsentSchema },
+      { name: ConsentHistory.name, schema: ConsentHistorySchema },
+      { name: DocumentEntity.name, schema: DocumentSchema },
+      { name: DocumentAccessLog.name, schema: DocumentAccessLogSchema },
+      { name: TimelineEvent.name, schema: TimelineEventSchema },
     ]),
   ],
   controllers: [HospitalController],
@@ -51,6 +63,8 @@ import { TenantSchema } from './schemas/tenant.schema';
     HospitalService,
     PatientService,
     DocumentService,
+    ConsentService,
+    TimelineService,
     RBACService,
     TenantService,
     KafkaService,
