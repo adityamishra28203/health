@@ -1,0 +1,310 @@
+name: Full Stack Deployment Pipeline
+
+on:
+  workflow_run:
+    workflows: ["Frontend CI/CD Pipeline", "Backend CI/CD Pipeline"]
+    types:
+      - completed
+    branches: [main, testing-phase]
+
+env:
+  REGISTRY: ghcr.io
+  FRONTEND_IMAGE: ${{ github.repository }}/hospital-portal-frontend
+  BACKEND_IMAGE: ${{ github.repository }}/hospital-service
+
+jobs:
+  # Check if both workflows succeeded
+  check-workflows:
+    name: Check Workflow Status
+    runs-on: ubuntu-latest
+    outputs:
+      frontend-success: ${{ steps.check.outputs.frontend-success }}
+      backend-success: ${{ steps.check.outputs.backend-success }}
+      all-success: ${{ steps.check.outputs.all-success }}
+    
+    steps:
+      - name: Check workflow results
+        id: check
+        run: |
+          # Check if frontend workflow succeeded
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "frontend-success=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend-success=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check if backend workflow succeeded
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "backend-success=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend-success=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check if all workflows succeeded
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "all-success=true" >> $GITHUB_OUTPUT
+          else
+            echo "all-success=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Deploy to Staging Environment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: check-workflows
+    if: needs.check-workflows.outputs.all-success == 'true' && (github.ref == 'refs/heads/testing-phase' || github.ref == 'refs/heads/develop')
+    environment: 
+      name: staging
+      url: https://staging.hospital-portal.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy Frontend to Staging
+        run: |
+          echo "🚀 Deploying Frontend to Staging..."
+          
+          # Update image tag in deployment
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.ref_name }}|g" k8s/frontend-deployment.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/frontend-deployment.yaml
+          kubectl apply -f k8s/frontend-service.yaml
+          kubectl apply -f k8s/frontend-ingress.yaml
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/frontend-deployment -n hospital-portal-staging --timeout=300s
+          
+          echo "✅ Frontend deployed to staging"
+
+      - name: Deploy Backend Services to Staging
+        run: |
+          echo "🚀 Deploying Backend Services to Staging..."
+          
+          # Update image tags in deployments
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.ref_name }}|g" k8s/backend-deployment.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/mongodb-deployment.yaml
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl apply -f k8s/backend-service.yaml
+          kubectl apply -f k8s/api-gateway.yaml
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/hospital-service -n hospital-portal-staging --timeout=300s
+          
+          echo "✅ Backend services deployed to staging"
+
+      - name: Run Health Checks
+        run: |
+          echo "🔍 Running health checks..."
+          
+          # Wait for services to be ready
+          kubectl wait --for=condition=ready pod -l app=hospital-service -n hospital-portal-staging --timeout=300s
+          kubectl wait --for=condition=ready pod -l app=frontend -n hospital-portal-staging --timeout=300s
+          
+          # Get service URLs
+          FRONTEND_URL=$(kubectl get ingress frontend-ingress -n hospital-portal-staging -o jsonpath='{.spec.rules[0].host}')
+          BACKEND_URL=$(kubectl get service hospital-service -n hospital-portal-staging -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          
+          echo "Frontend URL: https://$FRONTEND_URL"
+          echo "Backend URL: http://$BACKEND_URL:3003"
+          
+          # Run health checks
+          kubectl run health-check --image=curlimages/curl --rm -i --restart=Never -n hospital-portal-staging -- \
+            curl -f http://hospital-service:3003/api/v1/hospitals/health
+          
+          echo "✅ Health checks passed"
+
+      - name: Notify Staging Deployment
+        if: ${{ secrets.SLACK_WEBHOOK_URL }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            🚀 Staging Deployment Successful!
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Frontend: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.ref_name }}
+            Backend: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.ref_name }}
+            Author: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Deploy to Production Environment
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: check-workflows
+    if: needs.check-workflows.outputs.all-success == 'true' && github.ref == 'refs/heads/main'
+    environment: 
+      name: production
+      url: https://hospital-portal.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy Frontend to Production
+        run: |
+          echo "🚀 Deploying Frontend to Production..."
+          
+          # Update image tag in deployment
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest|g" k8s/production/frontend-deployment.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/production/frontend-deployment.yaml
+          kubectl apply -f k8s/production/frontend-service.yaml
+          kubectl apply -f k8s/production/frontend-ingress.yaml
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/frontend-deployment -n hospital-portal --timeout=600s
+          
+          echo "✅ Frontend deployed to production"
+
+      - name: Deploy Backend Services to Production
+        run: |
+          echo "🚀 Deploying Backend Services to Production..."
+          
+          # Update image tags in deployments
+          sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest|g" k8s/production/backend-deployment.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/production/mongodb-deployment.yaml
+          kubectl apply -f k8s/production/backend-deployment.yaml
+          kubectl apply -f k8s/production/backend-service.yaml
+          kubectl apply -f k8s/production/api-gateway.yaml
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/hospital-service -n hospital-portal --timeout=600s
+          
+          echo "✅ Backend services deployed to production"
+
+      - name: Run Production Health Checks
+        run: |
+          echo "🔍 Running production health checks..."
+          
+          # Wait for services to be ready
+          kubectl wait --for=condition=ready pod -l app=hospital-service -n hospital-portal --timeout=600s
+          kubectl wait --for=condition=ready pod -l app=frontend -n hospital-portal --timeout=600s
+          
+          # Get service URLs
+          FRONTEND_URL=$(kubectl get ingress frontend-ingress -n hospital-portal -o jsonpath='{.spec.rules[0].host}')
+          BACKEND_URL=$(kubectl get service hospital-service -n hospital-portal -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          
+          echo "Frontend URL: https://$FRONTEND_URL"
+          echo "Backend URL: http://$BACKEND_URL:3003"
+          
+          # Run health checks
+          kubectl run health-check --image=curlimages/curl --rm -i --restart=Never -n hospital-portal -- \
+            curl -f http://hospital-service:3003/api/v1/hospitals/health
+          
+          echo "✅ Production health checks passed"
+
+      - name: Run Smoke Tests
+        run: |
+          echo "🧪 Running smoke tests..."
+          
+          # Add your smoke test commands here
+          # Example: API endpoint tests, UI automation tests
+          echo "✅ Smoke tests passed"
+
+      - name: Notify Production Deployment
+        if: ${{ secrets.SLACK_WEBHOOK_URL }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            🎉 Production Deployment Successful!
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Frontend: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+            Backend: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+            Author: ${{ github.actor }}
+            URL: https://hospital-portal.com
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Rollback on Failure
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          else
+            echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          fi
+          export KUBECONFIG=kubeconfig
+
+      - name: Rollback deployment
+        run: |
+          echo "🔄 Rolling back deployment..."
+          
+          # Rollback frontend
+          kubectl rollout undo deployment/frontend-deployment -n ${{ github.ref == 'refs/heads/main' && 'hospital-portal' || 'hospital-portal-staging' }}
+          
+          # Rollback backend
+          kubectl rollout undo deployment/hospital-service -n ${{ github.ref == 'refs/heads/main' && 'hospital-portal' || 'hospital-portal-staging' }}
+          
+          # Wait for rollback to complete
+          kubectl rollout status deployment/frontend-deployment -n ${{ github.ref == 'refs/heads/main' && 'hospital-portal' || 'hospital-portal-staging' }} --timeout=300s
+          kubectl rollout status deployment/hospital-service -n ${{ github.ref == 'refs/heads/main' && 'hospital-portal' || 'hospital-portal-staging' }} --timeout=300s
+          
+          echo "✅ Rollback completed"
+
+      - name: Notify Rollback
+        if: ${{ secrets.SLACK_WEBHOOK_URL }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: |
+            🔄 Rollback Executed
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+            Author: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hospital-service
+  namespace: hospital-portal
+  labels:
+    app: hospital-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hospital-service
+  template:
+    metadata:
+      labels:
+        app: hospital-service
+        version: v1
+    spec:
+      containers:
+      - name: hospital-service
+        image: ghcr.io/adityamishra28203/health/hospital-service:latest
+        ports:
+        - containerPort: 3003
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3003"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: uri
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: secret
+        - name: ALLOWED_ORIGINS
+          value: "https://hospital-portal.com,https://staging.hospital-portal.com"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/hospitals/health
+            port: 3003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/v1/hospitals/health
+            port: 3003
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hospital-service
+  namespace: hospital-portal
+spec:
+  selector:
+    app: hospital-service
+  ports:
+  - port: 3003
+    targetPort: 3003
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-secret
+  namespace: hospital-portal
+type: Opaque
+data:
+  uri: bW9uZ29kYjovL2xvY2FsaG9zdDoyNzAxNy9ob3NwaXRhbC1wb3J0YWw= # mongodb://localhost:27017/hospital-portal
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwt-secret
+  namespace: hospital-portal
+type: Opaque
+data:
+  secret: eW91ci1qd3Qtc2VjcmV0LWtleS1oZXJl # your-jwt-secret-key-here
