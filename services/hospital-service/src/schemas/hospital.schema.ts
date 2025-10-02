@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type HospitalDocument = Hospital & Document;
 
@@ -33,7 +33,16 @@ export class Hospital {
   @Prop({ required: true })
   type: HospitalType;
 
-  @Prop({ required: true })
+  @Prop({ 
+    type: {
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      postalCode: { type: String, required: true },
+      country: { type: String, required: true }
+    },
+    required: true 
+  })
   address: {
     street: string;
     city: string;
@@ -42,7 +51,14 @@ export class Hospital {
     country: string;
   };
 
-  @Prop({ required: true })
+  @Prop({ 
+    type: {
+      phone: { type: String, required: true },
+      email: { type: String, required: true },
+      website: { type: String, required: false }
+    },
+    required: true 
+  })
   contactInfo: {
     phone: string;
     email: string;
@@ -70,7 +86,7 @@ export class Hospital {
   @Prop()
   certificateIssuedAt?: Date;
 
-  @Prop({ default: {} })
+  @Prop({ type: Map, of: MongooseSchema.Types.Mixed, default: {} })
   metadata: Record<string, any>;
 
   @Prop({ required: true })
@@ -91,7 +107,17 @@ export class Hospital {
   @Prop({ type: [String], default: [] })
   allowedDomains: string[];
 
-  @Prop({ default: {} })
+  @Prop({ 
+    type: {
+      maxUsers: { type: Number, default: 100 },
+      maxDocumentsPerDay: { type: Number, default: 1000 },
+      allowedDocumentTypes: [{ type: String }],
+      requireApprovalForDocuments: { type: Boolean, default: false },
+      enableAuditLogging: { type: Boolean, default: true },
+      dataRetentionDays: { type: Number, default: 2555 } // 7 years
+    },
+    default: {}
+  })
   settings: {
     maxUsers?: number;
     maxDocumentsPerDay?: number;
@@ -101,7 +127,17 @@ export class Hospital {
     dataRetentionDays?: number;
   };
 
-  @Prop({ default: {} })
+  @Prop({ 
+    type: {
+      hipaaCompliant: { type: Boolean, default: false },
+      abdmRegistered: { type: Boolean, default: false },
+      abdmHealthId: { type: String, default: '' },
+      certificationExpiry: { type: Date },
+      lastAuditDate: { type: Date },
+      auditScore: { type: Number, default: 0 }
+    },
+    default: {}
+  })
   compliance: {
     hipaaCompliant: boolean;
     abdmRegistered: boolean;

@@ -112,9 +112,8 @@ export default function HospitalPortalPage() {
   const loadHospitals = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3003/api/v1/hospitals');
-      const data = await response.json();
-      setHospitals(data.hospitals || []);
+      const response = await hospitalService.getHospitals();
+      setHospitals(response.hospitals || []);
     } catch (error) {
       console.error('Error loading hospitals:', error);
       toast.error('Failed to load hospitals');
@@ -147,22 +146,11 @@ export default function HospitalPortalPage() {
         ownerName: formData.ownerName,
       };
 
-      const response = await fetch('http://localhost:3003/api/v1/hospitals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(hospitalData),
-      });
-
-      if (response.ok) {
-        toast.success('Hospital registered successfully!');
-        setShowRegistrationForm(false);
-        resetForm();
-        loadHospitals();
-      } else {
-        throw new Error('Registration failed');
-      }
+      const response = await hospitalService.registerHospital(hospitalData);
+      toast.success('Hospital registered successfully!');
+      setShowRegistrationForm(false);
+      resetForm();
+      loadHospitals();
     } catch (error) {
       console.error('Error registering hospital:', error);
       toast.error('Failed to register hospital');

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type PatientLinkDocument = PatientLink & Document;
 
@@ -64,7 +64,23 @@ export class PatientLink {
   @Prop()
   revocationReason?: string;
 
-  @Prop({ default: {} })
+  @Prop({ 
+    type: {
+      name: { type: String, required: true },
+      dateOfBirth: { type: Date, required: true },
+      gender: { type: String, required: true },
+      phone: { type: String },
+      email: { type: String },
+      address: {
+        street: { type: String },
+        city: { type: String },
+        state: { type: String },
+        postalCode: { type: String },
+        country: { type: String }
+      }
+    },
+    default: {}
+  })
   patientInfo: {
     name: string;
     dateOfBirth: Date;
@@ -107,7 +123,20 @@ export class PatientLink {
     duration: number; // in seconds
   }>;
 
-  @Prop({ default: {} })
+  @Prop({ 
+    type: {
+      canViewDocuments: { type: Boolean, default: false },
+      canUploadDocuments: { type: Boolean, default: false },
+      canModifyDocuments: { type: Boolean, default: false },
+      canAccessEmergencyData: { type: Boolean, default: false },
+      allowedDocumentTypes: [{ type: String }],
+      restrictedHours: [{
+        start: { type: String },
+        end: { type: String }
+      }]
+    },
+    default: {}
+  })
   permissions: {
     canViewDocuments: boolean;
     canUploadDocuments: boolean;
@@ -120,7 +149,7 @@ export class PatientLink {
     }[];
   };
 
-  @Prop({ default: {} })
+  @Prop({ type: Map, of: MongooseSchema.Types.Mixed, default: {} })
   metadata: Record<string, any>;
 
   @Prop({ default: true })

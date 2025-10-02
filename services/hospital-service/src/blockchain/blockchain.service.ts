@@ -4,25 +4,28 @@ import { Injectable, Logger } from '@nestjs/common';
 export class BlockchainService {
   private readonly logger = new Logger(BlockchainService.name);
 
-  async storeHash(hash: string, documentId: string): Promise<string> {
-    // Mock implementation - in real scenario, this would store hash on blockchain
-    const transactionHash = `0x${documentId}${Date.now()}`;
-    this.logger.log(`Storing hash on blockchain: ${hash}, TX: ${transactionHash}`);
+  async storeHash(hash: string, metadata: any): Promise<string> {
+    this.logger.log(`Storing hash on blockchain: ${hash}`);
     
-    return transactionHash;
+    // Mock implementation
+    return `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async verifyHash(hash: string): Promise<any> {
-    // Mock implementation - in real scenario, this would verify hash on blockchain
-    this.logger.log(`Verifying hash on blockchain: ${hash}`);
+  async verifyHash(hash: string): Promise<boolean> {
+    this.logger.log(`Verifying hash: ${hash}`);
     
+    // Mock implementation
+    return true;
+  }
+
+  async getTransaction(txId: string): Promise<any> {
+    this.logger.log(`Getting transaction: ${txId}`);
+    
+    // Mock implementation
     return {
-      hash,
-      verified: true,
-      blockNumber: Math.floor(Math.random() * 1000000),
-      transactionHash: `0x${hash}${Date.now()}`,
+      txId,
+      status: 'confirmed',
       timestamp: new Date(),
-      network: 'fabric',
     };
   }
 }

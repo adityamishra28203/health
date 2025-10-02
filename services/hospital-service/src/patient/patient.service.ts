@@ -1,23 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { PatientSearchRequest } from '../dto/hospital.dto';
 
 @Injectable()
 export class PatientService {
   private readonly logger = new Logger(PatientService.name);
 
-  // This service would integrate with the Patient Service microservice
-  // For now, it's a placeholder for patient-related operations
-  
-  async searchPatients(criteria: any): Promise<any[]> {
-    this.logger.log('Searching patients with criteria:', criteria);
-    
-    // Mock implementation - in real scenario, this would call Patient Service
-    return [];
-  }
-
-  async linkPatient(patientId: string, hospitalId: string): Promise<boolean> {
-    this.logger.log(`Linking patient ${patientId} to hospital ${hospitalId}`);
+  async searchPatients(searchRequest: PatientSearchRequest): Promise<any> {
+    this.logger.log('Searching patients...');
     
     // Mock implementation
-    return true;
+    const mockResults = [];
+    
+    if (searchRequest.abhaId) {
+      mockResults.push({
+        patientId: `patient_${Date.now()}`,
+        abhaId: searchRequest.abhaId,
+        name: 'John Doe',
+        phone: '+91-9876543210',
+        email: 'john@example.com',
+      });
+    }
+    
+    return {
+      patients: mockResults,
+      total: mockResults.length,
+    };
   }
 }

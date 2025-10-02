@@ -34,11 +34,9 @@ import { TenantSchema } from './schemas/tenant.schema';
         if (uri.startsWith('mock://')) {
           return { uri: 'mongodb://localhost:27017/hospital-service-mock' };
         }
-        return {
-          uri,
-          useNewUrlParser: true,
-          useUnifiedTopology: true,
-        };
+                return {
+                  uri,
+                };
       },
     }),
     MongooseModule.forFeature([

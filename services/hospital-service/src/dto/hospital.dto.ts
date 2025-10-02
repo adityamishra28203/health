@@ -1,101 +1,14 @@
-import { IsString, IsEmail, IsOptional, IsArray, IsEnum, IsNumber, IsObject, ValidateNested } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsArray, IsEnum, IsObject, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum HospitalType {
   GENERAL = 'general',
   SPECIALTY = 'specialty',
   CLINIC = 'clinic',
-  DIAGNOSTIC_CENTER = 'diagnostic_center',
+  LABORATORY = 'laboratory',
+  DIAGNOSTIC = 'diagnostic',
   PHARMACY = 'pharmacy',
-}
-
-export enum HospitalStatus {
-  PENDING = 'pending',
-  ACTIVE = 'active',
-  SUSPENDED = 'suspended',
-  INACTIVE = 'inactive',
-}
-
-export class AddressDto {
-  @ApiProperty({ description: 'Street address' })
-  @IsString()
-  street: string;
-
-  @ApiProperty({ description: 'City' })
-  @IsString()
-  city: string;
-
-  @ApiProperty({ description: 'State' })
-  @IsString()
-  state: string;
-
-  @ApiProperty({ description: 'Postal code' })
-  @IsString()
-  postalCode: string;
-
-  @ApiProperty({ description: 'Country' })
-  @IsString()
-  country: string;
-}
-
-export class ContactInfoDto {
-  @ApiProperty({ description: 'Phone number' })
-  @IsString()
-  phone: string;
-
-  @ApiProperty({ description: 'Email address' })
-  @IsEmail()
-  email: string;
-
-  @ApiProperty({ description: 'Website URL', required: false })
-  @IsOptional()
-  @IsString()
-  website?: string;
-}
-
-export class HospitalRegistrationRequest {
-  @ApiProperty({ description: 'Hospital name' })
-  @IsString()
-  name: string;
-
-  @ApiProperty({ description: 'Hospital registration number' })
-  @IsString()
-  registrationNumber: string;
-
-  @ApiProperty({ description: 'Hospital type', enum: HospitalType })
-  @IsEnum(HospitalType)
-  type: HospitalType;
-
-  @ApiProperty({ description: 'Hospital address' })
-  @ValidateNested()
-  @Type(() => AddressDto)
-  address: AddressDto;
-
-  @ApiProperty({ description: 'Contact information' })
-  @ValidateNested()
-  @Type(() => ContactInfoDto)
-  contactInfo: ContactInfoDto;
-
-  @ApiProperty({ description: 'List of specialties', required: false })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  specialties?: string[];
-
-  @ApiProperty({ description: 'KYC documents', required: false })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  kycDocuments?: string[];
-
-  @ApiProperty({ description: 'Owner email address' })
-  @IsEmail()
-  ownerEmail: string;
-
-  @ApiProperty({ description: 'Owner name' })
-  @IsString()
-  ownerName: string;
 }
 
 export enum UserRole {
@@ -110,83 +23,156 @@ export enum UserRole {
   VIEWER = 'viewer',
 }
 
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-  PENDING_VERIFICATION = 'pending_verification',
+export class AddressDto {
+  @ApiProperty()
+  @IsString()
+  street: string;
+
+  @ApiProperty()
+  @IsString()
+  city: string;
+
+  @ApiProperty()
+  @IsString()
+  state: string;
+
+  @ApiProperty()
+  @IsString()
+  postalCode: string;
+
+  @ApiProperty()
+  @IsString()
+  country: string;
 }
 
-export class HospitalUserCreationRequest {
-  @ApiProperty({ description: 'User email address' })
+export class ContactInfoDto {
+  @ApiProperty()
+  @IsString()
+  phone: string;
+
+  @ApiProperty()
   @IsEmail()
   email: string;
 
-  @ApiProperty({ description: 'User name' })
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  website?: string;
+}
+
+export class HospitalRegistrationRequest {
+  @ApiProperty()
   @IsString()
   name: string;
 
-  @ApiProperty({ description: 'User role', enum: UserRole })
+  @ApiProperty()
+  @IsString()
+  registrationNumber: string;
+
+  @ApiProperty({ enum: HospitalType })
+  @IsEnum(HospitalType)
+  type: HospitalType;
+
+  @ApiProperty({ type: AddressDto })
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address: AddressDto;
+
+  @ApiProperty({ type: ContactInfoDto })
+  @ValidateNested()
+  @Type(() => ContactInfoDto)
+  contactInfo: ContactInfoDto;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  specialties?: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  kycDocuments?: string[];
+
+  @ApiProperty()
+  @IsEmail()
+  ownerEmail: string;
+
+  @ApiProperty()
+  @IsString()
+  ownerName: string;
+}
+
+export class HospitalUserCreationRequest {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsString()
+  name: string;
+
+  @ApiProperty({ enum: UserRole })
   @IsEnum(UserRole)
   role: UserRole;
 
-  @ApiProperty({ description: 'User phone number', required: false })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiProperty({ description: 'Department', required: false })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   department?: string;
 
-  @ApiProperty({ description: 'Employee ID', required: false })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   employeeId?: string;
 
-  @ApiProperty({ description: 'Access control settings', required: false })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsObject()
   accessControl?: any;
 }
 
-export enum PatientSearchType {
-  ABHA_ID = 'abha_id',
-  MOBILE = 'mobile',
-  EMAIL = 'email',
-  NAME = 'name',
-  DOB = 'dob',
-}
-
 export class PatientSearchRequest {
-  @ApiProperty({ description: 'Search type', enum: PatientSearchType })
-  @IsEnum(PatientSearchType)
-  searchType: PatientSearchType;
-
-  @ApiProperty({ description: 'Search value' })
-  @IsString()
-  searchValue: string;
-
-  @ApiProperty({ description: 'Additional search criteria', required: false })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsObject()
-  additionalCriteria?: any;
+  @IsString()
+  abhaId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  dateOfBirth?: string;
 }
 
 export class HospitalStatsDto {
-  @ApiProperty({ description: 'Total users' })
+  @ApiProperty()
   totalUsers: number;
 
-  @ApiProperty({ description: 'Total patients' })
+  @ApiProperty()
   totalPatients: number;
 
-  @ApiProperty({ description: 'Total documents' })
+  @ApiProperty()
   totalDocuments: number;
 
-  @ApiProperty({ description: 'Active users' })
+  @ApiProperty()
   activeUsers: number;
 
-  @ApiProperty({ description: 'Pending verifications' })
+  @ApiProperty()
   pendingVerifications: number;
 }

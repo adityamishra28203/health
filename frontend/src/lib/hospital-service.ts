@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const HOSPITAL_API_BASE_URL = 'http://localhost:3003/api/v1';
+const HOSPITAL_API_BASE_URL = process.env.NEXT_PUBLIC_HOSPITAL_API_URL || 'http://localhost:3003/api/v1';
 
 export interface HospitalAddress {
   street: string;

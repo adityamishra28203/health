@@ -1,60 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class EncryptionService {
   private readonly logger = new Logger(EncryptionService.name);
-  private readonly encryptionKey: string;
 
-  constructor(private configService: ConfigService) {
-    this.encryptionKey = this.configService.get<string>('FILE_ENCRYPTION_KEY') || 
-                        crypto.randomBytes(32).toString('hex');
+  async encryptData(data: string): Promise<string> {
+    this.logger.log('Encrypting data...');
+    
+    // Simple encryption for demo
+    const cipher = crypto.createCipher('aes192', 'secret-key');
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    return encrypted;
   }
 
-  async encryptFile(buffer: Buffer): Promise<{
-    encryptedData: Buffer;
-    iv: Buffer;
-    tag: Buffer;
-    keyId: string;
-  }> {
-    const iv = crypto.randomBytes(16);
-    const key = crypto.scryptSync(this.encryptionKey, 'salt', 32);
-    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-    cipher.setAAD(Buffer.from('health-record', 'utf8'));
+  async decryptData(encryptedData: string): Promise<string> {
+    this.logger.log('Decrypting data...');
     
-    let encrypted = cipher.update(buffer);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
-    
-    const tag = cipher.getAuthTag();
-    const keyId = crypto.randomUUID();
-    
-    return { encryptedData: encrypted, iv, tag, keyId };
-  }
-
-  async decryptFile(
-    encryptedData: Buffer,
-    keyId: string,
-    iv: Buffer,
-    tag: Buffer,
-  ): Promise<Buffer> {
-    const key = crypto.scryptSync(this.encryptionKey, 'salt', 32);
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-    decipher.setAAD(Buffer.from('health-record', 'utf8'));
-    decipher.setAuthTag(tag);
-    
-    let decrypted = decipher.update(encryptedData);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    // Simple decryption for demo
+    const decipher = crypto.createDecipher('aes192', 'secret-key');
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
     
     return decrypted;
-  }
-
-  async signDocument(fileHash: string, certificateId: string): Promise<string> {
-    // Mock implementation - in real scenario, this would use actual digital signing
-    const signature = crypto.createHash('sha256')
-      .update(fileHash + certificateId + Date.now())
-      .digest('base64');
-    
-    return signature;
   }
 }

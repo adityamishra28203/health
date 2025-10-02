@@ -1,0 +1,85 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Hospital Service
+  - job_name: 'hospital-service'
+    static_configs:
+      - targets: ['hospital-service:3003']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Notification Service
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:3006']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Consent Service
+  - job_name: 'consent-service'
+    static_configs:
+      - targets: ['consent-service:3007']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Audit Service
+  - job_name: 'audit-service'
+    static_configs:
+      - targets: ['audit-service:3008']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Frontend
+  - job_name: 'frontend'
+    static_configs:
+      - targets: ['frontend:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Node Exporter (if available)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 5s
+
+  # cAdvisor (if available)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 5s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 5s
+
+  # MongoDB
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:27017']
+    scrape_interval: 5s
+
+  # Kafka
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+    scrape_interval: 5s
+
+  # Elasticsearch
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    scrape_interval: 5s
+

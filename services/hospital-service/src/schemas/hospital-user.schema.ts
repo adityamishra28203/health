@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type HospitalUserDocument = HospitalUser & Document;
 
@@ -108,7 +108,22 @@ export class HospitalUser {
   @Prop({ default: [] })
   passwordHistory: string[];
 
-  @Prop({ default: {} })
+  @Prop({ 
+    type: {
+      language: { type: String, default: 'en' },
+      timezone: { type: String, default: 'UTC' },
+      notifications: {
+        email: { type: Boolean, default: true },
+        sms: { type: Boolean, default: false },
+        push: { type: Boolean, default: true }
+      },
+      dashboard: {
+        defaultView: { type: String, default: 'overview' },
+        widgets: [{ type: String }]
+      }
+    },
+    default: {}
+  })
   preferences: {
     language: string;
     timezone: string;
@@ -123,7 +138,7 @@ export class HospitalUser {
     };
   };
 
-  @Prop({ default: {} })
+  @Prop({ type: Map, of: MongooseSchema.Types.Mixed, default: {} })
   metadata: Record<string, any>;
 
   @Prop({ default: true })
@@ -150,7 +165,18 @@ export class HospitalUser {
   @Prop({ default: [] })
   assignedDepartments: string[];
 
-  @Prop({ default: {} })
+  @Prop({ 
+    type: {
+      allowedDocumentTypes: [{ type: String }],
+      maxDocumentsPerDay: { type: Number, default: 100 },
+      allowedPatientData: [{ type: String }],
+      restrictedHours: [{
+        start: { type: String },
+        end: { type: String }
+      }]
+    },
+    default: {}
+  })
   accessControl: {
     allowedDocumentTypes: string[];
     maxDocumentsPerDay: number;
