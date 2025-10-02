@@ -214,6 +214,25 @@ class HospitalService {
     return response.data;
   }
 
+  // Authentication methods
+  async login(email: string, password: string): Promise<{ accessToken: string; user: any }> {
+    const response = await axios.post(`${this.baseURL}/hospitals/auth/login`, { email, password });
+    return response.data;
+  }
+
+  async register(userData: any): Promise<{ message: string; hospitalId: string }> {
+    const response = await axios.post(`${this.baseURL}/hospitals/auth/register`, userData);
+    return response.data;
+  }
+
+  async getProfile(): Promise<any> {
+    const token = localStorage.getItem('hospital_token');
+    const response = await axios.get(`${this.baseURL}/hospitals/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  }
+
   // Utility methods
   async isServiceHealthy(): Promise<boolean> {
     try {
