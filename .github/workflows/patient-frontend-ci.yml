@@ -1,20 +1,20 @@
-name: Frontend CI/CD Pipeline
+name: Patient Portal Frontend CI/CD Pipeline
 
 on:
   push:
     branches: [ main, testing-phase, develop ]
     paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - 'patient-portal/frontend/**'
+      - '.github/workflows/patient-frontend-ci.yml'
   pull_request:
     branches: [ main, testing-phase ]
     paths:
-      - 'frontend/**'
+      - 'patient-portal/frontend/**'
 
 env:
   NODE_VERSION: '18'
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/hospital-portal-frontend
+  IMAGE_NAME: ${{ github.repository }}/patient-portal-frontend
 
 jobs:
   # Lint and Test Job
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./patient-portal/frontend
     
     steps:
       - name: Checkout code
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: patient-portal/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -51,9 +51,9 @@ jobs:
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
-          directory: ./frontend/coverage
-          flags: frontend
-          name: frontend-coverage
+          directory: ./patient-portal/frontend/coverage
+          flags: patient-frontend
+          name: patient-frontend-coverage
 
   # Build Job
   build:
@@ -62,7 +62,7 @@ jobs:
     needs: lint-test
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./patient-portal/frontend
     
     steps:
       - name: Checkout code
@@ -73,7 +73,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: patient-portal/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -81,13 +81,13 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_HOSPITAL_API_URL: ${{ secrets.NEXT_PUBLIC_HOSPITAL_API_URL }}
+          NEXT_PUBLIC_PATIENT_API_URL: ${{ secrets.NEXT_PUBLIC_PATIENT_API_URL }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: frontend-build
-          path: frontend/.next/
+          name: patient-frontend-build
+          path: patient-portal/frontend/.next/
           retention-days: 7
 
   # Docker Build Job
@@ -129,7 +129,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./patient-portal/frontend
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -165,7 +165,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-build, security-scan]
     if: github.ref == 'refs/heads/testing-phase' || github.ref == 'refs/heads/develop'
-    environment: staging
+    environment: patient-portal-staging
     
     steps:
       - name: Checkout code
@@ -173,12 +173,11 @@ jobs:
 
       - name: Deploy to staging
         run: |
-          echo "🚀 Deploying to staging environment..."
+          echo "🚀 Deploying Patient Portal to staging environment..."
           echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
           
           # Add your staging deployment commands here
-          # Example: kubectl, docker-compose, or cloud deployment
-          echo "✅ Deployment to staging completed"
+          echo "✅ Patient Portal deployment to staging completed"
 
   # Deploy to Production
   deploy-production:
@@ -186,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-build, security-scan]
     if: github.ref == 'refs/heads/main'
-    environment: production
+    environment: patient-portal-production
     
     steps:
       - name: Checkout code
@@ -194,11 +193,11 @@ jobs:
 
       - name: Deploy to production
         run: |
-          echo "🚀 Deploying to production environment..."
+          echo "🚀 Deploying Patient Portal to production environment..."
           echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           
           # Add your production deployment commands here
-          echo "✅ Deployment to production completed"
+          echo "✅ Patient Portal deployment to production completed"
 
   # Notify Deployment
   notify:
@@ -213,9 +212,9 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          channel: '#deployments'
+          channel: '#patient-portal-deployments'
           text: |
-            🚀 Frontend Deployment ${{ job.status }}
+            👤 Patient Portal Deployment ${{ job.status }}
             Branch: ${{ github.ref_name }}
             Commit: ${{ github.sha }}
             Author: ${{ github.actor }}

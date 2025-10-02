@@ -1,16 +1,18 @@
-name: Full Stack Deployment Pipeline
+name: Separate Portal Deployment Pipeline
 
 on:
   workflow_run:
-    workflows: ["Frontend CI/CD Pipeline", "Backend CI/CD Pipeline"]
+    workflows: ["Hospital Portal Frontend CI/CD Pipeline", "Hospital Portal Backend CI/CD Pipeline", "Patient Portal Frontend CI/CD Pipeline", "Patient Portal Backend CI/CD Pipeline"]
     types:
       - completed
     branches: [main, testing-phase]
 
 env:
   REGISTRY: ghcr.io
-  FRONTEND_IMAGE: ${{ github.repository }}/hospital-portal-frontend
-  BACKEND_IMAGE: ${{ github.repository }}/hospital-service
+  HOSPITAL_FRONTEND_IMAGE: ${{ github.repository }}/hospital-portal-frontend
+  HOSPITAL_BACKEND_IMAGE: ${{ github.repository }}/hospital-service
+  PATIENT_FRONTEND_IMAGE: ${{ github.repository }}/patient-portal-frontend
+  PATIENT_BACKEND_IMAGE: ${{ github.repository }}/patient-portal-backend
 
 jobs:
   # Check if both workflows succeeded

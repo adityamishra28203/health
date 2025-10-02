@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { hospitalService } from '@/lib/hospital-service';
-import PortalNavigation from '@/components/common/PortalNavigation';
+// Portal navigation removed - Hospital Portal is standalone
 
 interface Hospital {
   hospitalId: string;
@@ -214,9 +214,6 @@ export default function HospitalPortalPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Portal Navigation */}
-      <PortalNavigation currentPortal="hospital" showBackButton={false} showHomeButton={true} />
-      
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -231,14 +228,6 @@ export default function HospitalPortalPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                onClick={() => router.push('/')}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <UserIcon className="h-4 w-4" />
-                <span>Patient Portal</span>
-              </Button>
               <Button
                 onClick={() => setShowRegistrationForm(true)}
                 className="flex items-center space-x-2"
